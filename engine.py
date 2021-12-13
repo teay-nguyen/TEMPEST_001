@@ -20,6 +20,8 @@ class State:
         self.moveLog = []
         self.whiteKingLocation = (7, 4)
         self.blackKingLocation = (0, 4)
+        self.checkmate = False
+        self.stalemate = False
         self.moveFuncs = {
             "p": self.getPawnMoves,
             "R": self.getRookMoves,
@@ -62,6 +64,16 @@ class State:
                 moves.remove(moves[i])
             self.whitesturn = not self.whitesturn
             self.undo_move()
+
+        if len(moves) == 0:
+            if self.inCheck():
+                self.checkmate = True
+            else:
+                self.stalemate = True
+
+        else:
+            self.checkmate = False
+            self.stalemate = False
 
         return moves
 
