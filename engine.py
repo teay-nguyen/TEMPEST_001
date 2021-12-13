@@ -21,6 +21,7 @@ class State:
         self.blackKingLocation = (0, 4)
         self.checkmate = False
         self.stalemate = False
+        self.epPossible = ()
         self.moveFuncs = {
             "p": self.getPawnMoves,
             "R": self.getRookMoves,
@@ -35,6 +36,17 @@ class State:
         self.board[move.endRow, move.endCol] = move.pieceMoved
         self.moveLog.append(move)
         self.whitesturn = not self.whitesturn
+
+        if move.isPawnPromotion:
+            self.board[move.endRow, move.endCol] = move.pieceMoved[0] + 'Q'
+
+        if move.epMove:
+            self.board[move.startRow, move.endCol] = '--'
+
+        if move.pieceMoved[1] == 'p' and abs(move.startRow-move.endRow) == 2:
+            self.epPossible = ((move.startRow+move.endRow)//2, move.startCol)
+        else:
+            self.epPossible = ()
 
         if move.pieceMoved == 'wK':
             self.whiteKingLocation = (move.endRow, move.endCol)
@@ -53,8 +65,17 @@ class State:
             elif move.pieceMoved == 'bK':
                 self.blackKingLocation = (move.startRow, move.startCol)
 
+            if move.epMove:
+                self.board[move.endRow, move.endCol] = '--'
+                self.board[move.startRow, move.endCol] = move.pieceCaptured
+                self.epPossible = (move.endRow, move.endCol)
+
+            if move.pieceMoved[1] == 'p' and abs(move.startRow-move.endRow) == 2:
+                self.epPossible = ()
+
     def FilterValidMoves(self):
         moves = self.getAllPossibleMoves()
+        tempEpPossible = self.epPossible
 
         for i in range(len(moves)-1, -1, -1):
             self.make_move(moves[i])
@@ -74,6 +95,7 @@ class State:
             self.checkmate = False
             self.stalemate = False
 
+        self.epPossible = tempEpPossible
         return moves
 
     def inCheck(self):
@@ -116,9 +138,16 @@ class State:
             if c - 1 >= 0:
                 if self.board[r - 1, c - 1][0] == "b":
                     moves.append(Move((r, c), (r - 1, c - 1), self.board))
+                elif (r-1, c-1) == self.epPossible:
+                    moves.append(Move((r, c), (r - 1, c - 1),
+                                 self.board, epMove=True))
+
             if c + 1 <= 7:
                 if self.board[r - 1, c + 1][0] == "b":
                     moves.append(Move((r, c), (r - 1, c + 1), self.board))
+                elif (r-1, c+1) == self.epPossible:
+                    moves.append(
+                        Move((r, c), (r-1, c+1), self.board, epMove=True))
 
         else:
             if self.board[r + 1, c] == "--":
@@ -128,9 +157,15 @@ class State:
             if c - 1 >= 0:
                 if self.board[r + 1, c - 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c - 1), self.board))
+                elif (r+1, c-1) == self.epPossible:
+                    moves.append(
+                        Move((r, c), (r+1, c-1), self.board, epMove=True))
             if c + 1 <= 7:
                 if self.board[r + 1, c + 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c + 1), self.board))
+                elif (r+1, c+1) == self.epPossible:
+                    moves.append(
+                        Move((r, c), (r+1, c+1), self.board, epMove=True))
 
     def getRookMoves(self, r, c, moves):
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1))
@@ -232,7 +267,7 @@ class Move:
                    "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     colsToFiles = {v: k for k, v in filesToCols.items()}
 
-    def __init__(self, start_sq, end_sq, board):
+    def __init__(self, start_sq, end_sq, board, epMove=False):
         self.startRow = start_sq[0]
         self.startCol = start_sq[1]
         self.endRow = end_sq[0]
@@ -240,6 +275,11 @@ class Move:
 
         self.pieceMoved = board[self.startRow, self.startCol]
         self.pieceCaptured = board[self.endRow, self.endCol]
+        self.isPawnPromotion = (self.pieceMoved == 'wp' and self.endRow == 0) or (
+            self.pieceMoved == 'bp' and self.endRow == 7)
+        self.epMove = epMove
+        if self.epMove:
+            self.pieceCaptured = 'wp' if self.pieceMoved == 'bp' else 'bp'
 
         self.moveid = (
             self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol

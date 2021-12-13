@@ -60,13 +60,14 @@ class Interface:
                     if len(plr_clicks) == 2:
                         move = Move(plr_clicks[0], plr_clicks[1], state.board)
                         print(move.getChessNotation())
-                        if move in valid_moves:
-                            state.make_move(move)
-                            moveMade = True
+                        for i in range(len(valid_moves)):
+                            if move == valid_moves[i]:
+                                state.make_move(valid_moves[i])
+                                moveMade = True
 
-                            sq_selected = ()
-                            plr_clicks = []
-                        else:
+                                sq_selected = ()
+                                plr_clicks = []
+                        if not moveMade:
                             plr_clicks = [sq_selected]
 
                 elif e.type == pyg.KEYDOWN:
