@@ -15,92 +15,89 @@ WHITE = pyg.Color('white')
 GREY = pyg.Color('grey')
 
 
-def get_pieces():
-    PIECES = {}
-    for fn in os.listdir('pieces'):
-        full_path = os.path.join('pieces', fn)
-        name = fn.replace('.png', '')
-        PIECES[name] = pyg.transform.scale(
-            pyg.image.load(full_path), (SIZE, SIZE))
+class Interface:
+    def __init__(self):
+        pass
 
-    return PIECES
+    def get_pieces(self):
+        PIECES = {}
+        for fn in os.listdir('pieces'):
+            full_path = os.path.join('pieces', fn)
+            name = fn.replace('.png', '')
+            PIECES[name] = pyg.transform.scale(
+                pyg.image.load(full_path), (SIZE, SIZE))
 
+        return PIECES
 
-def main():
-    screen = pyg.display.set_mode((WIDTH, HEIGHT))
-    clock = pyg.time.Clock()
-    state = State()
-    pieces = get_pieces()
-    running = True
-    sq_selected = ()
-    plr_clicks = []
-    valid_moves = state.FilterValidMoves()
-    moveMade = False
+    def app_main_exec(self):
+        screen = pyg.display.set_mode((WIDTH, HEIGHT))
+        clock = pyg.time.Clock()
+        state = State()
+        pieces = self.get_pieces()
+        running = True
+        sq_selected = ()
+        plr_clicks = []
+        valid_moves = state.FilterValidMoves()
+        moveMade = False
 
-    screen.fill(WHITE)
+        screen.fill(WHITE)
 
-    while running:
-        for e in pyg.event.get():
-            if e.type == pyg.QUIT:
-                running = False
-            elif e.type == pyg.MOUSEBUTTONDOWN:
-                location = pyg.mouse.get_pos()
-                col = location[0]//SIZE
-                row = location[1]//SIZE
-                if sq_selected == (row, col):
-                    sq_selected = ()
-                    plr_clicks = []
-                else:
-                    sq_selected = (row, col)
-                    plr_clicks.append(sq_selected)
-
-                if len(plr_clicks) == 2:
-                    move = Move(plr_clicks[0], plr_clicks[1], state.board)
-                    print(move.getChessNotation())
-                    if move in valid_moves:
-                        state.make_move(move)
-                        moveMade = True
-
+        while running:
+            for e in pyg.event.get():
+                if e.type == pyg.QUIT:
+                    running = False
+                elif e.type == pyg.MOUSEBUTTONDOWN:
+                    location = pyg.mouse.get_pos()
+                    col = location[0]//SIZE
+                    row = location[1]//SIZE
+                    if sq_selected == (row, col):
                         sq_selected = ()
                         plr_clicks = []
                     else:
-                        plr_clicks = [sq_selected]
+                        sq_selected = (row, col)
+                        plr_clicks.append(sq_selected)
 
-            elif e.type == pyg.KEYDOWN:
-                if e.key == pyg.K_z:
-                    state.undo_move()
-                    moveMade = True
+                    if len(plr_clicks) == 2:
+                        move = Move(plr_clicks[0], plr_clicks[1], state.board)
+                        print(move.getChessNotation())
+                        if move in valid_moves:
+                            state.make_move(move)
+                            moveMade = True
 
-        if moveMade:
-            valid_moves = state.FilterValidMoves()
-            moveMade = False
+                            sq_selected = ()
+                            plr_clicks = []
+                        else:
+                            plr_clicks = [sq_selected]
 
-        draw_state(screen, state.board, pieces)
-        clock.tick(MAX_FPS)
-        pyg.display.flip()
+                elif e.type == pyg.KEYDOWN:
+                    if e.key == pyg.K_z:
+                        state.undo_move()
+                        moveMade = True
 
+            if moveMade:
+                valid_moves = state.FilterValidMoves()
+                moveMade = False
 
-def draw_state(screen, board, loaded_pieces):
-    draw_board(screen)
-    draw_pieces(screen, board, loaded_pieces)
+            self.draw_state(screen, state.board, pieces)
+            clock.tick(MAX_FPS)
+            pyg.display.flip()
 
+    def draw_state(self, screen, board, loaded_pieces):
+        self.draw_board(screen)
+        self.draw_pieces(screen, board, loaded_pieces)
 
-def draw_board(screen):
-    colors = [WHITE, GREY]
-    for r in range(DIMENSION):
-        for c in range(DIMENSION):
-            color = colors[((r+c) % 2)]
-            pyg.draw.rect(screen, color, pyg.Rect(c*SIZE, r*SIZE, SIZE, SIZE))
-
-
-def draw_pieces(screen, board, loaded_pieces):
-    for r in range(DIMENSION):
-        for c in range(DIMENSION):
-            piece = board[r, c]
-            if piece != '--':
-                screen.blit(loaded_pieces[piece], pyg.Rect(
+    def draw_board(self, screen):
+        colors = [WHITE, GREY]
+        for r in range(DIMENSION):
+            for c in range(DIMENSION):
+                color = colors[((r+c) % 2)]
+                pyg.draw.rect(screen, color, pyg.Rect(
                     c*SIZE, r*SIZE, SIZE, SIZE))
 
-
-if __name__ == '__main__':
-    main()
+    def draw_pieces(self, screen, board, loaded_pieces):
+        for r in range(DIMENSION):
+            for c in range(DIMENSION):
+                piece = board[r, c]
+                if piece != '--':
+                    screen.blit(loaded_pieces[piece], pyg.Rect(
+                        c*SIZE, r*SIZE, SIZE, SIZE))

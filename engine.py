@@ -13,8 +13,7 @@ class State:
                 ["--", "--", "--", "--", "--", "--", "--", "--"],
                 ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
                 ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
-            ]
-        )
+            ])
 
         self.whitesturn = True
         self.moveLog = []
