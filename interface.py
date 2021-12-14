@@ -67,6 +67,9 @@ class Interface:
 
                                 sq_selected = ()
                                 plr_clicks = []
+
+                                state.prntcastlerights()
+
                         if not moveMade:
                             plr_clicks = [sq_selected]
 

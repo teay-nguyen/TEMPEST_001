@@ -17,6 +17,9 @@ class State:
 
         self.whitesturn = True
         self.moveLog = []
+        self.currCastleRights = castlerights(True, True, True, True)
+        self.castleLog = [castlerights(self.currCastleRights.wks, self.currCastleRights.bks,
+                                       self.currCastleRights.wqs, self.currCastleRights.bqs)]
         self.whiteKingLocation = (7, 4)
         self.blackKingLocation = (0, 4)
         self.checkmate = False
@@ -31,7 +34,12 @@ class State:
             "Q": self.getQueenMoves,
         }
 
+    def prntcastlerights(self):
+        for log in self.castleLog:
+            print(log.wks, log.wqs, log.bks, log.bqs, end=', ')
+
     def make_move(self, move):
+
         self.board[move.startRow, move.startCol] = "--"
         self.board[move.endRow, move.endCol] = move.pieceMoved
         self.moveLog.append(move)
@@ -48,10 +56,25 @@ class State:
         else:
             self.epPossible = ()
 
+        if move.castlemove:
+            if move.endCol - move.startCol == 2:
+                self.board[move.endRow, move.endCol -
+                           1] = self.board[move.endRow, move.endCol+1]
+                self.board[move.endRow, move.endCol+1] = '--'
+
+            else:
+                self.board[move.endRow, move.endCol +
+                           1] = self.board[move.endRow, move.endCol-2]
+                self.board[move.endRow, move.endCol-2] = '--'
+
         if move.pieceMoved == 'wK':
             self.whiteKingLocation = (move.endRow, move.endCol)
         elif move.pieceMoved == 'bK':
             self.blackKingLocation = (move.endRow, move.endCol)
+
+        self.updatecastlerights(move)
+        self.castleLog.append(castlerights(self.currCastleRights.wks, self.currCastleRights.bks,
+                              self.currCastleRights.wqs, self.currCastleRights.bqs))
 
     def undo_move(self):
         if len(self.moveLog) > 0:
@@ -73,9 +96,57 @@ class State:
             if move.pieceMoved[1] == 'p' and abs(move.startRow-move.endRow) == 2:
                 self.epPossible = ()
 
+            self.castleLog.pop()
+            newRights = self.castleLog[-1]
+            self.currCastleRights = castlerights(
+                newRights.wks, newRights.bks, newRights.wqs, newRights.bqs)
+
+            if move.castlemove:
+                if move.endCol - move.startCol == 2:
+                    self.board[move.endRow, move.endCol +
+                               1] = self.board[move.endRow, move.endCol-1]
+                    self.board[move.endRow, move.endCol-1] = '--'
+                else:
+                    self.board[move.endRow, move.endCol -
+                               2] = self.board[move.endRow, move.endCol+1]
+                    self.board[move.endRow, move.endCol+1] = '--'
+
+    def updatecastlerights(self, move):
+
+        if move.pieceMoved == 'wK':
+            self.currCastleRights.wks = False
+            self.currCastleRights.wqs = False
+
+        elif move.pieceMoved == 'bK':
+            self.currCastleRights.bks = False
+            self.currCastleRights.bqs = False
+
+        elif move.pieceMoved == 'wR':
+            if move.startRow == 7:
+                if move.startCol == 0:
+                    self.currCastleRights.wqs = False
+                elif move.startCol == 7:
+                    self.currCastleRights.wks = False
+
+        elif move.pieceMoved == 'bR':
+            if move.startRow == 0:
+                if move.startCol == 0:
+                    self.currCastleRights.bqs = False
+                elif move.startCol == 7:
+                    self.currCastleRights.bks = False
+
     def FilterValidMoves(self):
         moves = self.getAllPossibleMoves()
         tempEpPossible = self.epPossible
+        tempcastleRights = castlerights(
+            self.currCastleRights.wks, self.currCastleRights.bks, self.currCastleRights.wqs, self.currCastleRights.bqs)
+
+        if self.whitesturn:
+            self.getCastleMoves(
+                self.whiteKingLocation[0], self.whiteKingLocation[1], moves)
+        else:
+            self.getCastleMoves(
+                self.blackKingLocation[0], self.blackKingLocation[1], moves)
 
         for i in range(len(moves)-1, -1, -1):
             self.make_move(moves[i])
@@ -96,6 +167,7 @@ class State:
             self.stalemate = False
 
         self.epPossible = tempEpPossible
+        self.currCastleRights = tempcastleRights
         return moves
 
     def inCheck(self):
@@ -258,6 +330,36 @@ class State:
                 if endPiece != allyColor:
                     moves.append(Move((r, c), (endRow, endCol), self.board))
 
+    def getCastleMoves(self, r, c, moves):
+        if self.squareUnderAttack(r, c):
+            return
+
+        if (self.whitesturn and self.currCastleRights.wks) or (not self.whitesturn and self.currCastleRights.bks):
+            self.getKSCastleMoves(r, c, moves)
+        if (self.whitesturn and self.currCastleRights.wqs) or (not self.whitesturn and self.currCastleRights.bqs):
+            self.getQSCastleMoves(r, c, moves)
+
+    def getKSCastleMoves(self, r, c, moves):
+        if self.board[r][c+1] == '--' and self.board[r][c+2] == '--':
+            if not self.squareUnderAttack(r, c+1) and not self.squareUnderAttack(r, c+2):
+                moves.append(
+                    Move((r, c), (r, c+2), self.board, castlemove=True))
+
+    def getQSCastleMoves(self, r, c, moves):
+        if self.board[r, c-1] == '--' and self.board[r, c-2] == '--' and self.board[r, c-3]:
+            if not self.squareUnderAttack(r, c-1) and not self.squareUnderAttack(r, c-2):
+                moves.append(
+                    Move((r, c), (r, c-2), self.board, castlemove=True))
+
+
+class castlerights:
+    def __init__(self, wks, bks, wqs, bqs):
+
+        self.wks = wks
+        self.bks = bks
+        self.wqs = wqs
+        self.bqs = bqs
+
 
 class Move:
     ranksToRows = {"1": 7, "2": 6, "3": 5,
@@ -267,7 +369,7 @@ class Move:
                    "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     colsToFiles = {v: k for k, v in filesToCols.items()}
 
-    def __init__(self, start_sq, end_sq, board, epMove=False):
+    def __init__(self, start_sq, end_sq, board, epMove=False, castlemove=False):
         self.startRow = start_sq[0]
         self.startCol = start_sq[1]
         self.endRow = end_sq[0]
@@ -280,6 +382,8 @@ class Move:
         self.epMove = epMove
         if self.epMove:
             self.pieceCaptured = 'wp' if self.pieceMoved == 'bp' else 'bp'
+
+        self.castlemove = castlemove
 
         self.moveid = (
             self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
