@@ -37,6 +37,7 @@ class State:
     def prntcastlerights(self):
         for log in self.castleLog:
             print(log.wks, log.wqs, log.bks, log.bqs)
+        print('\n')
 
     def make_move(self, move):
 
@@ -136,6 +137,8 @@ class State:
                     self.currCastleRights.bks = False
 
     def FilterValidMoves(self):
+        self.prntcastlerights()
+
         moves = self.getAllPossibleMoves()
         tempEpPossible = self.epPossible
         tempcastleRights = castlerights(

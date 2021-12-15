@@ -2,6 +2,7 @@
 import pygame as pyg
 import os
 from engine import State, Move
+from draw_board import DrawState
 
 pyg.init()
 
@@ -10,7 +11,6 @@ WIDTH = HEIGHT = 512
 SIZE = HEIGHT//DIMENSION
 MAX_FPS = 15
 
-BLACK = pyg.Color('black')
 WHITE = pyg.Color('white')
 GREY = pyg.Color('grey')
 
@@ -79,10 +79,11 @@ class Interface:
                 valid_moves = state.FilterValidMoves()
                 moveMade = False
 
-            self.draw_state(screen, state.board, pieces)
+            DrawState(screen, state.board, pieces)
             clock.tick(MAX_FPS)
             pyg.display.flip()
 
+    '''
     def draw_state(self, screen, board, loaded_pieces):
         self.draw_board(screen)
         self.draw_pieces(screen, board, loaded_pieces)
@@ -102,3 +103,4 @@ class Interface:
                 if piece != '--':
                     screen.blit(loaded_pieces[piece], pyg.Rect(
                         c*SIZE, r*SIZE, SIZE, SIZE))
+    '''
