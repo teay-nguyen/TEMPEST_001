@@ -35,8 +35,8 @@ class State:
         }
 
     def prntcastlerights(self):
-        for log in self.castleLog:
-            print(log.wks, log.wqs, log.bks, log.bqs)
+        last_log = self.castleLog[-1]
+        print(last_log.wks, last_log.wqs, last_log.bks, last_log.bqs)
         print('\n')
 
     def make_move(self, move):
@@ -159,11 +159,15 @@ class State:
             self.whitesturn = not self.whitesturn
             self.undo_move()
 
-        if len(moves) == 0:
+        if len(moves) <= 0:
             if self.inCheck():
                 self.checkmate = True
+                print('Checkmate!')
+                quit()
             else:
                 self.stalemate = True
+                print('Stalemate!')
+                quit()
 
         else:
             self.checkmate = False
@@ -330,7 +334,7 @@ class State:
 
             if 0 <= endRow < 8 and 0 <= endCol < 8:
                 endPiece = self.board[endRow, endCol]
-                if endPiece != allyColor:
+                if endPiece[0] != allyColor:
                     moves.append(Move((r, c), (endRow, endCol), self.board))
 
     def getCastleMoves(self, r, c, moves):
@@ -349,7 +353,7 @@ class State:
                     Move((r, c), (r, c+2), self.board, castlemove=True))
 
     def getQSCastleMoves(self, r, c, moves):
-        if self.board[r, c-1] == '--' and self.board[r, c-2] == '--' and self.board[r, c-3]:
+        if self.board[r, c-1] == '--' and self.board[r, c-2] == '--' and self.board[r, c-3] == '--':
             if not self.squareUnderAttack(r, c-1) and not self.squareUnderAttack(r, c-2):
                 moves.append(
                     Move((r, c), (r, c-2), self.board, castlemove=True))
