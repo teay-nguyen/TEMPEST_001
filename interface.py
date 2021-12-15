@@ -123,7 +123,9 @@ class Interface:
 
             if not human_turn:
                 AI = ChessAi()
-                AIMove = AI.rand_move_ai(valid_moves)
+                AIMove = AI.minmax_ai(state, valid_moves)
+                if AIMove is None:
+                    AIMove = AI.rand_move_ai(valid_moves)
                 state.make_move(AIMove)
                 moveMade = True
                 animate = True
