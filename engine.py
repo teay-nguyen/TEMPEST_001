@@ -36,11 +36,9 @@ class State:
 
     def prntcastlerights(self):
         for log in self.castleLog:
-            print(log.wks, log.wqs, log.bks, log.bqs, end=', ')
+            print(log.wks, log.wqs, log.bks, log.bqs)
 
     def make_move(self, move):
-
-        self.prntcastlerights()
 
         self.board[move.startRow, move.startCol] = "--"
         self.board[move.endRow, move.endCol] = move.pieceMoved
