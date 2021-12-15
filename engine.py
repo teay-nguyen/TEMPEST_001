@@ -40,6 +40,8 @@ class State:
 
     def make_move(self, move):
 
+        self.prntcastlerights()
+
         self.board[move.startRow, move.startCol] = "--"
         self.board[move.endRow, move.endCol] = move.pieceMoved
         self.moveLog.append(move)

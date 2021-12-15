@@ -59,7 +59,6 @@ class Interface:
 
                     if len(plr_clicks) == 2:
                         move = Move(plr_clicks[0], plr_clicks[1], state.board)
-                        print(move.getChessNotation())
                         for i in range(len(valid_moves)):
                             if move == valid_moves[i]:
                                 state.make_move(valid_moves[i])
@@ -67,8 +66,6 @@ class Interface:
 
                                 sq_selected = ()
                                 plr_clicks = []
-
-                                state.prntcastlerights()
 
                         if not moveMade:
                             plr_clicks = [sq_selected]
