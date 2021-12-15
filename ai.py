@@ -8,6 +8,7 @@ class ChessAi:
 
     def rand_move_ai(self, valid_moves):
         return valid_moves[random.randint(0, len(valid_moves)-1)]
+        # return random.choice(valid_moves)
 
     def best_move_ai(self, valid_moves):
         pass

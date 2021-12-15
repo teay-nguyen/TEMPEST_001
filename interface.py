@@ -4,6 +4,7 @@ import os
 from engine import State, Move
 from draw_board import DrawState, animatemove
 from ai import ChessAi
+
 pyg.init()
 
 DIMENSION = 8
@@ -49,13 +50,35 @@ class Interface:
 
         screen.fill(WHITE)
 
-        plr1 = True
-        plr2 = True
+        plrChoice1 = None
+        plrChoice2 = None
+
+        Options = [
+            'True',
+            'False',
+        ]
+
+        while not plrChoice1 in Options:
+            try:
+                plrChoice1 = input('1. HUMAN OR AI: True or False --> ')
+            except Exception:
+                print('NOT A VALID INPUT')
+
+        while not plrChoice2 in Options:
+            try:
+                plrChoice2 = input('2. HUMAN OR AI: True or False --> ')
+            except Exception:
+                print('NOT A VALID INPUT')
+
+        plr1 = eval(plrChoice1)
+        plr2 = eval(plrChoice2)
+
+        humanPlr = human_plr(plr1, plr2)
 
         while running:
-            human_turn = (state.whitesturn and plr1) or (
-                not state.whitesturn and plr2)
-            
+            human_turn = (state.whitesturn and humanPlr.plr1) or (
+                not state.whitesturn and humanPlr.plr2)
+
             for e in pyg.event.get():
                 if e.type == pyg.QUIT:
                     running = False
@@ -72,7 +95,8 @@ class Interface:
                             plr_clicks.append(sq_selected)
 
                         if len(plr_clicks) == 2:
-                            move = Move(plr_clicks[0], plr_clicks[1], state.board)
+                            move = Move(plr_clicks[0],
+                                        plr_clicks[1], state.board)
                             for i in range(len(valid_moves)):
                                 if move == valid_moves[i]:
                                     state.make_move(valid_moves[i])

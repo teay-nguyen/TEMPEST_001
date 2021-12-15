@@ -39,6 +39,13 @@ class State:
         print(last_log.wks, last_log.wqs, last_log.bks, last_log.bqs)
         print('\n')
 
+    def prntboard(self):
+        print(self.board, '\n')
+
+    def prnt_status(self):
+        print(self.whiteKingLocation)
+        print(self.blackKingLocation)
+
     def make_move(self, move):
 
         self.board[move.startRow, move.startCol] = "--"
@@ -137,19 +144,14 @@ class State:
                     self.currCastleRights.bks = False
 
     def FilterValidMoves(self):
-        self.prntcastlerights()
+
+        self.prntboard()
+        self.prnt_status()
 
         moves = self.getAllPossibleMoves()
         tempEpPossible = self.epPossible
         tempcastleRights = castlerights(
             self.currCastleRights.wks, self.currCastleRights.bks, self.currCastleRights.wqs, self.currCastleRights.bqs)
-
-        if self.whitesturn:
-            self.getCastleMoves(
-                self.whiteKingLocation[0], self.whiteKingLocation[1], moves)
-        else:
-            self.getCastleMoves(
-                self.blackKingLocation[0], self.blackKingLocation[1], moves)
 
         for i in range(len(moves)-1, -1, -1):
             self.make_move(moves[i])
@@ -159,19 +161,20 @@ class State:
             self.whitesturn = not self.whitesturn
             self.undo_move()
 
-        if len(moves) <= 0:
+        if len(moves) == 0:
             if self.inCheck():
                 self.checkmate = True
                 print('Checkmate!')
-                quit()
             else:
                 self.stalemate = True
                 print('Stalemate!')
-                quit()
 
+        if self.whitesturn:
+            self.getCastleMoves(
+                self.whiteKingLocation[0], self.whiteKingLocation[1], moves)
         else:
-            self.checkmate = False
-            self.stalemate = False
+            self.getCastleMoves(
+                self.blackKingLocation[0], self.blackKingLocation[1], moves)
 
         self.epPossible = tempEpPossible
         self.currCastleRights = tempcastleRights
@@ -317,14 +320,14 @@ class State:
 
     def getKingMoves(self, r, c, moves):
         directions = (
-            (-1, 1),
             (-1, 0),
             (-1, 1),
-            (0, -1),
-            (0, 1),
-            (1, -1),
+            (-1, -1),
             (1, 0),
+            (1, -1),
             (1, 1),
+            (0, 1),
+            (0, -1),
         )
         allyColor = "w" if self.whitesturn else "b"
 
