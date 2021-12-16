@@ -1,10 +1,9 @@
-
+import numpy as np
 import random
 
-piece_val = {'K': 0, 'Q': 10, 'R': 5, 'B': 3, 'N': 3, 'p': 1}
-CHECKMATE = 100000
+CHECKMATE = 1000
 STALEMATE = 0
-DEPTH = 2
+DEPTH = 4
 
 
 class ChessAi:
@@ -12,10 +11,10 @@ class ChessAi:
         pass
 
     def rand_move_ai(self, valid_moves):
-        return valid_moves[random.randint(0, len(valid_moves)-1)]
-        # return random.choice(valid_moves)
+        return (random.choice(valid_moves))
 
-    def best_move_ai(self, state, valid_moves):
+    '''
+    def greedy_alg_norec(self, state, valid_moves):
         turn_mult = 1 if state.whitesturn else -1
 
         opp_minmax_score = CHECKMATE
@@ -51,48 +50,137 @@ class ChessAi:
             state.undo_move()
 
         return best_plr_move
+    '''
 
-    def minmax_ai(self, state, valid_moves):
-        global next_move
+    def minmax_ai(self, state, valid_moves, returnQueue):
+        global next_move,count
 
         next_move = None
-        self.minmax(state, valid_moves, DEPTH, state.whitesturn)
+        count = 0
+        random.shuffle(valid_moves)
+        self.neg_ap(state, DEPTH, CHECKMATE, -CHECKMATE,
+                                        valid_moves, 1 if state.whitesturn else -1, count)
 
-        return next_move
+        print(next_move, count)
+        returnQueue.put(next_move)
 
-    def minmax(self, state, valid_moves, depth, whitesturn):
-        global next_move
+    # def minmax(self, state, valid_moves, depth, whitesturn):
+    #     global next_move
+    #     if depth == 0:
+    #         return self.evaluate(state.board)
+
+    #     if whitesturn:
+    #         maxScore = -CHECKMATE
+    #         for move in valid_moves:
+    #             state.make_move(move)
+    #             next_moves = state.FilterValidMoves()
+    #             score = self.minmax(state, next_moves, depth-1, False)
+    #             if score > maxScore:
+    #                 maxScore = score
+    #                 if depth == DEPTH:
+    #                     next_move = move
+
+    #             state.undo_move()
+
+    #         return maxScore
+    #     else:
+    #         minScore = CHECKMATE
+    #         for move in valid_moves:
+    #             state.make_move(move)
+    #             next_moves = state.FilterValidMoves()
+    #             score = self.minmax(state, next_moves, depth-1, True)
+    #             if score < minScore:
+    #                 minScore = score
+    #                 if depth == DEPTH:
+    #                     next_move = move
+
+    #             state.undo_move()
+
+    #         return minScore
+
+    '''
+    def negamax(self, state, valid_moves, depth, turn_mult):
+        global next_move, count
+
+        count += 1
+        random.shuffle(valid_moves)
         if depth == 0:
-            return self.evaluate(state.board)
+            return turn_mult*self.scoreboard(state)
 
-        if whitesturn:
-            maxScore = -CHECKMATE
-            for move in valid_moves:
-                state.make_move(move)
-                next_moves = state.FilterValidMoves()
-                score = self.minmax(state, valid_moves, depth-1, False)
-                if score > maxScore:
-                    maxScore = score
-                    if depth == DEPTH:
-                        next_move = move
+        maxScore = -CHECKMATE
+        for move in valid_moves:
+            state.make_move(move)
 
-                state.undo_move()
+            next_moves = state.FilterValidMoves()
+            score = -self.negamax(state, next_moves, depth-1, -turn_mult)
 
-            return maxScore
-        else:
-            minScore = CHECKMATE
-            for move in valid_moves:
-                state.make_move(move)
-                next_moves = state.FilterValidMoves()
-                score = self.minmax(state, valid_moves, depth-1, True)
-                if score < minScore:
-                    minScore = score
-                    if depth == DEPTH:
-                        next_move = move
+            if score > maxScore:
+                maxScore = score
+                if depth == DEPTH:
+                    next_move = move
 
-                state.undo_move()
+            state.undo_move()
 
-            return minScore
+        return maxScore
+    '''
+
+    def neg_ap(self, state, depth, beta, alpha, validMoves, turnmultiplier, count):
+        random.shuffle(validMoves)
+        global piece_vals
+        piece_vals = {
+            'K': 0,
+            'Q': 10,
+            'R': 5,
+            'B': 3,
+            'N': 3,
+            'p': 1,
+        }
+
+        global next_move
+        count += 1
+
+        if depth == 0:
+            return turnmultiplier * self.scoreboard(state)
+
+        max_score = -CHECKMATE
+        for move in validMoves:
+            state.make_move(move)
+            next_moves = state.FilterValidMoves()
+            score = -self.neg_ap(state, depth-1, -beta,-alpha, next_moves, -turnmultiplier, count)
+            if score > max_score:
+                max_score = score
+                if depth == DEPTH:
+                    next_move = move
+            state.undo_move()
+            if max_score > alpha:
+                alpha = max_score
+            if alpha >= beta:
+                break
+
+        return max_score
+
+    '''
+    def ap_proto(self, state, moveList, depth, alpha, beta):
+        global next_move, count
+
+        count += 1
+        if depth == 0:
+            return self.scoreboard(state)
+
+        for move in moveList:
+            state.make_move(move)
+            val = -self.ap_proto(state, state.FilterValidMoves(),
+                                 depth-1, -alpha, -beta)
+            state.undo_move()
+            if val >= beta:
+                return beta
+
+            elif val > alpha:
+                alpha = val
+                next_move = move
+
+        return alpha
+    '''
 
     def scoreboard(self, state):
         if state.checkmate:
@@ -104,15 +192,17 @@ class ChessAi:
             return STALEMATE
 
         score = 0
-        for row in state.board:
-            for square in row:
+        for row in range(len(state.board)):
+            for col in range(len(state.board[row])):
+                square = state.board[row, col]
                 if square[0] == 'w':
-                    score += piece_val[square[1]]
+                    score += piece_vals[square[1]]
                 elif square[0] == 'b':
-                    score -= piece_val[square[1]]
+                    score -= piece_vals[square[1]]
 
         return score
 
+    '''
     def evaluate(self, board):
         score = 0
         for row in board:
@@ -123,3 +213,5 @@ class ChessAi:
                     score -= piece_val[square[1]]
 
         return score
+
+    '''

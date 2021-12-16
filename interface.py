@@ -4,11 +4,14 @@ import os
 from engine import State, Move
 from draw_board import DrawState, animatemove
 from ai import ChessAi
+from multiprocessing import Process, Queue
 
 pyg.init()
 
+WIDTH = HEIGHT = 800
+PANEL_WIDTH = 250
+PANEL_HEIGHT = HEIGHT
 DIMENSION = 8
-WIDTH = HEIGHT = 512
 SIZE = HEIGHT//DIMENSION
 MAX_FPS = 15
 
@@ -37,7 +40,7 @@ class Interface:
         return PIECES
 
     def app_main_exec(self):
-        screen = pyg.display.set_mode((WIDTH, HEIGHT))
+        screen = pyg.display.set_mode((WIDTH+PANEL_WIDTH, HEIGHT))
         clock = pyg.time.Clock()
         state = State()
         pieces = self.get_pieces()
@@ -52,6 +55,8 @@ class Interface:
 
         plrChoice1 = None
         plrChoice2 = None
+        AIThinking = False
+        movefinderprocess = None
 
         Options = [
             'True',
@@ -87,27 +92,28 @@ class Interface:
                         location = pyg.mouse.get_pos()
                         col = location[0]//SIZE
                         row = location[1]//SIZE
-                        if sq_selected == (row, col):
-                            sq_selected = ()
-                            plr_clicks = []
-                        else:
-                            sq_selected = (row, col)
-                            plr_clicks.append(sq_selected)
+                        if not col > 7:
+                            if sq_selected == (row, col):
+                                sq_selected = ()
+                                plr_clicks = []
+                            else:
+                                sq_selected = (row, col)
+                                plr_clicks.append(sq_selected)
 
-                        if len(plr_clicks) == 2:
-                            move = Move(plr_clicks[0],
-                                        plr_clicks[1], state.board)
-                            for i in range(len(valid_moves)):
-                                if move == valid_moves[i]:
-                                    state.make_move(valid_moves[i])
-                                    moveMade = True
-                                    animate = True
+                            if len(plr_clicks) == 2:
+                                move = Move(plr_clicks[0],
+                                            plr_clicks[1], state.board)
+                                for i in range(len(valid_moves)):
+                                    if move == valid_moves[i]:
+                                        state.make_move(valid_moves[i])
+                                        moveMade = True
+                                        animate = True
 
-                                    sq_selected = ()
-                                    plr_clicks = []
+                                        sq_selected = ()
+                                        plr_clicks = []
 
-                            if not moveMade:
-                                plr_clicks = [sq_selected]
+                                if not moveMade:
+                                    plr_clicks = [sq_selected]
 
                 elif e.type == pyg.KEYDOWN:
                     if e.key == pyg.K_z:
@@ -122,13 +128,25 @@ class Interface:
                         animate = False
 
             if not human_turn:
-                AI = ChessAi()
-                AIMove = AI.minmax_ai(state, valid_moves)
-                if AIMove is None:
-                    AIMove = AI.rand_move_ai(valid_moves)
-                state.make_move(AIMove)
-                moveMade = True
-                animate = True
+                if not AIThinking:
+                    AIThinking = True
+                    AI = ChessAi()
+                    print('THINKING...')
+
+                    returnQueue = Queue()
+                    movefinderprocess = Process(
+                        target=AI.minmax_ai, args=(state, valid_moves, returnQueue))
+                    movefinderprocess.start()
+
+                if not movefinderprocess.is_alive():
+                    print('FINISHED THINKING...')
+                    AIMove = returnQueue.get()
+                    if AIMove is None:
+                        AIMove = AI.rand_move_ai(valid_moves)
+                    state.make_move(AIMove)
+                    moveMade = True
+                    animate = True
+                    AIThinking = False
 
             if moveMade:
                 if animate:

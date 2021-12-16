@@ -15,6 +15,19 @@ class State:
                 ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
             ])
 
+        '''
+        self.board = np.array(
+            [
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "bp", "--", "wp", "--", "--", "--", "bp"],
+                ["--", "--", "bp", "--", "--", "bK", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "wB", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["wp", "wp", "wp", "--", "wN", "bN", "wp", "wp"],
+                ["wR", "wN", "wB", "wQ", "wK", "--", "--", "wR"],
+            ])
+        '''
         self.whitesturn = True
         self.moveLog = []
         self.currCastleRights = castlerights(True, True, True, True)
@@ -25,6 +38,8 @@ class State:
         self.checkmate = False
         self.stalemate = False
         self.epPossible = ()
+        self.epLog = [self.epPossible]
+        self.game_over = False
         self.moveFuncs = {
             "p": self.getPawnMoves,
             "R": self.getRookMoves,
@@ -33,6 +48,21 @@ class State:
             "B": self.getBishopMoves,
             "Q": self.getQueenMoves,
         }
+
+    def moveGenerationTest(self, depth):
+        if depth == 0:
+            return 1
+
+        moves = self.FilterValidMoves()
+        num_positions = 0
+
+        for move in moves:
+            self.make_move(move)
+            num_positions += self.moveGenerationTest(depth-1)
+            print(move.getChessNotation(False))
+            self.undo_move()
+
+        return num_positions
 
     def prntcastlerights(self):
         last_log = self.castleLog[-1]
@@ -80,6 +110,8 @@ class State:
         elif move.pieceMoved == 'bK':
             self.blackKingLocation = (move.endRow, move.endCol)
 
+        self.epLog.append(self.epPossible)
+
         self.updatecastlerights(move)
         self.castleLog.append(castlerights(self.currCastleRights.wks, self.currCastleRights.bks,
                               self.currCastleRights.wqs, self.currCastleRights.bqs))
@@ -99,10 +131,9 @@ class State:
             if move.epMove:
                 self.board[move.endRow, move.endCol] = '--'
                 self.board[move.startRow, move.endCol] = move.pieceCaptured
-                self.epPossible = (move.endRow, move.endCol)
 
-            if move.pieceMoved[1] == 'p' and abs(move.startRow-move.endRow) == 2:
-                self.epPossible = ()
+            self.epLog.pop()
+            self.epPossible = self.epLog[-1]
 
             self.castleLog.pop()
             newRights = self.castleLog[-1]
@@ -146,10 +177,20 @@ class State:
                 elif move.startCol == 7:
                     self.currCastleRights.bks = False
 
-    def FilterValidMoves(self):
+        if move.pieceCaptured == 'wR':
+            if move.endRow == 7:
+                if move.endCol == 0:
+                    self.currCastleRights.wqs = False
+                elif move.endCol == 7:
+                    self.currCastleRights.wks = False
+        elif move.pieceCaptured == 'bR':
+            if move.endRow == 0:
+                if move.endCol == 0:
+                    self.currCastleRights.bqs = False
+                elif move.endCol == 7:
+                    self.currCastleRights.bks = False
 
-        self.prntboard()
-        self.prnt_status()
+    def FilterValidMoves(self):
 
         moves = self.getAllPossibleMoves()
         tempEpPossible = self.epPossible
@@ -171,6 +212,8 @@ class State:
             else:
                 self.stalemate = True
                 print('Stalemate!')
+            self.game_over = True
+            print(self.board)
 
         if self.whitesturn:
             self.getCastleMoves(
@@ -353,16 +396,16 @@ class State:
             self.getQSCastleMoves(r, c, moves)
 
     def getKSCastleMoves(self, r, c, moves):
-        if self.board[r][c+1] == '--' and self.board[r][c+2] == '--':
-            if not self.squareUnderAttack(r, c+1) and not self.squareUnderAttack(r, c+2):
-                moves.append(
-                    Move((r, c), (r, c+2), self.board, castlemove=True))
+        if self.board[r][c+1] == '--' and self.board[r][c+2] == '--' and \
+                not self.squareUnderAttack(r, c+1) and not self.squareUnderAttack(r, c+2):
+            moves.append(
+                Move((r, c), (r, c+2), self.board, castlemove=True))
 
     def getQSCastleMoves(self, r, c, moves):
-        if self.board[r, c-1] == '--' and self.board[r, c-2] == '--' and self.board[r, c-3] == '--':
-            if not self.squareUnderAttack(r, c-1) and not self.squareUnderAttack(r, c-2):
-                moves.append(
-                    Move((r, c), (r, c-2), self.board, castlemove=True))
+        if self.board[r, c-1] == '--' and self.board[r, c-2] == '--' and self.board[r, c-3] == '--' and \
+                not self.squareUnderAttack(r, c-1) and not self.squareUnderAttack(r, c-2):
+            moves.append(
+                Move((r, c), (r, c-2), self.board, castlemove=True))
 
 
 class castlerights:
@@ -395,6 +438,7 @@ class Move:
         self.epMove = epMove
         if self.epMove:
             self.pieceCaptured = 'wp' if self.pieceMoved == 'bp' else 'bp'
+        self.isCapture = self.pieceCaptured != '--'
 
         self.castlemove = castlemove
 
@@ -407,10 +451,30 @@ class Move:
             return self.moveid == other.moveid
         return False
 
-    def getChessNotation(self):
-        return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(
-            self.endRow, self.endCol
-        )
+    def getChessNotation(self, raw):
+        if raw:
+            return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(
+                self.endRow, self.endCol
+            )
+        else:
+            return (self.pieceMoved[1] + self.getRankFile(self.endRow, self.endCol)) if self.pieceMoved[1] != 'p' else (self.getRankFile(self.endRow, self.endCol))
 
     def getRankFile(self, r, c):
         return self.colsToFiles[c] + self.rowsToRanks[r]
+
+    def __str__(self):
+        if self.castlemove:
+            return 'O-O' if self.endCol == 6 else 'O-O-O'
+
+        endSquare = self.getRankFile(self.endRow, self.endCol)
+        if self.pieceMoved[1] == 'p':
+            if self.isCapture:
+                return self.colsToFiles[self.startCol] + 'x' + endSquare
+            else:
+                return endSquare
+
+        mstring = self.pieceMoved[1]
+        if self.isCapture:
+            mstring += 'x'
+
+        return mstring + endSquare
