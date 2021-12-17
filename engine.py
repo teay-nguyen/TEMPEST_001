@@ -18,16 +18,17 @@ class State:
         '''
         self.board = np.array(
             [
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["--", "bp", "--", "wp", "--", "--", "--", "bp"],
-                ["--", "--", "bp", "--", "--", "bK", "--", "--"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["--", "--", "wB", "--", "--", "--", "--", "--"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["wp", "wp", "wp", "--", "wN", "bN", "wp", "wp"],
-                ["wR", "wN", "wB", "wQ", "wK", "--", "--", "wR"],
+                ['--' '--' '--' '--' '--' '--' '--' '--'],
+                ['--' 'bp' '--' 'wp' '--' '--' '--' 'bp'],
+                ['--' '--' 'bp' '--' '--' 'bK' '--' '--'],
+                ['--' '--' '--' '--' '--' '--' 'wQ' '--'],
+                ['--' '--' 'wB' '--' '--' '--' 'bN' '--'],
+                ['--' 'wp' '--' '--' '--' '--' '--' '--'],
+                ['wp' 'wB' 'wp' '--' 'wN' '--' 'wp' 'wp'],
+                ['wR' 'wN' '--' '--' 'wK' '--' '--' 'wR'],
             ])
         '''
+        
         self.whitesturn = True
         self.moveLog = []
         self.currCastleRights = castlerights(True, True, True, True)
@@ -59,10 +60,17 @@ class State:
         for move in moves:
             self.make_move(move)
             num_positions += self.moveGenerationTest(depth-1)
-            print(move.getChessNotation(False))
+            print(move)
+            print(self.board)
             self.undo_move()
 
         return num_positions
+
+    def fenToPos(self,fen):
+        start_row = 0
+        start_col = 0
+
+        pass
 
     def prntcastlerights(self):
         last_log = self.castleLog[-1]
@@ -94,16 +102,18 @@ class State:
         else:
             self.epPossible = ()
 
-        if move.castlemove:
-            if move.endCol - move.startCol == 2:
-                self.board[move.endRow, move.endCol -
-                           1] = self.board[move.endRow, move.endCol+1]
-                self.board[move.endRow, move.endCol+1] = '--'
-
-            else:
-                self.board[move.endRow, move.endCol +
-                           1] = self.board[move.endRow, move.endCol-2]
-                self.board[move.endRow, move.endCol-2] = '--'
+        if move.castlemove and move.pieceMoved[1] == 'K':
+            try:
+                if move.endCol - move.startCol == 2:
+                    self.board[move.endRow, move.endCol-1] = self.board[move.endRow, move.endCol+1]
+                    self.board[move.endRow, move.endCol+1] = '--'
+                else:
+                    self.board[move.endRow, move.endCol +1] = self.board[move.endRow, move.endCol-2]
+                    self.board[move.endRow, move.endCol-2] = '--'
+            except Exception as e:
+                print(f'{move} is the cause of the error: {e}')
+            finally:
+                pass
 
         if move.pieceMoved == 'wK':
             self.whiteKingLocation = (move.endRow, move.endCol)
@@ -141,14 +151,17 @@ class State:
                 newRights.wks, newRights.bks, newRights.wqs, newRights.bqs)
 
             if move.castlemove:
-                if move.endCol - move.startCol == 2:
-                    self.board[move.endRow, move.endCol +
-                               1] = self.board[move.endRow, move.endCol-1]
-                    self.board[move.endRow, move.endCol-1] = '--'
-                else:
-                    self.board[move.endRow, move.endCol -
-                               2] = self.board[move.endRow, move.endCol+1]
-                    self.board[move.endRow, move.endCol+1] = '--'
+                try:
+                    if move.endCol - move.startCol == 2:
+                        self.board[move.endRow, move.endCol + 1] = self.board[move.endRow, move.endCol-1]
+                        self.board[move.endRow, move.endCol - 1] = '--'
+                    else:
+                        self.board[move.endRow, move.endCol - 2] = self.board[move.endRow, move.endCol+1]
+                        self.board[move.endRow, move.endCol + 1] = '--'
+                except Exception as e:
+                    print(f'{move} is the cause of the error: {e}')
+                finally:
+                    pass
 
         self.checkmate = False
         self.stalemate = False
