@@ -3,39 +3,17 @@ import numpy as np
 
 class State:
     def __init__(self):
-        self.board = np.array(
-            [
-                ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-                ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-                ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
-            ])
-
-        '''
-        self.board = np.array(
-            [
-                ['--' '--' '--' '--' '--' '--' '--' '--'],
-                ['--' 'bp' '--' 'wp' '--' '--' '--' 'bp'],
-                ['--' '--' 'bp' '--' '--' 'bK' '--' '--'],
-                ['--' '--' '--' '--' '--' '--' 'wQ' '--'],
-                ['--' '--' 'wB' '--' '--' '--' 'bN' '--'],
-                ['--' 'wp' '--' '--' '--' '--' '--' '--'],
-                ['wp' 'wB' 'wp' '--' 'wN' '--' 'wp' 'wp'],
-                ['wR' 'wN' '--' '--' 'wK' '--' '--' 'wR'],
-            ])
-        '''
-        
-        self.whitesturn = True
-        self.moveLog = []
         self.currCastleRights = castlerights(True, True, True, True)
-        self.castleLog = [castlerights(self.currCastleRights.wks, self.currCastleRights.bks,
-                                       self.currCastleRights.wqs, self.currCastleRights.bqs)]
-        self.whiteKingLocation = (7, 4)
-        self.blackKingLocation = (0, 4)
+        (
+            self.board,
+            self.castleLog,
+            self.whitesturn,
+            self.currCastleRights,
+        ) = self.fenToPos()
+
+        self.moveLog = []
+        self.oppPawnAttackMap = []
+        self.boardLog = [self.board]
         self.checkmate = False
         self.stalemate = False
         self.epPossible = ()
@@ -59,26 +37,125 @@ class State:
 
         for move in moves:
             self.make_move(move)
-            num_positions += self.moveGenerationTest(depth-1)
+            num_positions += self.moveGenerationTest(depth - 1)
             print(move)
             print(self.board)
             self.undo_move()
 
         return num_positions
 
-    def fenToPos(self,fen):
-        start_row = 0
-        start_col = 0
+    def fenToPos(self):
+        fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"
+        self.board = np.array(
+            [
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ]
+        )
 
-        pass
+        pieceTypeFromSymbol = {
+            "K": "K",
+            "P": "P",
+            "N": "N",
+            "B": "B",
+            "Q": "Q",
+            "R": "R",
+        }
+
+        fen_board = fen.split()[0]
+        row, col = 0, 0
+
+        for symbol in fen_board:
+            if symbol == "/":
+                col = 0
+                row += 1
+            else:
+                if symbol.isdigit():
+                    col += int(symbol)
+                else:
+                    piece_color = "w" if symbol.isupper() else "b"
+                    pieceType = pieceTypeFromSymbol[symbol.upper()]
+
+                    if pieceType.lower() == "p":
+                        pieceType = pieceType.lower()
+
+                    self.board[row, col] = piece_color + pieceType
+                    if pieceType == "K":
+                        if piece_color == "w":
+                            self.whiteKingLocation = (row, col)
+                        elif piece_color == "b":
+                            self.blackKingLocation = (row, col)
+
+                    col += 1
+
+        fen_turn = fen.split()[1]
+        self.whitesturn = True if fen_turn == "w" else False
+
+        fen_castle_rights = fen.split()[2]
+        for symbol in fen_castle_rights:
+            if symbol != "-":
+                if symbol.lower() == "q":
+                    if symbol == "Q":
+                        self.currCastleRights = castlerights(
+                            self.currCastleRights.wks,
+                            self.currCastleRights.bks,
+                            True,
+                            self.currCastleRights.bqs,
+                        )
+                    elif symbol == "q":
+                        self.currCastlRights = castlerights(
+                            self.currCastleRights.wks,
+                            self.currCastleRights.bks,
+                            self.currCastleRights.wqs,
+                            True,
+                        )
+                elif symbol.lower() == "k":
+                    if symbol == "K":
+                        self.currCastleRights = castlerights(
+                            True,
+                            self.currCastleRights.bks,
+                            self.currCastleRights.wqs,
+                            self.currCastleRights.bqs,
+                        )
+                    elif symbol == "k":
+                        self.currCastleRights = castlerights(
+                            self.currCastleRights.wks,
+                            True,
+                            self.currCastleRights.wqs,
+                            self.currCastleRights.bqs,
+                        )
+            else:
+                self.currCastleRights = castlerights(False, False, False, False)
+
+        self.castleLog = [
+            castlerights(
+                self.currCastleRights.wks,
+                self.currCastleRights.bks,
+                self.currCastleRights.wqs,
+                self.currCastleRights.bqs,
+            )
+        ]
+
+        return self.board, self.castleLog, self.whitesturn, self.currCastleRights
+
+    def posToFen(self):
+        fen = ''
+
+        return fen
 
     def prntcastlerights(self):
         last_log = self.castleLog[-1]
         print(last_log.wks, last_log.wqs, last_log.bks, last_log.bqs)
-        print('\n')
+        print("\n")
 
     def prntboard(self):
-        print(self.board, '\n')
+        print(self.board, "\n")
 
     def prnt_status(self):
         print(self.whiteKingLocation)
@@ -92,39 +169,58 @@ class State:
         self.whitesturn = not self.whitesturn
 
         if move.isPawnPromotion:
-            self.board[move.endRow, move.endCol] = move.pieceMoved[0] + 'Q'
+            self.board[move.endRow, move.endCol] = move.pieceMoved[0] + "Q"
 
         if move.epMove:
-            self.board[move.startRow, move.endCol] = '--'
+            self.board[move.startRow, move.endCol] = "--"
 
-        if move.pieceMoved[1] == 'p' and abs(move.startRow-move.endRow) == 2:
-            self.epPossible = ((move.startRow+move.endRow)//2, move.startCol)
+        if move.pieceMoved[1] == "p" and abs(move.startRow - move.endRow) == 2:
+            self.epPossible = ((move.startRow + move.endRow) // 2, move.startCol)
         else:
             self.epPossible = ()
 
-        if move.castlemove and move.pieceMoved[1] == 'K':
+        if move.castlemove and move.pieceMoved[1] == "K":
             try:
                 if move.endCol - move.startCol == 2:
-                    self.board[move.endRow, move.endCol-1] = self.board[move.endRow, move.endCol+1]
-                    self.board[move.endRow, move.endCol+1] = '--'
+                    self.board[move.endRow, move.endCol - 1] = self.board[
+                        move.endRow, move.endCol + 1
+                    ]
+                    self.board[move.endRow, move.endCol + 1] = "--"
+                    if move.pieceMoved == "wK":
+                        self.whiteKingLocation = (move.endRow, move.endCol)
+                    elif move.pieceMoved == "bK":
+                        self.bkacKingLocation = (move.endRow, move.endCol)
                 else:
-                    self.board[move.endRow, move.endCol +1] = self.board[move.endRow, move.endCol-2]
-                    self.board[move.endRow, move.endCol-2] = '--'
+                    self.board[move.endRow, move.endCol + 1] = self.board[
+                        move.endRow, move.endCol - 2
+                    ]
+                    self.board[move.endRow, move.endCol - 2] = "--"
+                    if move.pieceMoved == "wK":
+                        self.whiteKingLocation = (move.endRow, move.endCol)
+                    elif move.pieceMoved == "bK":
+                        self.blackKingLocation = (move.endRow, move.endCol)
             except Exception as e:
-                print(f'{move} is the cause of the error: {e}')
+                print(f"{move} is the cause of the error: {e}")
             finally:
                 pass
 
-        if move.pieceMoved == 'wK':
+        if move.pieceMoved == "wK":
             self.whiteKingLocation = (move.endRow, move.endCol)
-        elif move.pieceMoved == 'bK':
+        elif move.pieceMoved == "bK":
             self.blackKingLocation = (move.endRow, move.endCol)
 
         self.epLog.append(self.epPossible)
+        self.boardLog.append(self.board)
 
         self.updatecastlerights(move)
-        self.castleLog.append(castlerights(self.currCastleRights.wks, self.currCastleRights.bks,
-                              self.currCastleRights.wqs, self.currCastleRights.bqs))
+        self.castleLog.append(
+            castlerights(
+                self.currCastleRights.wks,
+                self.currCastleRights.bks,
+                self.currCastleRights.wqs,
+                self.currCastleRights.bqs,
+            )
+        )
 
     def undo_move(self):
         if len(self.moveLog) > 0:
@@ -133,33 +229,40 @@ class State:
             self.board[move.endRow, move.endCol] = move.pieceCaptured
             self.whitesturn = not self.whitesturn
 
-            if move.pieceMoved == 'wK':
+            if move.pieceMoved == "wK":
                 self.whiteKingLocation = (move.startRow, move.startCol)
-            elif move.pieceMoved == 'bK':
+            elif move.pieceMoved == "bK":
                 self.blackKingLocation = (move.startRow, move.startCol)
 
             if move.epMove:
-                self.board[move.endRow, move.endCol] = '--'
+                self.board[move.endRow, move.endCol] = "--"
                 self.board[move.startRow, move.endCol] = move.pieceCaptured
 
             self.epLog.pop()
             self.epPossible = self.epLog[-1]
 
+            self.boardLog.pop()
+
             self.castleLog.pop()
             newRights = self.castleLog[-1]
             self.currCastleRights = castlerights(
-                newRights.wks, newRights.bks, newRights.wqs, newRights.bqs)
+                newRights.wks, newRights.bks, newRights.wqs, newRights.bqs
+            )
 
             if move.castlemove:
                 try:
                     if move.endCol - move.startCol == 2:
-                        self.board[move.endRow, move.endCol + 1] = self.board[move.endRow, move.endCol-1]
-                        self.board[move.endRow, move.endCol - 1] = '--'
+                        self.board[move.endRow, move.endCol + 1] = self.board[
+                            move.endRow, move.endCol - 1
+                        ]
+                        self.board[move.endRow, move.endCol - 1] = "--"
                     else:
-                        self.board[move.endRow, move.endCol - 2] = self.board[move.endRow, move.endCol+1]
-                        self.board[move.endRow, move.endCol + 1] = '--'
+                        self.board[move.endRow, move.endCol - 2] = self.board[
+                            move.endRow, move.endCol + 1
+                        ]
+                        self.board[move.endRow, move.endCol + 1] = "--"
                 except Exception as e:
-                    print(f'{move} is the cause of the error: {e}')
+                    print(f"{move} is the cause of the error: {e}")
                 finally:
                     pass
 
@@ -168,49 +271,52 @@ class State:
 
     def updatecastlerights(self, move):
 
-        if move.pieceMoved == 'wK':
+        if move.pieceMoved == "wK" or (self.whiteKingLocation != (7, 4)):
             self.currCastleRights.wks = False
             self.currCastleRights.wqs = False
 
-        elif move.pieceMoved == 'bK':
+        elif move.pieceMoved == "bK" or (self.blackKingLocation != (0, 4)):
             self.currCastleRights.bks = False
             self.currCastleRights.bqs = False
 
-        elif move.pieceMoved == 'wR':
+        elif move.pieceMoved == "wR":
             if move.startRow == 7:
                 if move.startCol == 0:
                     self.currCastleRights.wqs = False
                 elif move.startCol == 7:
                     self.currCastleRights.wks = False
 
-        elif move.pieceMoved == 'bR':
+        elif move.pieceMoved == "bR":
             if move.startRow == 0:
                 if move.startCol == 0:
                     self.currCastleRights.bqs = False
                 elif move.startCol == 7:
                     self.currCastleRights.bks = False
 
-        if move.pieceCaptured == 'wR':
+        if move.pieceCaptured == "wR":
             if move.endRow == 7:
                 if move.endCol == 0:
                     self.currCastleRights.wqs = False
                 elif move.endCol == 7:
                     self.currCastleRights.wks = False
-        elif move.pieceCaptured == 'bR':
+        elif move.pieceCaptured == "bR":
             if move.endRow == 0:
                 if move.endCol == 0:
                     self.currCastleRights.bqs = False
                 elif move.endCol == 7:
                     self.currCastleRights.bks = False
 
-    def FilterValidMoves(self):
-
+    def FilterValidMoves(self, onlyCaptures=False):
         moves = self.getAllPossibleMoves()
         tempEpPossible = self.epPossible
         tempcastleRights = castlerights(
-            self.currCastleRights.wks, self.currCastleRights.bks, self.currCastleRights.wqs, self.currCastleRights.bqs)
+            self.currCastleRights.wks,
+            self.currCastleRights.bks,
+            self.currCastleRights.wqs,
+            self.currCastleRights.bqs,
+        )
 
-        for i in range(len(moves)-1, -1, -1):
+        for i in range(len(moves) - 1, -1, -1):
             self.make_move(moves[i])
             self.whitesturn = not self.whitesturn
             if self.inCheck():
@@ -221,29 +327,41 @@ class State:
         if len(moves) == 0:
             if self.inCheck():
                 self.checkmate = True
-                print('Checkmate!')
+                print("Checkmate!")
             else:
                 self.stalemate = True
-                print('Stalemate!')
+                print("Stalemate!")
             self.game_over = True
             print(self.board)
 
         if self.whitesturn:
             self.getCastleMoves(
-                self.whiteKingLocation[0], self.whiteKingLocation[1], moves)
+                self.whiteKingLocation[0], self.whiteKingLocation[1], moves
+            )
         else:
             self.getCastleMoves(
-                self.blackKingLocation[0], self.blackKingLocation[1], moves)
+                self.blackKingLocation[0], self.blackKingLocation[1], moves
+            )
 
         self.epPossible = tempEpPossible
         self.currCastleRights = tempcastleRights
+
+        if onlyCaptures == True:
+            for i in range(len(moves) - 1, -1, -1):
+                if moves[i].pieceCaptured == "--":
+                    moves.remove(moves[i])
+
         return moves
 
     def inCheck(self):
         if self.whitesturn:
-            return self.squareUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[1])
+            return self.squareUnderAttack(
+                self.whiteKingLocation[0], self.whiteKingLocation[1]
+            )
         else:
-            return self.squareUnderAttack(self.blackKingLocation[0], self.blackKingLocation[1])
+            return self.squareUnderAttack(
+                self.blackKingLocation[0], self.blackKingLocation[1]
+            )
 
     def squareUnderAttack(self, r, c):
         self.whitesturn = not self.whitesturn
@@ -271,24 +389,37 @@ class State:
         return moves
 
     def getPawnMoves(self, r, c, moves):
+        self.oppPawnAttackMap = []
         if self.whitesturn:
             if self.board[r - 1, c] == "--":
                 moves.append(Move((r, c), (r - 1, c), self.board))
                 if r == 6 and self.board[r - 2, c] == "--":
                     moves.append(Move((r, c), (r - 2, c), self.board))
             if c - 1 >= 0:
+                endSquare = (r - 1, c - 1)
                 if self.board[r - 1, c - 1][0] == "b":
                     moves.append(Move((r, c), (r - 1, c - 1), self.board))
-                elif (r-1, c-1) == self.epPossible:
-                    moves.append(Move((r, c), (r - 1, c - 1),
-                                 self.board, epMove=True))
+                    self.oppPawnAttackMap.append(
+                        endSquare,
+                    )
+                elif (r - 1, c - 1) == self.epPossible:
+                    moves.append(Move((r, c), (r - 1, c - 1), self.board, epMove=True))
+                    self.oppPawnAttackMap.append(
+                        endSquare,
+                    )
 
             if c + 1 <= 7:
+                endSquare = (r - 1, c + 1)
                 if self.board[r - 1, c + 1][0] == "b":
                     moves.append(Move((r, c), (r - 1, c + 1), self.board))
-                elif (r-1, c+1) == self.epPossible:
-                    moves.append(
-                        Move((r, c), (r-1, c+1), self.board, epMove=True))
+                    self.oppPawnAttackMap.append(
+                        endSquare,
+                    )
+                elif (r - 1, c + 1) == self.epPossible:
+                    moves.append(Move((r, c), (r - 1, c + 1), self.board, epMove=True))
+                    self.oppPawnAttackMap.append(
+                        endSquare,
+                    )
 
         else:
             if self.board[r + 1, c] == "--":
@@ -296,17 +427,29 @@ class State:
                 if r == 1 and self.board[r + 2, c] == "--":
                     moves.append(Move((r, c), (r + 2, c), self.board))
             if c - 1 >= 0:
+                endSquare = (r + 1, c - 1)
                 if self.board[r + 1, c - 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c - 1), self.board))
-                elif (r+1, c-1) == self.epPossible:
-                    moves.append(
-                        Move((r, c), (r+1, c-1), self.board, epMove=True))
+                    self.oppPawnAttackMap.append(
+                        endSquare,
+                    )
+                elif (r + 1, c - 1) == self.epPossible:
+                    moves.append(Move((r, c), (r + 1, c - 1), self.board, epMove=True))
+                    self.oppPawnAttackMap.append(
+                        endSquare,
+                    )
             if c + 1 <= 7:
+                endSquare = (r + 1, c + 1)
                 if self.board[r + 1, c + 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c + 1), self.board))
-                elif (r+1, c+1) == self.epPossible:
-                    moves.append(
-                        Move((r, c), (r+1, c+1), self.board, epMove=True))
+                    self.oppPawnAttackMap.append(
+                        endSquare,
+                    )
+                elif (r + 1, c + 1) == self.epPossible:
+                    moves.append(Move((r, c), (r + 1, c + 1), self.board, epMove=True))
+                    self.oppPawnAttackMap.append(
+                        endSquare,
+                    )
 
     def getRookMoves(self, r, c, moves):
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1))
@@ -319,11 +462,9 @@ class State:
                 if 0 <= endRow < 8 and 0 <= endCol < 8:
                     endPiece = self.board[endRow, endCol]
                     if endPiece == "--":
-                        moves.append(
-                            Move((r, c), (endRow, endCol), self.board))
+                        moves.append(Move((r, c), (endRow, endCol), self.board))
                     elif endPiece[0] == eColor:
-                        moves.append(
-                            Move((r, c), (endRow, endCol), self.board))
+                        moves.append(Move((r, c), (endRow, endCol), self.board))
                         break
                     else:
                         break
@@ -341,11 +482,9 @@ class State:
                 if 0 <= endRow < 8 and 0 <= endCol < 8:
                     endPiece = self.board[endRow, endCol]
                     if endPiece == "--":
-                        moves.append(
-                            Move((r, c), (endRow, endCol), self.board))
+                        moves.append(Move((r, c), (endRow, endCol), self.board))
                     elif endPiece[0] == eColor:
-                        moves.append(
-                            Move((r, c), (endRow, endCol), self.board))
+                        moves.append(Move((r, c), (endRow, endCol), self.board))
                         break
                     else:
                         break
@@ -403,22 +542,33 @@ class State:
         if self.squareUnderAttack(r, c):
             return
 
-        if (self.whitesturn and self.currCastleRights.wks) or (not self.whitesturn and self.currCastleRights.bks):
+        if (self.whitesturn and self.currCastleRights.wks) or (
+            not self.whitesturn and self.currCastleRights.bks
+        ):
             self.getKSCastleMoves(r, c, moves)
-        if (self.whitesturn and self.currCastleRights.wqs) or (not self.whitesturn and self.currCastleRights.bqs):
+        if (self.whitesturn and self.currCastleRights.wqs) or (
+            not self.whitesturn and self.currCastleRights.bqs
+        ):
             self.getQSCastleMoves(r, c, moves)
 
     def getKSCastleMoves(self, r, c, moves):
-        if self.board[r][c+1] == '--' and self.board[r][c+2] == '--' and \
-                not self.squareUnderAttack(r, c+1) and not self.squareUnderAttack(r, c+2):
-            moves.append(
-                Move((r, c), (r, c+2), self.board, castlemove=True))
+        if (
+            self.board[r][c + 1] == "--"
+            and self.board[r][c + 2] == "--"
+            and not self.squareUnderAttack(r, c + 1)
+            and not self.squareUnderAttack(r, c + 2)
+        ):
+            moves.append(Move((r, c), (r, c + 2), self.board, castlemove=True))
 
     def getQSCastleMoves(self, r, c, moves):
-        if self.board[r, c-1] == '--' and self.board[r, c-2] == '--' and self.board[r, c-3] == '--' and \
-                not self.squareUnderAttack(r, c-1) and not self.squareUnderAttack(r, c-2):
-            moves.append(
-                Move((r, c), (r, c-2), self.board, castlemove=True))
+        if (
+            self.board[r, c - 1] == "--"
+            and self.board[r, c - 2] == "--"
+            and self.board[r, c - 3] == "--"
+            and not self.squareUnderAttack(r, c - 1)
+            and not self.squareUnderAttack(r, c - 2)
+        ):
+            moves.append(Move((r, c), (r, c - 2), self.board, castlemove=True))
 
 
 class castlerights:
@@ -431,11 +581,9 @@ class castlerights:
 
 
 class Move:
-    ranksToRows = {"1": 7, "2": 6, "3": 5,
-                   "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
+    ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
     rowsToRanks = {v: k for k, v in ranksToRows.items()}
-    filesToCols = {"a": 0, "b": 1, "c": 2,
-                   "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
+    filesToCols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     colsToFiles = {v: k for k, v in filesToCols.items()}
 
     def __init__(self, start_sq, end_sq, board, epMove=False, castlemove=False):
@@ -443,15 +591,18 @@ class Move:
         self.startCol = start_sq[1]
         self.endRow = end_sq[0]
         self.endCol = end_sq[1]
+        self.endSquare = end_sq
+        self.startSquare = start_sq
 
         self.pieceMoved = board[self.startRow, self.startCol]
         self.pieceCaptured = board[self.endRow, self.endCol]
-        self.isPawnPromotion = (self.pieceMoved == 'wp' and self.endRow == 0) or (
-            self.pieceMoved == 'bp' and self.endRow == 7)
+        self.isPawnPromotion = (self.pieceMoved == "wp" and self.endRow == 0) or (
+            self.pieceMoved == "bp" and self.endRow == 7
+        )
         self.epMove = epMove
         if self.epMove:
-            self.pieceCaptured = 'wp' if self.pieceMoved == 'bp' else 'bp'
-        self.isCapture = self.pieceCaptured != '--'
+            self.pieceCaptured = "wp" if self.pieceMoved == "bp" else "bp"
+        self.isCapture = self.pieceCaptured != "--"
 
         self.castlemove = castlemove
 
@@ -470,24 +621,46 @@ class Move:
                 self.endRow, self.endCol
             )
         else:
-            return (self.pieceMoved[1] + self.getRankFile(self.endRow, self.endCol)) if self.pieceMoved[1] != 'p' else (self.getRankFile(self.endRow, self.endCol))
+            if self.castlemove:
+                return "O-O" if self.endCol == 6 else "O-O-O"
+
+            endSquare = self.getRankFile(self.endRow, self.endCol)
+            if self.pieceMoved[1] == "p":
+                if self.isCapture:
+                    return self.colsToFiles[self.startCol] + "x" + endSquare
+                else:
+                    return endSquare
+
+            mstring = self.pieceMoved[1]
+            if self.isCapture:
+                mstring += "x"
+
+            return mstring + endSquare
 
     def getRankFile(self, r, c):
         return self.colsToFiles[c] + self.rowsToRanks[r]
 
     def __str__(self):
         if self.castlemove:
-            return 'O-O' if self.endCol == 6 else 'O-O-O'
+            return "O-O" if self.endCol == 6 else "O-O-O"
 
         endSquare = self.getRankFile(self.endRow, self.endCol)
-        if self.pieceMoved[1] == 'p':
+        if self.pieceMoved[1] == "p":
             if self.isCapture:
-                return self.colsToFiles[self.startCol] + 'x' + endSquare
+                return self.colsToFiles[self.startCol] + "x" + endSquare
             else:
                 return endSquare
 
         mstring = self.pieceMoved[1]
         if self.isCapture:
-            mstring += 'x'
+            mstring += "x"
 
         return mstring + endSquare
+
+
+class Test:
+    def __init__(self):
+        self.state = State()
+
+    def generationTest(self):
+        print(self.state.moveGenerationTest(2))

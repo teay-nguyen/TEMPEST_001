@@ -126,6 +126,8 @@ class Interface:
                         plr_clicks = []
                         moveMade = False
                         animate = False
+                    if e.key == pyg.K_q:
+                        running = False
 
             if not human_turn:
                 if not AIThinking:

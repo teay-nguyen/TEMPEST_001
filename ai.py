@@ -1,9 +1,11 @@
 import numpy as np
 import random
+import threading
+import time
 
-CHECKMATE = 1e6
+CHECKMATE = 1e8
 STALEMATE = 0
-DEPTH = 3
+DEPTH = 4
 
 piece_vals = {
     "K": 0,
@@ -17,12 +19,12 @@ piece_vals = {
 piece_map_visualization = {
     "K": np.array(
         [
+            [2, 3, 1, 0, 0, 1, 3, 2],
+            [2, 2, 0, 0, 0, 0, 2, 2],
             [-3, -4, -4, -5, -5, -4, -4, -3],
             [-3, -4, -4, -5, -5, -4, -4, -3],
             [-3, -4, -4, -5, -5, -4, -4, -3],
             [-3, -4, -4, -5, -5, -4, -4, -3],
-            [-2, -3, -3, -4, -4, -3, -3, -2],
-            [-1, -2, -2, -2, -2, -2, -2, -1],
             [2, 2, 0, 0, 0, 0, 2, 2],
             [2, 3, 1, 0, 0, 1, 3, 2],
         ]
@@ -33,7 +35,7 @@ piece_map_visualization = {
             [-1, 0, 0, 0, 0, 0, 0, -1],
             [-1, 0, 0.5, 0.5, 0.5, 0.5, 0, -1],
             [-0.5, 0, 0.5, 0.5, 0.5, 0.5, 0, -0.5],
-            [0, 0, 0.5, 0.5, 0.5, 0.5, 0, -0.5],
+            [-0.5, 0, 0.5, 0.5, 0.5, 0.5, 0, -0.5],
             [-1, 0.5, 0.5, 0.5, 0.5, 0.5, 0, -1],
             [-1, 0, 0.5, 0, 0, 0, 0, -1],
             [-2, -1, -1, -0.5, -0.5, -1, -1, -2],
@@ -41,14 +43,14 @@ piece_map_visualization = {
     ),
     "R": np.array(
         [
-            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 0, 0, 0],
             [0.5, 1, 1, 1, 1, 1, 1, 0.5],
             [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
             [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
             [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
             [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
-            [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
-            [0, 0, 0, 0.5, 0.5, 0, 0, 0],
+            [0.5, 1, 1, 1, 1, 1, 1, 0.5],
+            [0, 0, 0, 1, 1, 0, 0, 0],
         ]
     ),
     "B": np.array(
@@ -59,32 +61,44 @@ piece_map_visualization = {
             [-1, 0.5, 0.5, 1, 1, 0.5, 0.5, -1],
             [-1, 0, 1, 1, 1, 1, 0, -1],
             [-1, 1, 1, 1, 1, 1, 1, -1],
-            [-1, 0.5, 0, 0, 0, 0, 0.5, -1],
+            [-1, 1, 0, 0, 0, 0, 1, -1],
             [-2, -1, -1, -1, -1, -1, -1, -2],
         ]
     ),
     "N": np.array(
         [
-            [-5, -4, -3, -3, -3, -3, -4, -5],
-            [-4, -2, 0, 0, 0, 0, -2, -4],
-            [-3, 0, 1, 1.5, 1.5, 1, 0, -3],
-            [-3, 0.5, 1.5, 2, 2, 1.5, 0.5, -3],
-            [-3, 0, 1.5, 2, 2, 1.5, 0, -3],
-            [-3, 0.5, 1.5, 2, 2, 1.5, 0.5, -3],
-            [-4, -2, 0, 0.5, 0.5, 0, -2, -4],
-            [-5, -4, -3, -3, -3, -3, -4, -5],
+            [-1, -1, -1, -1, -1, -1, -1, -1],
+            [0, -2, 0, 0, 0, 0, -2, 0],
+            [0, 0, 1, 1.5, 1.5, 1, 0, 0],
+            [0, 0.5, 1.5, 2, 2, 1.5, 0.5, 0],
+            [0, 0, 1.5, 2, 2, 1.5, 0, 0],
+            [0, 0.5, 1.5, 2, 2, 1.5, 0.5, 0],
+            [0, 1, 0, 0.5, 0.5, 0, 1, 0],
+            [-1, -1, -1, -1, -1, -1, -1, -1],
         ]
     ),
-    "p": np.array(
+    "wp": np.array(
+        [
+            [7, 8, 8, 8, 8, 8, 8, 7],
+            [5, 5, 5, 5, 5, 5, 5, 5],
+            [1, 1, 2, 3, 3, 2, 1, 1],
+            [0.5, 0.5, 1, 2.5, 2.5, 1, 0.5, 0.5],
+            [0, 0, 2, 2, 2, 2, 0, 0],
+            [1, 1, 1, 0, 0, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+        ]
+    ),
+    "bp": np.array(
         [
             [0, 0, 0, 0, 0, 0, 0, 0],
-            [5, 5, 5, 5, 5, 5, 5, 5],
-            [1, 1, 2, 3, 3, 4, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 0, 0, 1, 1, 1],
+            [0, 0, 2, 2, 2, 2, 0, 0],
             [0.5, 0.5, 1, 2.5, 2.5, 1, 0.5, 0.5],
-            [0, 0, 0, 2, 2, 0, 0, 0],
-            [0.5, -0.5, -1, 0, 0, -1, -0.5, 0.5],
-            [0.5, 1, 1, -2, -2, 1, 1, 0.5],
-            [0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 2, 3, 3, 2, 1, 1],
+            [5, 5, 5, 5, 5, 5, 5, 5],
+            [7, 8, 8, 8, 8, 8, 8, 7],
         ]
     ),
 }
@@ -100,208 +114,201 @@ class ChessAi:
     def minmax_ai(self, state, valid_moves, returnQueue):
         global next_move, count
 
-        random.shuffle(valid_moves)
+        start = time.time()
+        ordered_moves = self.order_moves(
+            state, valid_moves, 1 if state.whitesturn else -1
+        )
         next_move = None
         count = 0
-        score = self.neg_ap(
+        score = self.search(
             state,
             DEPTH,
             CHECKMATE,
             -CHECKMATE,
-            valid_moves,
+            ordered_moves,
             1 if state.whitesturn else -1,
         )
 
         # self.search(state,valid_moves,DEPTH,-CHECKMATE,CHECKMATE)
-        print(next_move, count, score)
+        print("-------------------------------------------------------------------")
+        print("NEXT MOVE:", next_move, count, score)
+        print("-------------------------------------------------------------------")
+
         returnQueue.put(next_move)
+        end = time.time()
 
-    # def minmax(self, state, valid_moves, depth, whitesturn):
-    #     global next_move
-    #     if depth == 0:
-    #         return self.evaluate(state.board)
+        print("TIME AI TOOK TO GENERATE NEXT MOVE:", end - start)
 
-    #     if whitesturn:
-    #         maxScore = -CHECKMATE
-    #         for move in valid_moves:
-    #             state.make_move(move)
-    #             next_moves = state.FilterValidMoves()
-    #             score = self.minmax(state, next_moves, depth-1, False)
-    #             if score > maxScore:
-    #                 maxScore = score
-    #                 if depth == DEPTH:
-    #                     next_move = move
+    def search(self, state, depth, beta, alpha, validMoves, turnmultiplier):
 
-    #             state.undo_move()
-
-    #         return maxScore
-    #     else:
-    #         minScore = CHECKMATE
-    #         for move in valid_moves:
-    #             state.make_move(move)
-    #             next_moves = state.FilterValidMoves()
-    #             score = self.minmax(state, next_moves, depth-1, True)
-    #             if score < minScore:
-    #                 minScore = score
-    #                 if depth == DEPTH:
-    #                     next_move = move
-
-    #             state.undo_move()
-
-    #         return minScore
-
-    """
-    def negamax(self, state, valid_moves, depth, turn_mult):
         global next_move, count
-
-        count += 1
-        random.shuffle(valid_moves)
-        if depth == 0:
-            return turn_mult*self.scoreboard(state)
-
-        maxScore = -CHECKMATE
-        for move in valid_moves:
-            state.make_move(move)
-
-            next_moves = state.FilterValidMoves()
-            score = -self.negamax(state, next_moves, depth-1, -turn_mult)
-
-            if score > maxScore:
-                maxScore = score
-                if depth == DEPTH:
-                    next_move = move
-
-            state.undo_move()
-
-        return maxScore
-    """
-
-    def neg_ap(self, state, depth, beta, alpha, validMoves, turnmultiplier):
-
-        global next_move,count
-        random.shuffle(validMoves)
         count += 1
 
         if depth == 0:
-            return self.evaluate(state)
+            return self.searchAllCaptures(state, turnmultiplier, alpha, beta)
 
         max_score = -CHECKMATE
         for move in validMoves:
-            #print(f"parsing move: {move}")
             state.make_move(move)
+
             next_moves = state.FilterValidMoves()
-            score = -self.neg_ap(
-                state, depth - 1, -alpha, -beta, next_moves, -turnmultiplier
+            ordered_moves = self.order_moves(state, next_moves, turnmultiplier)
+
+            score = -self.search(
+                state, depth - 1, -alpha, -beta, ordered_moves, -turnmultiplier
             )
+
             if score > max_score:
                 max_score = score
                 if depth == DEPTH:
                     next_move = move
+                    print("parsed move:", move, score)
 
             state.undo_move()
-            alpha = max(alpha,max_score)
 
+            if max_score > alpha:
+                alpha = max_score
             if alpha >= beta:
                 break
 
         return max_score
 
-    """
-    def ap_proto(self, state, moveList, depth, alpha, beta):
-        global next_move, count
+    def order_moves(self, state, valid_moves, turnmultiplier):
+        cache = {}
+        ordered_dict = {}
+        filtered_moves = []
+        # threads = []
+        # unparsed_moves = valid_moves
 
-        count += 1
-        if depth == 0:
-            return self.scoreboard(state)
-
-        for move in moveList:
-            state.make_move(move)
-            val = -self.ap_proto(state, state.FilterValidMoves(),
-                                 depth-1, -alpha, -beta)
-            state.undo_move()
-            if val >= beta:
-                return beta
-
-            elif val > alpha:
-                alpha = val
-                next_move = move
-
-        return alpha
-    """
-
-    """
-    def search(self, state, valid_moves, depth, alpha, beta):
-        global next_move
-        if depth == 0:
-            return self.evaluate(state.board)
-
-        if state.checkmate:
-            if state.whitesturn:
-                return -CHECKMATE
-            else:
-                return CHECKMATE
-        elif state.stalemate:
-            return 0
+        # capturedPieceValueMultiplier = 1
+        # squareControlledByOpponentPawnPenalty = 3.5
 
         for move in valid_moves:
+
             state.make_move(move)
-            next_moves = state.FilterValidMoves()
-            evaluation = -self.search(state, next_moves, depth - 1, -beta, -alpha)
+            score = turnmultiplier * self.evaluate(state)
+            state.undo_move()
+
+            cache[score] = move
+
+        """
+        for i in range(3):
+            t = threading.Thread(target=self.parse_moves,args=(state,valid_moves,unparsed_moves,turnmultiplier,cache))
+            threads.append(t)
+
+        for i in range(3):
+            threads[i].start()
+
+        for i in range(3):
+            threads[i].join()
+        """
+
+        ordered_dict = dict(sorted(cache.items(), reverse=True))
+
+        for ordered_move in ordered_dict:
+            filtered_moves.append(ordered_dict[ordered_move])
+
+        return filtered_moves
+
+    """
+    def parse_moves(self,state,valid_moves,unparsed_moves,turnmultiplier,cache):
+        for move in valid_moves:
+            for umove in unparsed_moves:
+                if umove == move:
+                    unparsed_moves.remove(umove)
+
+                    state.make_move(move)
+                    score = turnmultiplier * self.evaluate(state)
+                    state.undo_move()
+
+                    cache[score] = move
+    """
+
+    # for ordered_move in ordered_dict:
+    # print("ORDERED MOVE:", ordered_move, ordered_dict[ordered_move])
+
+    def order_moves_withscore(self, state, valid_moves, turnmultiplier):
+        cache = {}
+        ordered_dict = {}
+        # capturedPieceValueMultiplier = 1
+        # squareControlledByOpponentPawnPenalty = 3.5
+        for move in valid_moves:
+            state.make_move(move)
+            score = turnmultiplier * self.evaluate(state)
+            state.undo_move()
+
+            cache[score] = move
+
+        ordered_dict = dict(sorted(cache.items(), reverse=True))
+        return ordered_dict
+
+    def evaluate(self, state):
+        blackEval = 0
+        whiteEval = 0
+        for row in range(len(state.board)):
+            for col in range(len(state.board[row])):
+                sq = state.board[row, col]
+                if sq != "--":
+                    if sq[1] == "p":
+                        if sq[0] == "w":
+                            pos_val = piece_map_visualization["wp"][row][col]
+                            whiteEval += piece_vals[sq[1]] + (pos_val * 0.1)
+                        elif sq[0] == "b":
+                            pos_val = piece_map_visualization["bp"][row][col]
+                            blackEval += piece_vals[sq[1]] + (pos_val * 0.1)
+                    else:
+                        if sq[0] == "w":
+                            pos_val = piece_map_visualization[sq[1]][row][col]
+                            whiteEval += piece_vals[sq[1]] + (pos_val * 0.1)
+                        if sq[0] == "b":
+                            pos_val = piece_map_visualization[sq[1]][row][col]
+                            blackEval += piece_vals[sq[1]] + (pos_val * 0.1)
+
+        # perspective = 1 if (state.whitesturn) else -1
+        evaluation = whiteEval - blackEval
+        # print("SCORE:", evaluation)
+        return evaluation
+
+    def searchAllCaptures(self, state, turnmultiplier, alpha, beta):
+        evaluation = turnmultiplier * self.evaluate(state)
+        if evaluation >= beta:
+            return beta
+
+        alpha = max(alpha, evaluation)
+        captureMoves = state.FilterValidMoves(onlyCaptures=True)
+        ordered_moves = self.order_moves(state, captureMoves, turnmultiplier)
+
+        for capturemove in ordered_moves:
+            state.make_move(capturemove)
+            evaluation = -self.searchAllCaptures(state, -turnmultiplier, -beta, -alpha)
             state.undo_move()
 
             if evaluation >= beta:
                 return beta
 
-            # alpha = max(alpha,evaluation)
-            if alpha < evaluation:
-                alpha = evaluation
-                next_move = move
+            alpha = max(alpha, evaluation)
 
         return alpha
-    """
 
-    def order_moves(self, state, valid_moves):
-        ordered_moves = []
-        for move in valid_moves:
-            movescoreguess = 0
-            movepiecetype = state.board[move.startRow, move.startCol]
-            capturepiecetype = state.board[move.endRow, move.endCol]
 
-            if capturepiecetype != "--":
-                movescoreguess = (
-                    piece_vals[capturepiecetype[1]] - piece_vals[movepiecetype[1]]
-                )
+class Test:
+    def __init__(self):
+        pass
 
-            if move.isPawnPromotion:
-                movescoreguess += piece_vals["Q"]
+    def testMoveOrdering(self):
+        from engine import State
 
-            state.whitesturn = not state.whitesturn
-            oppMoves = state.FilterValidMoves()
-            state.whitesturn = not state.whitesturn
+        a = ChessAi()
+        e = State()
 
-            if move in oppMoves:
-                movescoreguess -= piece_vals[movepiecetype[1]]
+        ordered_dict = a.order_moves_withscore(
+            e, e.FilterValidMoves(), 1 if e.whitesturn else -1
+        )
+        filtered_list = []
 
-            ordered_moves.append(movescoreguess)
+        for ordered_move in ordered_dict:
+            filtered_list.append(ordered_dict[ordered_move])
+            print("RAW MOVE:", ordered_move, ordered_dict[ordered_move])
 
-        return ordered_moves
-
-    def evaluate(self, state):
-        score = 0
-        for row in range(len(state.board)):
-            for col in range(len(state.board[row])):
-                sq = state.board[row, col]
-
-                if sq != "--":
-
-                    #print(f"Position value: {pos_val*.1}")
-
-                    if sq[0] == "w":
-                        pos_val = piece_map_visualization[sq[1]][row][col]
-                        score += piece_vals[sq[1]] + pos_val * 0.1
-                    if sq[0] == "b":
-                        reverse_map = np.flipud(piece_map_visualization[sq[1]])
-                        pos_val = reverse_map[row][col]
-                        score -= piece_vals[sq[1]] + pos_val * 0.1
-
-        return score
+        for move in filtered_list:
+            print("FILTERED MOVE:", move)
