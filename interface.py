@@ -137,7 +137,7 @@ class Interface:
 
                     returnQueue = Queue()
                     movefinderprocess = Process(
-                        target=AI.minmax_ai, args=(state, valid_moves, returnQueue))
+                        target=AI.minmax_ai, args=(state, returnQueue))
                     movefinderprocess.start()
 
                 if not movefinderprocess.is_alive():

@@ -1,9 +1,8 @@
-import numpy as np
 import random
-import threading
 import time
+from evaluation import Evaluate
 
-CHECKMATE = 1e8
+CHECKMATE = 10**10
 STALEMATE = 0
 DEPTH = 2
 
@@ -16,6 +15,7 @@ piece_vals = {
     "p": 1,
 }
 
+"""
 piece_map_visualization = {
     "K": np.array(
         [
@@ -102,6 +102,7 @@ piece_map_visualization = {
         ]
     ),
 }
+"""
 
 
 class ChessAi:
@@ -111,23 +112,19 @@ class ChessAi:
     def rand_move_ai(self, valid_moves):
         return random.choice(valid_moves)
 
-    def minmax_ai(self, state, valid_moves, returnQueue):
+    def minmax_ai(self, state, returnQueue):
         global next_move, count
 
         start = time.time()
-        ordered_moves = self.order_moves(state, valid_moves)
         next_move = None
         count = 0
         score = self.search(
             state,
             DEPTH,
-            CHECKMATE,
             -CHECKMATE,
-            ordered_moves,
-            1 if state.whitesturn else -1,
+            CHECKMATE,
         )
 
-        # self.search(state,valid_moves,DEPTH,-CHECKMATE,CHECKMATE)
         print("-------------------------------------------------------------------")
         print("NEXT MOVE:", next_move, count, score)
         print("-------------------------------------------------------------------")
@@ -137,38 +134,35 @@ class ChessAi:
 
         print("TIME AI TOOK TO GENERATE NEXT MOVE:", end - start)
 
-    def search(self, state, depth, beta, alpha, validMoves, turnmultiplier):
+    def search(self, state, depth, alpha, beta):
 
         global next_move, count
         count += 1
 
-        if depth == 0 or state.game_over:
+        if (depth == 0):
             return self.searchAllCaptures(state, alpha, beta)
 
-        max_score = -CHECKMATE
+        validMoves = state.FilterValidMoves()
+        if len(validMoves) == 0:
+            if state.inCheck():
+                return -CHECKMATE
+            return 0
+
         for move in validMoves:
             state.make_move(move)
-
-            next_moves = state.FilterValidMoves()
-            ordered_moves = self.order_moves(state, next_moves)
-
-            score = -self.search(
-                state, depth - 1, -alpha, -beta, ordered_moves, -turnmultiplier
-            )
-
-            if score > max_score:
-                max_score = score
-                if depth == DEPTH:
-                    next_move = move
-                    print("parsed move:", move, score)
-
+            score = -self.search(state, depth - 1, -beta, -alpha)
             state.undo_move()
 
-            alpha = max(alpha, max_score)
-            if alpha >= beta:
-                break
+            if score >= beta:
+                return beta
 
-        return max_score
+            if alpha < score:
+                alpha = score
+                if depth == DEPTH:
+                    next_move = move
+                    print("parsed move:", next_move, score)
+
+        return alpha
 
     def order_moves(self, state, valid_moves):
         cache = {}
@@ -176,9 +170,21 @@ class ChessAi:
         filtered_moves = []
 
         for move in valid_moves:
+            score = 0
+            movepiece = move.pieceMoved
+            piececapture = move.pieceCaptured
+
+            if piececapture != '--':
+                score = 10 * piece_vals[piececapture[1]] - piece_vals[movepiece[1]]
+
+            if move.isPawnPromotion:
+                score += piece_vals["Q"]
 
             state.make_move(move)
-            score = self.evaluate(state)
+            oppMoves = state.FilterValidMoves()
+            for oppMove in oppMoves:
+                if oppMove.pieceMoved[1] == 'p' and oppMove.pieceCaptured != '--':
+                    score -= piece_vals[movepiece[1]]
             state.undo_move()
 
             cache[score] = move
@@ -206,31 +212,34 @@ class ChessAi:
         return ordered_dict
 
     def evaluate(self, state):
-        blackEval = 0
-        whiteEval = 0
-        for row in range(len(state.board)):
-            for col in range(len(state.board[row])):
-                sq = state.board[row, col]
-                if sq != "--":
-                    if sq[1] == "p":
-                        if sq[0] == "w":
-                            pos_val = piece_map_visualization["wp"][row][col]
-                            whiteEval += piece_vals[sq[1]] + (pos_val * 0.1)
-                        elif sq[0] == "b":
-                            pos_val = piece_map_visualization["bp"][row][col]
-                            blackEval += piece_vals[sq[1]] + (pos_val * 0.1)
-                    else:
-                        if sq[0] == "w":
-                            pos_val = piece_map_visualization[sq[1]][row][col]
-                            whiteEval += piece_vals[sq[1]] + (pos_val * 0.1)
-                        if sq[0] == "b":
-                            pos_val = piece_map_visualization[sq[1]][row][col]
-                            blackEval += piece_vals[sq[1]] + (pos_val * 0.1)
+        evaluation = Evaluate()
+        return evaluation.evaluate(state)
 
-        perspective = 1 if (state.whitesturn) else -1
-        evaluation = whiteEval - blackEval
+        # blackEval = 0
+        # whiteEval = 0
+        # for row in range(len(state.board)):
+        #    for col in range(len(state.board[row])):
+        #        sq = state.board[row, col]
+        #        if sq != "--":
+        #            if sq[1] == "p":
+        #                if sq[0] == "w":
+        #                    pos_val = piece_map_visualization["wp"][row][col]
+        #                    whiteEval += piece_vals[sq[1]] + (pos_val * 0.1)
+        #                elif sq[0] == "b":
+        #                    pos_val = piece_map_visualization["bp"][row][col]
+        #                    blackEval += piece_vals[sq[1]] + (pos_val * 0.1)
+        #            else:
+        #                if sq[0] == "w":
+        #                    pos_val = piece_map_visualization[sq[1]][row][col]
+        #                    whiteEval += piece_vals[sq[1]] + (pos_val * 0.1)
+        #                if sq[0] == "b":
+        #                    pos_val = piece_map_visualization[sq[1]][row][col]
+        #                    blackEval += piece_vals[sq[1]] + (pos_val * 0.1)
+
+        # perspective = 1 if (state.whitesturn) else -1
+        # evaluation = whiteEval - blackEval
         # print("SCORE:", evaluation)
-        return evaluation * perspective
+        # return evaluation * perspective
 
     def searchAllCaptures(self, state, alpha, beta):
         evaluation = self.evaluate(state)
@@ -264,9 +273,7 @@ class Test:
         a = ChessAi()
         e = State()
 
-        ordered_dict = a.order_moves_withscore(
-            e, e.FilterValidMoves()
-        )
+        ordered_dict = a.order_moves_withscore(e, e.FilterValidMoves())
         filtered_list = []
 
         for ordered_move in ordered_dict:

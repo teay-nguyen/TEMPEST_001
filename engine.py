@@ -9,6 +9,7 @@ class State:
             self.castleLog,
             self.whitesturn,
             self.currCastleRights,
+            self.init_board_pieces,
         ) = self.fenToPos()
 
         self.moveLog = []
@@ -45,6 +46,7 @@ class State:
         return num_positions
 
     def fenToPos(self):
+        self.init_board_pieces = []
         fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"
         self.board = np.array(
             [
@@ -86,11 +88,19 @@ class State:
                         pieceType = pieceType.lower()
 
                     self.board[row, col] = piece_color + pieceType
+                    self.init_board_pieces.append(piece_color + pieceType)
+
                     if pieceType == "K":
                         if piece_color == "w":
                             self.whiteKingLocation = (row, col)
                         elif piece_color == "b":
                             self.blackKingLocation = (row, col)
+
+                    elif pieceType == 'R':
+                        if piece_color == 'w':
+                            pass
+                        elif piece_color == 'b':
+                            pass
 
                     col += 1
 
@@ -98,6 +108,7 @@ class State:
         self.whitesturn = True if fen_turn == "w" else False
 
         fen_castle_rights = fen.split()[2]
+
         for symbol in fen_castle_rights:
             if symbol != "-":
                 if symbol.lower() == "q":
@@ -133,6 +144,12 @@ class State:
             else:
                 self.currCastleRights = castlerights(False, False, False, False)
 
+        if fen_castle_rights == '-':
+            self.currCastleRights.wks = False
+            self.currCastleRights.bks = False
+            self.currCastleRights.wqs = False
+            self.currCastleRights.bqs = False
+
         self.castleLog = [
             castlerights(
                 self.currCastleRights.wks,
@@ -142,7 +159,9 @@ class State:
             )
         ]
 
-        return self.board, self.castleLog, self.whitesturn, self.currCastleRights
+        print(self.init_board_pieces)
+
+        return self.board, self.castleLog, self.whitesturn, self.currCastleRights, self.init_board_pieces
 
     def posToFen(self):
         fen = ''
@@ -279,27 +298,32 @@ class State:
             self.currCastleRights.bks = False
             self.currCastleRights.bqs = False
 
-        elif move.pieceMoved == "wR":
-            if move.startRow == 7:
-                if move.startCol == 0:
-                    self.currCastleRights.wqs = False
-                elif move.startCol == 7:
-                    self.currCastleRights.wks = False
+        if 'wR' in self.init_board_pieces:
+            if move.pieceMoved == "wR":
+                if move.startRow == 7:
+                    if move.startCol == 0:
+                        self.currCastleRights.wqs = False
+                    elif move.startCol == 7:
+                        self.currCastleRights.wks = False
 
-        elif move.pieceMoved == "bR":
-            if move.startRow == 0:
-                if move.startCol == 0:
-                    self.currCastleRights.bqs = False
-                elif move.startCol == 7:
-                    self.currCastleRights.bks = False
+        if 'bR' in self.init_board_pieces:
+            if move.pieceMoved == "bR":
+                if move.startRow == 0:
+                    if move.startCol == 0:
+                        self.currCastleRights.bqs = False
+                    elif move.startCol == 7:
+                        self.currCastleRights.bks = False
 
+        #if 'wR' in self.init_board_pieces:
         if move.pieceCaptured == "wR":
             if move.endRow == 7:
                 if move.endCol == 0:
                     self.currCastleRights.wqs = False
                 elif move.endCol == 7:
                     self.currCastleRights.wks = False
-        elif move.pieceCaptured == "bR":
+
+        #if 'bR' in self.init_board_pieces:
+        if move.pieceCaptured == "bR":
             if move.endRow == 0:
                 if move.endCol == 0:
                     self.currCastleRights.bqs = False
@@ -327,21 +351,22 @@ class State:
         if len(moves) == 0:
             if self.inCheck():
                 self.checkmate = True
-                print("Checkmate!")
+                print(f"Checkmate! {'WHITE' if not self.whitesturn else 'BLACK'} wins")
             else:
                 self.stalemate = True
                 print("Stalemate!")
             self.game_over = True
             print(self.board)
 
-        if self.whitesturn:
-            self.getCastleMoves(
-                self.whiteKingLocation[0], self.whiteKingLocation[1], moves
-            )
-        else:
-            self.getCastleMoves(
-                self.blackKingLocation[0], self.blackKingLocation[1], moves
-            )
+        if onlyCaptures == False:
+            if self.whitesturn:
+                self.getCastleMoves(
+                    self.whiteKingLocation[0], self.whiteKingLocation[1], moves
+                )
+            else:
+                self.getCastleMoves(
+                    self.blackKingLocation[0], self.blackKingLocation[1], moves
+                )
 
         self.epPossible = tempEpPossible
         self.currCastleRights = tempcastleRights
@@ -386,6 +411,7 @@ class State:
                 if any(criteria):
                     piece = self.board[r, c][1]
                     self.moveFuncs[piece](r, c, moves)
+
         return moves
 
     def getPawnMoves(self, r, c, moves):
@@ -546,6 +572,7 @@ class State:
             not self.whitesturn and self.currCastleRights.bks
         ):
             self.getKSCastleMoves(r, c, moves)
+
         if (self.whitesturn and self.currCastleRights.wqs) or (
             not self.whitesturn and self.currCastleRights.bqs
         ):
@@ -557,6 +584,7 @@ class State:
             and self.board[r][c + 2] == "--"
             and not self.squareUnderAttack(r, c + 1)
             and not self.squareUnderAttack(r, c + 2)
+            and not self.inCheck()
         ):
             moves.append(Move((r, c), (r, c + 2), self.board, castlemove=True))
 
@@ -567,6 +595,7 @@ class State:
             and self.board[r, c - 3] == "--"
             and not self.squareUnderAttack(r, c - 1)
             and not self.squareUnderAttack(r, c - 2)
+            and not self.inCheck()
         ):
             moves.append(Move((r, c), (r, c - 2), self.board, castlemove=True))
 

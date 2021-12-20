@@ -1,0 +1,170 @@
+import numpy as np
+
+piece_value = {
+    "K": 0,
+    "Q": 10,
+    "R": 5,
+    "B": 3,
+    "N": 3,
+    "p": 1,
+}
+
+piece_map_visualization = {
+    "K": np.array(
+        [
+            [2, 3, 1, 0, 0, 1, 3, 2],
+            [2, 2, 0, 0, 0, 0, 2, 2],
+            [-3, -4, -4, -5, -5, -4, -4, -3],
+            [-3, -4, -4, -5, -5, -4, -4, -3],
+            [-3, -4, -4, -5, -5, -4, -4, -3],
+            [-3, -4, -4, -5, -5, -4, -4, -3],
+            [2, 2, 0, 0, 0, 0, 2, 2],
+            [2, 3, 1, 0, 0, 1, 3, 2],
+        ]
+    ),
+    "Q": np.array(
+        [
+            [-2, -1, -1, -0.5, -0.5, -1, -1, -2],
+            [-1, 0, 0, 0, 0, 0, 0, -1],
+            [-1, 0, 0.5, 0.5, 0.5, 0.5, 0, -1],
+            [-0.5, 0, 0.5, 0.5, 0.5, 0.5, 0, -0.5],
+            [-0.5, 0, 0.5, 0.5, 0.5, 0.5, 0, -0.5],
+            [-1, 0.5, 0.5, 0.5, 0.5, 0.5, 0, -1],
+            [-1, 0, 0.5, 0, 0, 0, 0, -1],
+            [-2, -1, -1, -0.5, -0.5, -1, -1, -2],
+        ]
+    ),
+    "R": np.array(
+        [
+            [0, 0, 0, 1, 1, 0, 0, 0],
+            [0.5, 1, 1, 1, 1, 1, 1, 0.5],
+            [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
+            [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
+            [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
+            [-0.5, 0, 0, 0, 0, 0, 0, -0.5],
+            [0.5, 1, 1, 1, 1, 1, 1, 0.5],
+            [0, 0, 0, 1, 1, 0, 0, 0],
+        ]
+    ),
+    "B": np.array(
+        [
+            [-2, -1, -1, -1, -1, -1, -1, -2],
+            [-1, 0, 0, 0, 0, 0, 0, -1],
+            [-1, 0, 0.5, 1, 1, 0.5, 0, -1],
+            [-1, 0.5, 0.5, 1, 1, 0.5, 0.5, -1],
+            [-1, 0, 1, 1, 1, 1, 0, -1],
+            [-1, 1, 1, 1, 1, 1, 1, -1],
+            [-1, 1, 0, 0, 0, 0, 1, -1],
+            [-2, -1, -1, -1, -1, -1, -1, -2],
+        ]
+    ),
+    "N": np.array(
+        [
+            [-1, -0.5, 0, 0, 0, 0, -0.5, -1],
+            [-0.5, 0.5, 1, 1, 1, 1, 0.5, -0.5],
+            [0, 1, 1.5, 1.5, 1.5, 1.5, 1, 0],
+            [0, 0.5, 1.5, 2, 2, 1.5, 0.5, 0],
+            [0, 0.5, 1.5, 2, 2, 1.5, 0.5, 0],
+            [0, 1, 1.5, 1.5, 1.5, 1.5, 1, 0],
+            [-0.5, 0.5, 1, 1, 1, 1, 0.5, -0.5],
+            [-1, -0.5, 0, 0, 0, 0, -0.5, -1],
+        ]
+    ),
+    "wp": np.array(
+        [
+            [7, 8, 8, 8, 8, 8, 8, 7],
+            [5, 5, 5, 5, 5, 5, 5, 5],
+            [1, 1, 2, 3, 3, 2, 1, 1],
+            [0.5, 0.5, 1, 2.5, 2.5, 1, 0.5, 0.5],
+            [0, 0, 2, 3, 3, 2, 0, 0],
+            [1, 1, 1, 0, 0, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+        ]
+    ),
+    "bp": np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 0, 0, 1, 1, 1],
+            [0, 0, 2, 3, 3, 2, 0, 0],
+            [0.5, 0.5, 1, 2.5, 2.5, 1, 0.5, 0.5],
+            [1, 1, 2, 3, 3, 2, 1, 1],
+            [5, 5, 5, 5, 5, 5, 5, 5],
+            [7, 8, 8, 8, 8, 8, 8, 7],
+        ]
+    ),
+}
+
+
+class Evaluate:
+    def __init__(self):
+        pass
+
+    def countMaterial(self, state, colorIndex):
+        board = state.board
+        material = 0
+        for row in range(len(board)):
+            for col in range(len(board[row])):
+                piece = board[row][col]
+                if piece != "--":
+                    if colorIndex == "w":
+                        if piece[0] == "w":
+                            material += piece_value[piece[1]]
+                    elif colorIndex == "b":
+                        if piece[0] == "b":
+                            material += piece_value[piece[1]]
+
+        return material
+
+    def countMaterialWithoutPawns(self, state, colorIndex):
+        board = state.board
+        material = 0
+        for row in range(len(board)):
+            for col in range(len(board[row])):
+                piece = board[row][col]
+                if piece != "--" and piece[1] != "p":
+                    if colorIndex == "w":
+                        if piece[0] == "w":
+                            material += piece_value[piece[1]]
+                    elif colorIndex == "b":
+                        if piece[0] == "b":
+                            material += piece_value[piece[1]]
+
+        return material
+
+    def evaluate(self, state):
+        blackEval = 0
+        whiteEval = 0
+
+        whiteMaterial = self.countMaterial(state, "w")
+        blackMaterial = self.countMaterial(state, "b")
+
+        whiteEval += whiteMaterial
+        blackEval += blackMaterial
+
+        for row in range(len(state.board)):
+            for col in range(len(state.board[row])):
+                square = state.board[row, col]
+                if square != "--":
+                    if square[1] == "p":
+                        if square[0] == "w":
+                            pos_val = piece_map_visualization[square][row][col]
+                            whiteEval += pos_val * 0.1
+                        elif square[0] == "b":
+                            pos_val = piece_map_visualization[square][row][col]
+                            blackEval += pos_val * 0.1
+                    else:
+                        if square[0] == "w":
+                            pos_val = piece_map_visualization[square[1]][row][col]
+                            whiteEval += pos_val * 0.1
+                        elif square[0] == "b":
+                            pos_val = piece_map_visualization[square[1]][row][col]
+                            blackEval += pos_val * 0.1
+
+        #print("BLACK MATERIAL:", blackMaterial)
+        #print("WHITE MATERIAL:", whiteMaterial)
+
+        eval = whiteEval - blackEval
+        perspective = 1 if state.whitesturn else -1
+        return eval * perspective
