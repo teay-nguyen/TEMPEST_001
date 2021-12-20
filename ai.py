@@ -2,7 +2,7 @@ import random
 import time
 from evaluation import Evaluate
 
-CHECKMATE = 10**10
+CHECKMATE = 10 ** 10
 STALEMATE = 0
 DEPTH = 2
 
@@ -139,7 +139,7 @@ class ChessAi:
         global next_move, count
         count += 1
 
-        if (depth == 0):
+        if depth == 0:
             return self.searchAllCaptures(state, alpha, beta)
 
         validMoves = state.FilterValidMoves()
@@ -174,7 +174,7 @@ class ChessAi:
             movepiece = move.pieceMoved
             piececapture = move.pieceCaptured
 
-            if piececapture != '--':
+            if piececapture != "--":
                 score = 10 * piece_vals[piececapture[1]] - piece_vals[movepiece[1]]
 
             if move.isPawnPromotion:
@@ -183,7 +183,7 @@ class ChessAi:
             state.make_move(move)
             oppMoves = state.FilterValidMoves()
             for oppMove in oppMoves:
-                if oppMove.pieceMoved[1] == 'p' and oppMove.pieceCaptured != '--':
+                if oppMove.pieceMoved[1] == "p" and oppMove.pieceCaptured != "--":
                     score -= piece_vals[movepiece[1]]
             state.undo_move()
 

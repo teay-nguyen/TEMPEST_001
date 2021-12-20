@@ -1,5 +1,3 @@
-
-
 import pygame as pyg
 from highlighting import highlightSq
 
@@ -9,11 +7,14 @@ WIDTH = HEIGHT = 800
 PANEL_WIDTH = 250
 PANEL_HEIGHT = HEIGHT
 DIMENSION = 8
-SIZE = HEIGHT//DIMENSION
+SIZE = HEIGHT // DIMENSION
 
-WHITE = pyg.Color('white')
-GREY = pyg.Color('grey')
-BLACK = pyg.Color('black')
+WHITE = pyg.Color("white")
+GREY = pyg.Color("grey")
+BLACK = pyg.Color("black")
+
+YELLOW = (253, 238, 211)
+BROWN = (186, 148, 125)
 
 
 def DrawState(screen, board, loaded_pieces, validMoves, sqSelected, gs, size):
@@ -25,20 +26,21 @@ def DrawState(screen, board, loaded_pieces, validMoves, sqSelected, gs, size):
 
 def DrawBoard(screen):
     global colors
-    colors = [WHITE, GREY]
+    colors = [YELLOW, BROWN]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
-            color = colors[((r+c) % 2)]
-            pyg.draw.rect(screen, color, pyg.Rect(c*SIZE, r*SIZE, SIZE, SIZE))
+            color = colors[((r + c) % 2)]
+            pyg.draw.rect(screen, color, pyg.Rect(c * SIZE, r * SIZE, SIZE, SIZE))
 
 
 def DrawPiece(screen, board, loaded_pieces):
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             piece = board[r, c]
-            if piece != '--':
-                screen.blit(loaded_pieces[piece], pyg.Rect(
-                    c*SIZE, r*SIZE, SIZE, SIZE))
+            if piece != "--":
+                screen.blit(
+                    loaded_pieces[piece], pyg.Rect(c * SIZE, r * SIZE, SIZE, SIZE)
+                )
 
 
 def drawMoveLog(screen, state):
@@ -47,9 +49,9 @@ def drawMoveLog(screen, state):
     move_log = state.moveLog
     move_text = []
     for i in range(0, len(move_log), 2):
-        mstring = f'{i//2+1}, {move_log[i]} '
-        if i+1 < len(move_log):
-            mstring += str(move_log[i+1])
+        mstring = f"{i//2+1}, {move_log[i]} "
+        if i + 1 < len(move_log):
+            mstring += str(move_log[i + 1])
         move_text.append(mstring)
     movesPerRow = 3
     padding = 5
@@ -57,11 +59,11 @@ def drawMoveLog(screen, state):
     textY = padding
 
     for i in range(0, len(move_text), movesPerRow):
-        text = ''
+        text = ""
         for j in range(movesPerRow):
-            if i+j < len(move_text):
-                text += move_text[i+j] + ' '
-        font = pyg.font.SysFont('Arial', 15, False, False)
+            if i + j < len(move_text):
+                text += move_text[i + j] + " "
+        font = pyg.font.SysFont("Arial", 15, False, False)
         textobj = font.render(text, False, WHITE)
         textlocation = log_rect.move(padding, textY)
         screen.blit(textobj, textlocation)
@@ -71,32 +73,38 @@ def drawMoveLog(screen, state):
 def animatemove(move, screen, board, clock, size, loaded_pieces):
     global colors
 
-    dR = move.endRow-move.startRow
-    dC = move.endCol-move.startCol
+    dR = move.endRow - move.startRow
+    dC = move.endCol - move.startCol
 
     fps = 5
-    frameCount = (abs(dR)+abs(dC))*fps
+    frameCount = (abs(dR) + abs(dC)) * fps
 
-    for frame in range(frameCount+1):
-        r, c = (move.startRow+dR*frame/frameCount,
-                move.startCol+dC*frame/frameCount)
+    for frame in range(frameCount + 1):
+        r, c = (
+            move.startRow + dR * frame / frameCount,
+            move.startCol + dC * frame / frameCount,
+        )
 
         DrawBoard(screen)
         DrawPiece(screen, board, loaded_pieces)
 
-        color = colors[(move.endRow+move.endCol) % 2]
-        endSquare = pyg.Rect(move.endCol*size, move.endRow*size, size, size)
+        color = colors[(move.endRow + move.endCol) % 2]
+        endSquare = pyg.Rect(move.endCol * size, move.endRow * size, size, size)
         pyg.draw.rect(screen, color, endSquare)
 
-        if move.pieceCaptured != '--':
+        if move.pieceCaptured != "--":
             if move.epMove:
                 epRow = (
-                    move.endRow + 1) if move.pieceCaptured[0] == 'b' else move.endRow - 1
-                endSquare = pyg.Rect(move.endCol*size, epRow*size, size, size)
+                    (move.endRow + 1)
+                    if move.pieceCaptured[0] == "b"
+                    else move.endRow - 1
+                )
+                endSquare = pyg.Rect(move.endCol * size, epRow * size, size, size)
 
             screen.blit(loaded_pieces[move.pieceCaptured], endSquare)
 
-        screen.blit(loaded_pieces[move.pieceMoved],
-                    pyg.Rect(c*size, r*size, size, size))
+        screen.blit(
+            loaded_pieces[move.pieceMoved], pyg.Rect(c * size, r * size, size, size)
+        )
         pyg.display.flip()
         clock.tick(60)

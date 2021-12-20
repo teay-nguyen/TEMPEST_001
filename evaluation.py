@@ -96,10 +96,9 @@ piece_map_visualization = {
     ),
 }
 
-
 class Evaluate:
     def __init__(self):
-        pass
+        self.endgameMaterialStart = piece_value["R"] * 2 + piece_value["B"] * piece_value['N']
 
     def countMaterial(self, state, colorIndex):
         board = state.board
@@ -132,6 +131,31 @@ class Evaluate:
                             material += piece_value[piece[1]]
 
         return material
+
+    def ForceKingToCornerEndgameVal(self, friendKingSquare, oppKingSquare, endgameWeight):
+        evaluation = 0
+
+        oppKingRank = oppKingSquare[0]
+        oppKingCol = oppKingSquare[1]
+
+        oppKingDstFromCentreCol = max(3 - oppKingCol, oppKingCol - 4)
+        oppKingDstFromCentreRank = max(3 - oppKingRank, oppKingRank - 4)
+        oppKingDstFromCentre = (oppKingDstFromCentreCol + oppKingDstFromCentreRank)
+        evaluation += oppKingDstFromCentre
+
+        friendKingRank = friendKingSquare[0]
+        friendKingCol = friendKingSquare[1]
+
+        dstBetweenKingsRank = abs(friendKingRank - oppKingRank)
+        dstBetweenKingsCol = abs(friendKingCol - oppKingCol)
+        dstBetweenKings = dstBetweenKingsRank + dstBetweenKingsCol
+        evaluation += 14 - dstBetweenKings
+
+        return int(evaluation * 10 * endgameWeight)
+
+    def engamePhaseWeight(self, materialCountWithoutPawns):
+        multiplier = 1 / self.endgameMaterialStart
+        return 1 - min(1, materialCountWithoutPawns * multiplier)
 
     def evaluate(self, state):
         blackEval = 0
