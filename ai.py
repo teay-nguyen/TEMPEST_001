@@ -5,7 +5,7 @@ import time
 
 CHECKMATE = 1e8
 STALEMATE = 0
-DEPTH = 4
+DEPTH = 2
 
 piece_vals = {
     "K": 0,
@@ -115,9 +115,7 @@ class ChessAi:
         global next_move, count
 
         start = time.time()
-        ordered_moves = self.order_moves(
-            state, valid_moves, 1 if state.whitesturn else -1
-        )
+        ordered_moves = self.order_moves(state, valid_moves)
         next_move = None
         count = 0
         score = self.search(
@@ -144,15 +142,15 @@ class ChessAi:
         global next_move, count
         count += 1
 
-        if depth == 0:
-            return self.searchAllCaptures(state, turnmultiplier, alpha, beta)
+        if depth == 0 or state.game_over:
+            return self.searchAllCaptures(state, alpha, beta)
 
         max_score = -CHECKMATE
         for move in validMoves:
             state.make_move(move)
 
             next_moves = state.FilterValidMoves()
-            ordered_moves = self.order_moves(state, next_moves, turnmultiplier)
+            ordered_moves = self.order_moves(state, next_moves)
 
             score = -self.search(
                 state, depth - 1, -alpha, -beta, ordered_moves, -turnmultiplier
@@ -166,42 +164,24 @@ class ChessAi:
 
             state.undo_move()
 
-            if max_score > alpha:
-                alpha = max_score
+            alpha = max(alpha, max_score)
             if alpha >= beta:
                 break
 
         return max_score
 
-    def order_moves(self, state, valid_moves, turnmultiplier):
+    def order_moves(self, state, valid_moves):
         cache = {}
         ordered_dict = {}
         filtered_moves = []
-        # threads = []
-        # unparsed_moves = valid_moves
-
-        # capturedPieceValueMultiplier = 1
-        # squareControlledByOpponentPawnPenalty = 3.5
 
         for move in valid_moves:
 
             state.make_move(move)
-            score = turnmultiplier * self.evaluate(state)
+            score = self.evaluate(state)
             state.undo_move()
 
             cache[score] = move
-
-        """
-        for i in range(3):
-            t = threading.Thread(target=self.parse_moves,args=(state,valid_moves,unparsed_moves,turnmultiplier,cache))
-            threads.append(t)
-
-        for i in range(3):
-            threads[i].start()
-
-        for i in range(3):
-            threads[i].join()
-        """
 
         ordered_dict = dict(sorted(cache.items(), reverse=True))
 
@@ -210,36 +190,19 @@ class ChessAi:
 
         return filtered_moves
 
-    """
-    def parse_moves(self,state,valid_moves,unparsed_moves,turnmultiplier,cache):
-        for move in valid_moves:
-            for umove in unparsed_moves:
-                if umove == move:
-                    unparsed_moves.remove(umove)
-
-                    state.make_move(move)
-                    score = turnmultiplier * self.evaluate(state)
-                    state.undo_move()
-
-                    cache[score] = move
-    """
-
-    # for ordered_move in ordered_dict:
-    # print("ORDERED MOVE:", ordered_move, ordered_dict[ordered_move])
-
-    def order_moves_withscore(self, state, valid_moves, turnmultiplier):
+    def order_moves_withscore(self, state, valid_moves):
         cache = {}
         ordered_dict = {}
         # capturedPieceValueMultiplier = 1
         # squareControlledByOpponentPawnPenalty = 3.5
         for move in valid_moves:
             state.make_move(move)
-            score = turnmultiplier * self.evaluate(state)
+            score = self.evaluate(state)
             state.undo_move()
 
             cache[score] = move
 
-        ordered_dict = dict(sorted(cache.items(), reverse=True))
+        ordered_dict = dict(sorted(cache.items()))
         return ordered_dict
 
     def evaluate(self, state):
@@ -264,23 +227,23 @@ class ChessAi:
                             pos_val = piece_map_visualization[sq[1]][row][col]
                             blackEval += piece_vals[sq[1]] + (pos_val * 0.1)
 
-        # perspective = 1 if (state.whitesturn) else -1
+        perspective = 1 if (state.whitesturn) else -1
         evaluation = whiteEval - blackEval
         # print("SCORE:", evaluation)
-        return evaluation
+        return evaluation * perspective
 
-    def searchAllCaptures(self, state, turnmultiplier, alpha, beta):
-        evaluation = turnmultiplier * self.evaluate(state)
+    def searchAllCaptures(self, state, alpha, beta):
+        evaluation = self.evaluate(state)
         if evaluation >= beta:
             return beta
 
         alpha = max(alpha, evaluation)
         captureMoves = state.FilterValidMoves(onlyCaptures=True)
-        ordered_moves = self.order_moves(state, captureMoves, turnmultiplier)
+        ordered_moves = self.order_moves(state, captureMoves)
 
         for capturemove in ordered_moves:
             state.make_move(capturemove)
-            evaluation = -self.searchAllCaptures(state, -turnmultiplier, -beta, -alpha)
+            evaluation = -self.searchAllCaptures(state, -beta, -alpha)
             state.undo_move()
 
             if evaluation >= beta:
@@ -302,7 +265,7 @@ class Test:
         e = State()
 
         ordered_dict = a.order_moves_withscore(
-            e, e.FilterValidMoves(), 1 if e.whitesturn else -1
+            e, e.FilterValidMoves()
         )
         filtered_list = []
 
