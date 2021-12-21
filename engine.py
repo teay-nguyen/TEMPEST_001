@@ -1,5 +1,9 @@
 import numpy as np
 
+ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
+rowsToRanks = {v: k for k, v in ranksToRows.items()}
+filesToCols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
+colsToFiles = {v: k for k, v in filesToCols.items()}
 
 class State:
     def __init__(self):
@@ -10,6 +14,7 @@ class State:
             self.whitesturn,
             self.currCastleRights,
             self.init_board_pieces,
+            self.epPossible
         ) = self.fenToPos()
 
         self.moveLog = []
@@ -17,7 +22,6 @@ class State:
         self.boardLog = [self.board]
         self.checkmate = False
         self.stalemate = False
-        self.epPossible = ()
         self.epLog = [self.epPossible]
         self.game_over = False
         self.moveFuncs = {
@@ -33,21 +37,24 @@ class State:
         if depth == 0:
             return 1
 
-        moves = self.FilterValidMoves()
+        def sort_criteria(move):
+            return move.getChessNotation(True)
+
+        moves = self.FilterValidMoves(onlyCaptures=False)
+        notation = sorted(moves, key=sort_criteria)
         num_positions = 0
 
-        for move in moves:
+        for move in notation:
             self.make_move(move)
             num_positions += self.moveGenerationTest(depth - 1)
-            print(move)
-            print(self.board)
+            print(move.getChessNotation(True))
             self.undo_move()
 
         return num_positions
 
     def fenToPos(self):
         self.init_board_pieces = []
-        fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"
+        fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
         self.board = np.array(
             [
                 ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -96,10 +103,10 @@ class State:
                         elif piece_color == "b":
                             self.blackKingLocation = (row, col)
 
-                    elif pieceType == 'R':
-                        if piece_color == 'w':
+                    elif pieceType == "R":
+                        if piece_color == "w":
                             pass
-                        elif piece_color == 'b':
+                        elif piece_color == "b":
                             pass
 
                     col += 1
@@ -144,7 +151,7 @@ class State:
             else:
                 self.currCastleRights = castlerights(False, False, False, False)
 
-        if fen_castle_rights == '-':
+        if fen_castle_rights == "-":
             self.currCastleRights.wks = False
             self.currCastleRights.bks = False
             self.currCastleRights.wqs = False
@@ -159,12 +166,23 @@ class State:
             )
         ]
 
-        print(self.init_board_pieces)
+        enpassantTarget = fen.split()[3]
+        if enpassantTarget == '-':
+            self.epPossible = ()
+        else:
+            self.epPossible = (ranksToRows[enpassantTarget[1]], filesToCols[enpassantTarget[0]])
 
-        return self.board, self.castleLog, self.whitesturn, self.currCastleRights, self.init_board_pieces
+        return (
+            self.board,
+            self.castleLog,
+            self.whitesturn,
+            self.currCastleRights,
+            self.init_board_pieces,
+            self.epPossible,
+        )
 
     def posToFen(self):
-        fen = ''
+        fen = ""
 
         return fen
 
@@ -298,7 +316,7 @@ class State:
             self.currCastleRights.bks = False
             self.currCastleRights.bqs = False
 
-        if 'wR' in self.init_board_pieces:
+        if "wR" in self.init_board_pieces:
             if move.pieceMoved == "wR":
                 if move.startRow == 7:
                     if move.startCol == 0:
@@ -306,7 +324,7 @@ class State:
                     elif move.startCol == 7:
                         self.currCastleRights.wks = False
 
-        if 'bR' in self.init_board_pieces:
+        if "bR" in self.init_board_pieces:
             if move.pieceMoved == "bR":
                 if move.startRow == 0:
                     if move.startCol == 0:
@@ -314,7 +332,7 @@ class State:
                     elif move.startCol == 7:
                         self.currCastleRights.bks = False
 
-        #if 'wR' in self.init_board_pieces:
+        # if 'wR' in self.init_board_pieces:
         if move.pieceCaptured == "wR":
             if move.endRow == 7:
                 if move.endCol == 0:
@@ -322,7 +340,7 @@ class State:
                 elif move.endCol == 7:
                     self.currCastleRights.wks = False
 
-        #if 'bR' in self.init_board_pieces:
+        # if 'bR' in self.init_board_pieces:
         if move.pieceCaptured == "bR":
             if move.endRow == 0:
                 if move.endCol == 0:
