@@ -176,10 +176,10 @@ class Evaluate:
                 if square != "--":
                     if square[1] == "p":
                         if square[0] == "w":
-                            pos_val = piece_map_visualization[square][row][col]
+                            pos_val = piece_map_visualization['wp'][row][col]
                             whiteEval += pos_val * 0.1
                         elif square[0] == "b":
-                            pos_val = piece_map_visualization[square][row][col]
+                            pos_val = piece_map_visualization['bp'][row][col]
                             blackEval += pos_val * 0.1
                     else:
                         if square[0] == "w":

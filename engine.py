@@ -15,7 +15,8 @@ class State:
             self.whitesturn,
             self.currCastleRights,
             self.init_board_pieces,
-            self.epPossible
+            self.epPossible,
+            self.start_fen
         ) = self.fenToPos()
 
         self.moveLog = []
@@ -79,7 +80,8 @@ class State:
 
     def fenToPos(self):
         self.init_board_pieces = []
-        fen = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
+        fen = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - '
+        #fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         self.board = np.array(
             [
                 ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -206,6 +208,7 @@ class State:
             self.currCastleRights,
             self.init_board_pieces,
             self.epPossible,
+            fen,
         )
 
     def posToFen(self):

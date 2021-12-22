@@ -87,7 +87,8 @@ class ChessAi:
             piececapture = move.pieceCaptured
 
             if piececapture != "--":
-                score = 10 * piece_vals[piececapture[1]] - piece_vals[movepiece[1]]
+                score = 10 * piece_vals[piececapture[1]
+                                        ] - piece_vals[movepiece[1]]
 
             if move.isPawnPromotion:
                 score += piece_vals["Q"]
