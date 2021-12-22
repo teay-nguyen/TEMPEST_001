@@ -5,6 +5,7 @@ rowsToRanks = {v: k for k, v in ranksToRows.items()}
 filesToCols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
 colsToFiles = {v: k for k, v in filesToCols.items()}
 
+
 class State:
     def __init__(self):
         self.currCastleRights = castlerights(True, True, True, True)
@@ -33,28 +34,52 @@ class State:
             "Q": self.getQueenMoves,
         }
 
-    def moveGenerationTest(self, depth):
+    def perft_pseudo_moves(self, depth):
+        move_list = self.FilterValidMoves()
+        nodes = 0
+
         if depth == 0:
             return 1
+
+        for move in move_list:
+            self.make_move(move)
+            if self.inCheck():
+                nodes += self.perft_pseudo_moves(depth - 1)
+            self.undo_move()
+
+        return nodes
+
+    def bulk_count(self, depth):
+        n_moves = self.FilterValidMoves()
+        nodes = 0
+
+        if depth == 1:
+            return len(n_moves)
+
+        for move in n_moves:
+            self.make_move(move)
+            nodes += self.bulk_count(depth - 1)
+            self.undo_move()
+
+        return nodes
+
+    def moveGenerationTest(self, depth):
 
         def sort_criteria(move):
             return move.getChessNotation(True)
 
-        moves = self.FilterValidMoves(onlyCaptures=False)
-        notation = sorted(moves, key=sort_criteria)
-        num_positions = 0
+        nodes = self.bulk_count(depth)
+        validMoves = self.FilterValidMoves()
+        validMoves.sort(key=sort_criteria)
 
-        for move in notation:
-            self.make_move(move)
-            num_positions += self.moveGenerationTest(depth - 1)
-            print(move.getChessNotation(True))
-            self.undo_move()
+        for move in validMoves:
+            print(f'{move.getChessNotation(True)}: {nodes//len(validMoves)}')
 
-        return num_positions
+        print(f'Total: {nodes}')
 
     def fenToPos(self):
         self.init_board_pieces = []
-        fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        fen = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
         self.board = np.array(
             [
                 ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -149,7 +174,8 @@ class State:
                             self.currCastleRights.bqs,
                         )
             else:
-                self.currCastleRights = castlerights(False, False, False, False)
+                self.currCastleRights = castlerights(
+                    False, False, False, False)
 
         if fen_castle_rights == "-":
             self.currCastleRights.wks = False
@@ -170,7 +196,8 @@ class State:
         if enpassantTarget == '-':
             self.epPossible = ()
         else:
-            self.epPossible = (ranksToRows[enpassantTarget[1]], filesToCols[enpassantTarget[0]])
+            self.epPossible = (
+                ranksToRows[enpassantTarget[1]], filesToCols[enpassantTarget[0]])
 
         return (
             self.board,
@@ -212,7 +239,8 @@ class State:
             self.board[move.startRow, move.endCol] = "--"
 
         if move.pieceMoved[1] == "p" and abs(move.startRow - move.endRow) == 2:
-            self.epPossible = ((move.startRow + move.endRow) // 2, move.startCol)
+            self.epPossible = (
+                (move.startRow + move.endRow) // 2, move.startCol)
         else:
             self.epPossible = ()
 
@@ -323,6 +351,9 @@ class State:
                         self.currCastleRights.wqs = False
                     elif move.startCol == 7:
                         self.currCastleRights.wks = False
+        else:
+            self.currCastleRights.wqs = False
+            self.currCastleRights.wks = False
 
         if "bR" in self.init_board_pieces:
             if move.pieceMoved == "bR":
@@ -331,6 +362,9 @@ class State:
                         self.currCastleRights.bqs = False
                     elif move.startCol == 7:
                         self.currCastleRights.bks = False
+        else:
+            self.currCastleRights.bqs = False
+            self.currCastleRights.bks = False
 
         # if 'wR' in self.init_board_pieces:
         if move.pieceCaptured == "wR":
@@ -369,7 +403,8 @@ class State:
         if len(moves) == 0:
             if self.inCheck():
                 self.checkmate = True
-                print(f"Checkmate! {'WHITE' if not self.whitesturn else 'BLACK'} wins")
+                print(
+                    f"Checkmate! {'WHITE' if not self.whitesturn else 'BLACK'} wins")
             else:
                 self.stalemate = True
                 print("Stalemate!")
@@ -388,6 +423,12 @@ class State:
 
         self.epPossible = tempEpPossible
         self.currCastleRights = tempcastleRights
+
+        # '''
+        # for move in moves:
+        #    if move.getChessNotation(True) == 'd7c8':
+        #        print(move)
+        # ''''
 
         if onlyCaptures == True:
             for i in range(len(moves) - 1, -1, -1):
@@ -447,7 +488,8 @@ class State:
                         endSquare,
                     )
                 elif (r - 1, c - 1) == self.epPossible:
-                    moves.append(Move((r, c), (r - 1, c - 1), self.board, epMove=True))
+                    moves.append(Move((r, c), (r - 1, c - 1),
+                                 self.board, epMove=True))
                     self.oppPawnAttackMap.append(
                         endSquare,
                     )
@@ -460,7 +502,8 @@ class State:
                         endSquare,
                     )
                 elif (r - 1, c + 1) == self.epPossible:
-                    moves.append(Move((r, c), (r - 1, c + 1), self.board, epMove=True))
+                    moves.append(Move((r, c), (r - 1, c + 1),
+                                 self.board, epMove=True))
                     self.oppPawnAttackMap.append(
                         endSquare,
                     )
@@ -478,7 +521,8 @@ class State:
                         endSquare,
                     )
                 elif (r + 1, c - 1) == self.epPossible:
-                    moves.append(Move((r, c), (r + 1, c - 1), self.board, epMove=True))
+                    moves.append(Move((r, c), (r + 1, c - 1),
+                                 self.board, epMove=True))
                     self.oppPawnAttackMap.append(
                         endSquare,
                     )
@@ -490,7 +534,8 @@ class State:
                         endSquare,
                     )
                 elif (r + 1, c + 1) == self.epPossible:
-                    moves.append(Move((r, c), (r + 1, c + 1), self.board, epMove=True))
+                    moves.append(Move((r, c), (r + 1, c + 1),
+                                 self.board, epMove=True))
                     self.oppPawnAttackMap.append(
                         endSquare,
                     )
@@ -506,9 +551,11 @@ class State:
                 if 0 <= endRow < 8 and 0 <= endCol < 8:
                     endPiece = self.board[endRow, endCol]
                     if endPiece == "--":
-                        moves.append(Move((r, c), (endRow, endCol), self.board))
+                        moves.append(
+                            Move((r, c), (endRow, endCol), self.board))
                     elif endPiece[0] == eColor:
-                        moves.append(Move((r, c), (endRow, endCol), self.board))
+                        moves.append(
+                            Move((r, c), (endRow, endCol), self.board))
                         break
                     else:
                         break
@@ -526,9 +573,11 @@ class State:
                 if 0 <= endRow < 8 and 0 <= endCol < 8:
                     endPiece = self.board[endRow, endCol]
                     if endPiece == "--":
-                        moves.append(Move((r, c), (endRow, endCol), self.board))
+                        moves.append(
+                            Move((r, c), (endRow, endCol), self.board))
                     elif endPiece[0] == eColor:
-                        moves.append(Move((r, c), (endRow, endCol), self.board))
+                        moves.append(
+                            Move((r, c), (endRow, endCol), self.board))
                         break
                     else:
                         break
@@ -628,9 +677,11 @@ class castlerights:
 
 
 class Move:
-    ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
+    ranksToRows = {"1": 7, "2": 6, "3": 5,
+                   "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
     rowsToRanks = {v: k for k, v in ranksToRows.items()}
-    filesToCols = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
+    filesToCols = {"a": 0, "b": 1, "c": 2,
+                   "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
     colsToFiles = {v: k for k, v in filesToCols.items()}
 
     def __init__(self, start_sq, end_sq, board, epMove=False, castlemove=False):

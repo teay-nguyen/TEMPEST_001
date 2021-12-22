@@ -96,9 +96,11 @@ piece_map_visualization = {
     ),
 }
 
+
 class Evaluate:
     def __init__(self):
-        self.endgameMaterialStart = piece_value["R"] * 2 + piece_value["B"] * piece_value['N']
+        self.endgameMaterialStart = piece_value["R"] * \
+            2 + piece_value["B"] * piece_value['N']
 
     def countMaterial(self, state, colorIndex):
         board = state.board
@@ -140,7 +142,8 @@ class Evaluate:
 
         oppKingDstFromCentreCol = max(3 - oppKingCol, oppKingCol - 4)
         oppKingDstFromCentreRank = max(3 - oppKingRank, oppKingRank - 4)
-        oppKingDstFromCentre = (oppKingDstFromCentreCol + oppKingDstFromCentreRank)
+        oppKingDstFromCentre = (
+            oppKingDstFromCentreCol + oppKingDstFromCentreRank)
         evaluation += oppKingDstFromCentre
 
         friendKingRank = friendKingSquare[0]
