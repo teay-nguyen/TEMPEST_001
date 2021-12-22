@@ -29,7 +29,7 @@ class Zobrist:
                 piece = board[row, col]
                 piece_type = piece[1]
                 piece_side = piece[0]
-                full = sides[piece_side] + piece_nums[piece_type]
+                full = sides[piece_side].join(piece_nums[piece_type])
 
                 hashed_string += full
 

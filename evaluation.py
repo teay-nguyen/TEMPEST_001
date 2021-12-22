@@ -164,8 +164,8 @@ class Evaluate:
         blackEval = 0
         whiteEval = 0
 
-        whiteMaterial = self.countMaterial(state, "w")
-        blackMaterial = self.countMaterial(state, "b")
+        whiteMaterial, blackMaterial = self.countMaterial(
+            state, "w"), self.countMaterial(state, "b")
 
         whiteEval += whiteMaterial
         blackEval += blackMaterial
@@ -192,6 +192,5 @@ class Evaluate:
         #print("BLACK MATERIAL:", blackMaterial)
         #print("WHITE MATERIAL:", whiteMaterial)
 
-        eval = whiteEval - blackEval
-        perspective = 1 if state.whitesturn else -1
+        eval, perspective = whiteEval - blackEval, 1 if state.whitesturn else -1
         return eval * perspective

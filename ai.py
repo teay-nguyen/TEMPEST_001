@@ -56,9 +56,7 @@ class ChessAi:
         validMoves = state.FilterValidMoves()
         if len(validMoves) == 0:
             if state.inCheck():
-                return -CHECKMATE
-            else:
-                return 0
+                return -CHECKMATE if state.inCheck() else 0
 
         for move in validMoves:
             state.make_move(move)
@@ -104,8 +102,11 @@ class ChessAi:
 
         ordered_dict = dict(sorted(cache.items(), reverse=True))
 
-        for ordered_move in ordered_dict:
-            filtered_moves.append(ordered_dict[ordered_move])
+        # for ordered_move in ordered_dict:
+        #    filtered_moves.append(ordered_dict[ordered_move])
+
+        filtered_moves = [ordered_dict[ordered_move]
+                          for ordered_move in ordered_dict]
 
         return filtered_moves
 
@@ -176,6 +177,7 @@ class ChessAi:
         return alpha
 
 
+'''
 class Test:
     def __init__(self):
         pass
@@ -195,3 +197,4 @@ class Test:
 
         for move in filtered_list:
             print("FILTERED MOVE:", move)
+'''

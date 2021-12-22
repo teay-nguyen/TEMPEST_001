@@ -80,7 +80,7 @@ class State:
 
     def fenToPos(self):
         self.init_board_pieces = []
-        fen = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - '
+        fen = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
         #fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         self.board = np.array(
             [
@@ -180,10 +180,9 @@ class State:
                     False, False, False, False)
 
         if fen_castle_rights == "-":
-            self.currCastleRights.wks = False
-            self.currCastleRights.bks = False
-            self.currCastleRights.wqs = False
-            self.currCastleRights.bqs = False
+            self.currCastleRights = castlerights(
+                False, False, False, False
+            )
 
         self.castleLog = [
             castlerights(
@@ -718,9 +717,14 @@ class Move:
 
     def getChessNotation(self, raw):
         if raw:
-            return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(
-                self.endRow, self.endCol
-            )
+            if not self.isPawnPromotion:
+                return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(
+                    self.endRow, self.endCol
+                )
+            else:
+                return self.getRankFile(self.startRow, self.startCol) + self.getRankFile(
+                    self.endRow, self.endCol
+                ) + 'q'
         else:
             if self.castlemove:
                 return "O-O" if self.endCol == 6 else "O-O-O"
