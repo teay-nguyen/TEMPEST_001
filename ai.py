@@ -18,21 +18,18 @@ piece_vals = {
 
 class ChessAi:
     def __init__(self):
-        pass
+        self.count = 0
 
     def rand_move_ai(self, valid_moves):
         return choice(valid_moves)
 
     def minmax_ai(self, state, returnQueue):
-        global next_move, count
+        global next_move
 
-        start = time()
-        next_move = None
-        count = 0
+        start, next_move, self.count, score = time(), None, 0, 0
 
         for idx in range(DEPTH):
             depth = idx + 1
-            print('DEPTH SEARCHING:', depth)
 
             score = self.search(
                 state,
@@ -42,25 +39,26 @@ class ChessAi:
             )
 
             search_time = time()
-            print('TIME FOR SEARCH:', (search_time - start))
             if (search_time - start) >= 2:
-                print('TIME LIMIT EXCEEDED! BREAKING OUT OF LOOP')
+                print('TIME LIMIT EXCEEDED! BREAKING OUT OF LOOP:',
+                      (search_time - start))
                 break
 
+        print()
         print("-------------------------------------------------------------------")
-        print("NEXT MOVE:", next_move, count, score)
-        print("-------------------------------------------------------------------")
+        print("NEXT MOVE:", next_move, self.count, score)
+        print("-------------------------------------------------------------------\n")
 
         returnQueue.put(next_move)
-        end = time.time()
+        end = time()
 
         print("TIME AI TOOK TO GENERATE NEXT MOVE:", end - start)
 
     def search(self, state, depth, alpha, beta):
 
-        global next_move, count
-        count += 1
+        global next_move
         PVFound = False
+        self.count += 1
 
         if depth == 0:
             return self.searchAllCaptures(state, alpha, beta)
@@ -74,9 +72,11 @@ class ChessAi:
             state.make_move(move)
             #score = -self.search(state, depth - 1, -beta, -alpha)
             if PVFound:
-                score = -self.search(state, depth - 1, -alpha - 1, -alpha)
+                score = -self.search(state, depth - 1, -
+                                     alpha - 1, -alpha)
                 if (score > alpha) and (score < beta):
-                    score = -self.search(state, depth - 1, -beta, -alpha)
+                    score = -self.search(state, depth -
+                                         1, -beta, -alpha)
             else:
                 score = -self.search(state, depth - 1, -beta, -alpha)
             state.undo_move()
@@ -90,6 +90,27 @@ class ChessAi:
                 if depth == DEPTH:
                     next_move = move
                     print("parsed move:", next_move, score)
+
+        return alpha
+
+    # def quiesce(self, state, alpha, beta):
+    #    score = self.evaluate(state)
+    #    if score >= beta:
+    #        return beta
+#
+#        if alpha < score:
+#            alpha = score
+#
+#        validMoves = state.FilterValidMoves(onlyCaptures=True)
+#        for move in validMoves:
+#            state.make_move(move)
+#            score = -self.quiesce(state, -beta, -alpha)
+#            state.undo_move()
+#
+#            if score >= beta:
+#                return beta
+#            if score > alpha:
+#                alpha = score
 
         return alpha
 

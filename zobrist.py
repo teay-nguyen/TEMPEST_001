@@ -1,3 +1,4 @@
+import numpy as np
 
 positions = {}
 piece_nums = {
@@ -24,14 +25,12 @@ class Zobrist:
     def hash(self, state):
         board = state.board
         hashed_string = ''
-        for row in range(len(board)):
-            for col in range(len(board[row])):
-                piece = board[row, col]
-                piece_type = piece[1]
-                piece_side = piece[0]
-                full = sides[piece_side].join(piece_nums[piece_type])
+        for square in np.nditer(board):
+            piece = str(square)
+            piece_type = piece[1]
+            piece_side = piece[0]
+            full = ''.join(sides[piece_side] + piece_nums[piece_type])
 
-                hashed_string += full
+            hashed_string += full
 
-        length_hashed = len(hashed_string)
-        print(hashed_string, length_hashed)
+        print('Hashed String:', hashed_string)

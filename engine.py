@@ -413,7 +413,7 @@ class State:
             self.game_over = True
             print(self.board)
 
-        if onlyCaptures == False:
+        if not onlyCaptures:
             if self.whitesturn:
                 self.getCastleMoves(
                     self.whiteKingLocation[0], self.whiteKingLocation[1], moves
@@ -432,10 +432,10 @@ class State:
         #        print(move)
         # ''''
 
-        if onlyCaptures == True:
-            for i in range(len(moves) - 1, -1, -1):
-                if moves[i].pieceCaptured == "--":
-                    moves.remove(moves[i])
+        if onlyCaptures:
+            for move in moves:
+                if move.pieceCaptured == '--':
+                    moves.remove(move)
 
         return moves
 
