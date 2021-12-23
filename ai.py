@@ -1,5 +1,5 @@
-import random
-import time
+from random import choice
+from time import time
 from evaluation import Evaluate
 
 CHECKMATE = 10 ** 10
@@ -21,20 +21,31 @@ class ChessAi:
         pass
 
     def rand_move_ai(self, valid_moves):
-        return random.choice(valid_moves)
+        return choice(valid_moves)
 
     def minmax_ai(self, state, returnQueue):
         global next_move, count
 
-        start = time.time()
+        start = time()
         next_move = None
         count = 0
-        score = self.search(
-            state,
-            DEPTH,
-            -CHECKMATE,
-            CHECKMATE,
-        )
+
+        for idx in range(DEPTH):
+            depth = idx + 1
+            print('DEPTH SEARCHING:', depth)
+
+            score = self.search(
+                state,
+                depth,
+                -CHECKMATE,
+                CHECKMATE,
+            )
+
+            search_time = time()
+            print('TIME FOR SEARCH:', (search_time - start))
+            if (search_time - start) >= 2:
+                print('TIME LIMIT EXCEEDED! BREAKING OUT OF LOOP')
+                break
 
         print("-------------------------------------------------------------------")
         print("NEXT MOVE:", next_move, count, score)
@@ -49,6 +60,7 @@ class ChessAi:
 
         global next_move, count
         count += 1
+        PVFound = False
 
         if depth == 0:
             return self.searchAllCaptures(state, alpha, beta)
@@ -60,14 +72,21 @@ class ChessAi:
 
         for move in validMoves:
             state.make_move(move)
-            score = -self.search(state, depth - 1, -beta, -alpha)
+            #score = -self.search(state, depth - 1, -beta, -alpha)
+            if PVFound:
+                score = -self.search(state, depth - 1, -alpha - 1, -alpha)
+                if (score > alpha) and (score < beta):
+                    score = -self.search(state, depth - 1, -beta, -alpha)
+            else:
+                score = -self.search(state, depth - 1, -beta, -alpha)
             state.undo_move()
 
             if score >= beta:
                 return beta
 
-            if alpha < score:
+            if score > alpha:
                 alpha = score
+                PVFound = True  # Testing
                 if depth == DEPTH:
                     next_move = move
                     print("parsed move:", next_move, score)
