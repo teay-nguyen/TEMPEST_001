@@ -1,6 +1,5 @@
 import numpy as np
 
-positions = {}
 piece_nums = {
     'K': '2',
     'Q': '3',
