@@ -20,7 +20,8 @@ class State:
         ) = self.fenToPos()
 
         self.moveLog = []
-        self.oppPawnAttackMap = []
+        self.oppPawnAttackMap = {}
+        self.oppPawnAttackMap['White'], self.oppPawnAttackMap['Black'] = [], []
         self.boardLog = [self.board]
         self.checkmate = False
         self.stalemate = False
@@ -80,7 +81,7 @@ class State:
 
     def fenToPos(self):
         self.init_board_pieces = []
-        fen = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
+        #fen = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
         fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         self.board = np.array(
             [
@@ -460,6 +461,7 @@ class State:
 
     def getAllPossibleMoves(self):
         moves = []
+        self.oppPawnAttackMap['Black' if self.whitesturn else 'White'] = []
 
         for r in range(len(self.board)):
             for c in range(len(self.board[r])):
@@ -476,71 +478,63 @@ class State:
         return moves
 
     def getPawnMoves(self, r, c, moves):
-        self.oppPawnAttackMap = []
         if self.whitesturn:
+
             if self.board[r - 1, c] == "--":
                 moves.append(Move((r, c), (r - 1, c), self.board))
                 if r == 6 and self.board[r - 2, c] == "--":
                     moves.append(Move((r, c), (r - 2, c), self.board))
+
             if c - 1 >= 0:
                 endSquare = (r - 1, c - 1)
+                self.oppPawnAttackMap['Black'].append(endSquare)
+
                 if self.board[r - 1, c - 1][0] == "b":
                     moves.append(Move((r, c), (r - 1, c - 1), self.board))
-                    self.oppPawnAttackMap.append(
-                        endSquare,
-                    )
+
                 elif (r - 1, c - 1) == self.epPossible:
                     moves.append(Move((r, c), (r - 1, c - 1),
                                  self.board, epMove=True))
-                    self.oppPawnAttackMap.append(
-                        endSquare,
-                    )
 
             if c + 1 <= 7:
                 endSquare = (r - 1, c + 1)
+                self.oppPawnAttackMap['Black'].append(endSquare)
+
                 if self.board[r - 1, c + 1][0] == "b":
                     moves.append(Move((r, c), (r - 1, c + 1), self.board))
-                    self.oppPawnAttackMap.append(
-                        endSquare,
-                    )
+
                 elif (r - 1, c + 1) == self.epPossible:
                     moves.append(Move((r, c), (r - 1, c + 1),
                                  self.board, epMove=True))
-                    self.oppPawnAttackMap.append(
-                        endSquare,
-                    )
 
         else:
+
             if self.board[r + 1, c] == "--":
                 moves.append(Move((r, c), (r + 1, c), self.board))
                 if r == 1 and self.board[r + 2, c] == "--":
                     moves.append(Move((r, c), (r + 2, c), self.board))
+
             if c - 1 >= 0:
                 endSquare = (r + 1, c - 1)
+                self.oppPawnAttackMap['White'].append(endSquare)
+
                 if self.board[r + 1, c - 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c - 1), self.board))
-                    self.oppPawnAttackMap.append(
-                        endSquare,
-                    )
+
                 elif (r + 1, c - 1) == self.epPossible:
                     moves.append(Move((r, c), (r + 1, c - 1),
                                  self.board, epMove=True))
-                    self.oppPawnAttackMap.append(
-                        endSquare,
-                    )
+
             if c + 1 <= 7:
                 endSquare = (r + 1, c + 1)
+                self.oppPawnAttackMap['White'].append(endSquare)
+
                 if self.board[r + 1, c + 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c + 1), self.board))
-                    self.oppPawnAttackMap.append(
-                        endSquare,
-                    )
+
                 elif (r + 1, c + 1) == self.epPossible:
                     moves.append(Move((r, c), (r + 1, c + 1),
                                  self.board, epMove=True))
-                    self.oppPawnAttackMap.append(
-                        endSquare,
-                    )
 
     def getRookMoves(self, r, c, moves):
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1))
@@ -631,7 +625,8 @@ class State:
             if 0 <= endRow < 8 and 0 <= endCol < 8:
                 endPiece = self.board[endRow, endCol]
                 if endPiece[0] != allyColor:
-                    moves.append(Move((r, c), (endRow, endCol), self.board))
+                    chosen_move = Move((r, c), (endRow, endCol), self.board)
+                    moves.append(chosen_move)
 
     def getCastleMoves(self, r, c, moves):
         if self.squareUnderAttack(r, c):
