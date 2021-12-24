@@ -3,17 +3,16 @@ import numpy as np
 
 
 class Bitboard:
-    def __init__(self, state):
-        self.state = state
+    def __init__(self):
         self.bitboard = np.zeros((8, 8))
 
-    def attacked_squares(self):
-        self.state.whitesturn = not self.state.whitesturn
-        oppMoves = self.state.FilterValidMoves()
-        self.state.whitseturn = not self.state.whitesturn
+    def attacked_squares(self, state):
+        state.whitesturn = not state.whitesturn
+        oppMoves = state.getAllPossibleMoves()
+        state.whitseturn = not state.whitesturn
 
         attackSquares = []
-        oppPawnAttackMap = self.state.oppPawnAttackMap['Black' if self.state.whitesturn else 'White']
+        oppPawnAttackMap = state.oppPawnAttackMap['Black' if state.whitesturn else 'White']
         print(oppPawnAttackMap)
 
         for move in oppMoves:
@@ -34,6 +33,6 @@ if __name__ == '__main__':
     from engine import State
 
     e = State()
-    b = Bitboard(e)
+    b = Bitboard()
 
-    b.attacked_squares()
+    b.attacked_squares(e)

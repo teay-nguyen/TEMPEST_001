@@ -81,8 +81,8 @@ class State:
 
     def fenToPos(self):
         self.init_board_pieces = []
-        #fen = 'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8'
-        fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+        fen = 'r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1'
+        #fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         self.board = np.array(
             [
                 ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -130,12 +130,6 @@ class State:
                             self.whiteKingLocation = (row, col)
                         elif piece_color == "b":
                             self.blackKingLocation = (row, col)
-
-                    elif pieceType == "R":
-                        if piece_color == "w":
-                            pass
-                        elif piece_color == "b":
-                            pass
 
                     col += 1
 
@@ -213,7 +207,33 @@ class State:
 
     def posToFen(self):
         fen = ""
+        emptySpace = 0
 
+        for row in range(len(self.board)):
+            for col in range(len(self.board[row])):
+                square = self.board[row, col]
+                pieceSide, pieceType = square[0], square[1]
+
+                if pieceSide == 'w':
+                    if emptySpace > 0:
+                        fen += (str(emptySpace))
+                        emptySpace = 0
+                    fen += (pieceType.upper())
+                elif pieceSide == 'b':
+                    if emptySpace > 0:
+                        fen += (str(emptySpace))
+                        emptySpace = 0
+                    fen += (pieceType.lower())
+                else:
+                    emptySpace += 1
+
+            if emptySpace > 0:
+                fen += (str(emptySpace))
+                emptySpace = 0
+
+            fen += fen.join('/')
+
+        fen = fen[:-1]
         return fen
 
     def prntcastlerights(self):
