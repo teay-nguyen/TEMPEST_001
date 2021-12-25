@@ -1,12 +1,13 @@
 
 import os
 import chess.pgn
-import numpy as np
+import chess
 
 
 def get_dataset():
     vals = {'1/2-1/2': 0, '0-1': -1, '1-0': 1}
     processed_file = open('processed/openings.txt', 'w+')
+    gn = 0
     for fn in os.listdir('data'):
         pgn = open(os.path.join('data', fn))
         while 1:
@@ -19,14 +20,17 @@ def get_dataset():
             if res not in vals:
                 continue
 
-            val = vals[res]
             board = game.board()
-            for i, move in enumerate(game.mainline_moves()):
+            for move in game.mainline_moves():
                 board.push(move)
-                processed_file.write(str(move) + ' ')
-                print(move)
+                processed_move = chess.Move.from_uci(str(move))
+                processed_file.write(str(processed_move) + ' ')
 
-            processed_file.write('\n')
+            processed_file.write(res + '\n')
+            gn += 1
+            print(f'PARSING GAME FINISHED, PARSING NEXT GAME: {gn}')
+
+    print('FINISHED PARSING GAME DATA AND WRITING TO TEXT FILE...')
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, randrange
 from time import time
 from evaluation import Evaluate
 import numpy as np
@@ -15,6 +15,15 @@ piece_vals = {
     "N": 3,
     "p": 1,
 }
+
+
+def random_line(afile):
+    line = next(afile)
+    for num, aline in enumerate(afile, 2):
+        if randrange(num):
+            continue
+        line = aline
+    return line
 
 
 class ChessAi:
