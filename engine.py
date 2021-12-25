@@ -81,8 +81,8 @@ class State:
 
     def fenToPos(self):
         self.init_board_pieces = []
-        fen = 'r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1'
-        #fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+        #fen = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - '
+        fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         self.board = np.array(
             [
                 ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -426,13 +426,13 @@ class State:
         if len(moves) == 0:
             if self.inCheck():
                 self.checkmate = True
-                print(
-                    f"Checkmate! {'WHITE' if not self.whitesturn else 'BLACK'} wins")
+                # print(
+                #    f"Checkmate! {'WHITE' if not self.whitesturn else 'BLACK'} wins")
             else:
                 self.stalemate = True
-                print("Stalemate!")
+                # print("Stalemate!")
             self.game_over = True
-            print(self.board)
+            # print(self.board)
 
         if not onlyCaptures:
             if self.whitesturn:

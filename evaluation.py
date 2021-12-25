@@ -26,11 +26,11 @@ piece_map_visualization = {
         [
             [-2, -1, -1, -0.5, -0.5, -1, -1, -2],
             [-1, 0, 0, 0, 0, 0, 0, -1],
-            [-1, 0, 0.5, 0.5, 0.5, 0.5, 0, -1],
+            [-1, 0.5, 0.5, 0.5, 0.5, 0.5, 0, -1],
             [-0.5, 0, 0.5, 0.5, 0.5, 0.5, 0, -0.5],
             [-0.5, 0, 0.5, 0.5, 0.5, 0.5, 0, -0.5],
             [-1, 0.5, 0.5, 0.5, 0.5, 0.5, 0, -1],
-            [-1, 0, 0.5, 0, 0, 0, 0, -1],
+            [-1, 0, 0, 0, 0, 0, 0, -1],
             [-2, -1, -1, -0.5, -0.5, -1, -1, -2],
         ]
     ),
@@ -177,17 +177,17 @@ class Evaluate:
                     if square[1] == "p":
                         if square[0] == "w":
                             pos_val = piece_map_visualization['wp'][row][col]
-                            whiteEval += pos_val * 0.1
+                            whiteEval += pos_val * 0.2
                         elif square[0] == "b":
                             pos_val = piece_map_visualization['bp'][row][col]
-                            blackEval += pos_val * 0.1
+                            blackEval += pos_val * 0.2
                     else:
                         if square[0] == "w":
                             pos_val = piece_map_visualization[square[1]][row][col]
-                            whiteEval += pos_val * 0.1
+                            whiteEval += pos_val * 0.2
                         elif square[0] == "b":
                             pos_val = piece_map_visualization[square[1]][row][col]
-                            blackEval += pos_val * 0.1
+                            blackEval += pos_val * 0.2
 
         #print("BLACK MATERIAL:", blackMaterial)
         #print("WHITE MATERIAL:", whiteMaterial)
