@@ -46,7 +46,7 @@ class DepthLite1():
                 print('Searching Depth:', _ + 1)
                 depth = _ + 1
                 eval = self.Search(
-                    state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves)
+                    state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves, 0)
 
                 searchTime = time.time()
                 if (searchTime - start) > 4:
@@ -64,7 +64,10 @@ class DepthLite1():
                         break
         else:
             eval = self.Search(state, self.DefaultDepth,
-                               self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves)
+                               self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves, 0)
+
+            self.bestMoveFound = self.bestMoveInIteration
+            self.bestEvalFound = self.bestEvalInIteration
 
         print()
         print('---------------------------------------')
@@ -76,7 +79,7 @@ class DepthLite1():
 
         return self.bestMoveFound
 
-    def Search(self, state, currentDepth, alpha, beta, moves):
+    def Search(self, state, currentDepth, alpha, beta, moves, plyFromRoot):
         self.count += 1
         MoveOrder = MoveOrdering()
         if currentDepth == 0:
@@ -95,7 +98,7 @@ class DepthLite1():
             oppMoves = state.FilterValidMoves()
             orderedMoves = MoveOrder.OrderMoves(state, oppMoves)
             eval = -self.Search(state, currentDepth -
-                                1, -beta, -alpha, orderedMoves)
+                                1, -beta, -alpha, orderedMoves, plyFromRoot + 1)
             state.undo_move()
             self.numNodes += 1
 
@@ -106,7 +109,7 @@ class DepthLite1():
                 bestMoveInPosition = move
                 alpha = eval
 
-                if currentDepth == self.DefaultDepth:
+                if plyFromRoot == 0:
                     print('New Best Move Found:', move, eval)
                     self.bestEvalInIteration = eval
                     self.bestMoveInIteration = move
