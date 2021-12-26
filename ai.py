@@ -86,7 +86,7 @@ class ChessAi:
 
         bestMoveThisPosition = None
 
-        for move in ordered_moves:
+        for move in validMoves:
             state.make_move(move)
             score = -self.search(state, depth - 1, -beta, -alpha)
             state.undo_move()
@@ -117,14 +117,15 @@ class ChessAi:
                 score += (piece_vals[piececapture[1]] -
                           piece_vals[movepiece[1]])
 
-            if move.isPawnPromotion:
-                score += piece_vals["Q"]
+            if move.pieceMoved[1] == 'p':
+                if move.isPawnPromotion:
+                    score += piece_vals["Q"]
+            else:
+                oppPawnAttackMap = state.oppPawnAttackMap
+                moveendSquare = (move.endRow, move.endCol)
 
-            oppPawnAttackMap = state.oppPawnAttackMap
-            moveendSquare = (move.endRow, move.endCol)
-
-            if moveendSquare in oppPawnAttackMap:
-                score -= piece_vals[movepiece[1]]
+                if moveendSquare in oppPawnAttackMap:
+                    score -= piece_vals[movepiece[1]]
 
             cache[score] = move
 
