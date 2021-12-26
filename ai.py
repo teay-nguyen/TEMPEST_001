@@ -106,6 +106,7 @@ class ChessAi:
 
     def order_moves(self, state, valid_moves):
         cache = {}
+        squareControlledByPawnPenalty = 2.5
 
         for move in valid_moves:
 
@@ -125,7 +126,7 @@ class ChessAi:
                 moveendSquare = (move.endRow, move.endCol)
 
                 if moveendSquare in oppPawnAttackMap:
-                    score -= piece_vals[movepiece[1]]
+                    score -= squareControlledByPawnPenalty
 
             cache[score] = move
 
