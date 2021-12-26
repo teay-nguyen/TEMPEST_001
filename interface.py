@@ -135,7 +135,15 @@ class Interface:
                     AIThinking = True
                     print('THINKING...')
 
-                    AIMove = DepthLite.startSearch(state)
+                    returnQueue = Queue()
+                    movefinderprocess = Process(
+                        target=DepthLite.startSearch, args=(state, returnQueue))
+                    movefinderprocess.start()
+
+                if not movefinderprocess.is_alive():
+                    print('DONE THINKING')
+
+                    AIMove = returnQueue.get()
                     if AIMove is None:
                         AIMove = DepthLite.random_move(state)
 

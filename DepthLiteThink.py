@@ -32,7 +32,7 @@ class DepthLite1():
         moves = state.FilterValidMoves()
         return choice(moves)
 
-    def startSearch(self, state):
+    def startSearch(self, state, rQueue):
         self.bestMoveFound = self.bestMoveInIteration = None
         self.bestEvalFound = self.bestEvalInIteration = 0
         MoveOrder = MoveOrdering()
@@ -77,7 +77,7 @@ class DepthLite1():
         end = time.time()
         print('TIME TOOK TO GENERATE NEXT MOVE:', end - start)
 
-        return self.bestMoveFound
+        rQueue.put(self.bestMoveFound)
 
     def Search(self, state, currentDepth, alpha, beta, moves, plyFromRoot):
         self.count += 1
