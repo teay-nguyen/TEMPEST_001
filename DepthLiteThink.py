@@ -27,6 +27,7 @@ class DepthLite1():
         self.POSITIVE_INF = 999999999
         self.NEGATIVE_INF = -self.POSITIVE_INF
         self.numNodes = 0
+        self.abortSearch = False
 
     def random_move(self, state):
         moves = state.FilterValidMoves()
@@ -35,6 +36,7 @@ class DepthLite1():
     def startSearch(self, state, rQueue):
         self.bestMoveFound = self.bestMoveInIteration = None
         self.bestEvalFound = self.bestEvalInIteration = 0
+        self.abortSearch = False
         MoveOrder = MoveOrdering()
         moves = state.FilterValidMoves()
         start = time.time()
@@ -49,7 +51,7 @@ class DepthLite1():
                     state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves, 0)
 
                 searchTime = time.time()
-                if (searchTime - start) > 4:
+                if (searchTime - start) > 4 or self.abortSearch:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
                     print('TIME LIMIT EXCEEDED! EXITING SEARCH:',
@@ -65,7 +67,6 @@ class DepthLite1():
         else:
             eval = self.Search(state, self.DefaultDepth,
                                self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves, 0)
-
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
 
