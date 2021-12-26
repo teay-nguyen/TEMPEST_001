@@ -1,35 +1,44 @@
 import numpy as np
-
-piece_nums = {
-    'K': '2',
-    'Q': '3',
-    'R': '4',
-    'B': '5',
-    'N': '6',
-    'p': '7',
-    '-': '8',
-}
-
-sides = {
-    'b': '1',
-    'w': '0',
-    '-': '2'
-}
+import random
+zobTable = [[[random.randint(1, 2**64 - 1) for i in range(12)]
+             for j in range(8)]for k in range(8)]
 
 
-class Zobrist:
-    def __init__(self):
-        pass
+def idxing(piece):
+    if piece == 'wp':
+        return 0
+    if piece == 'wN':
+        return 1
+    if piece == 'wB':
+        return 2
+    if piece == 'wR':
+        return 3
+    if piece == 'wQ':
+        return 4
+    if piece == 'wK':
+        return 5
+    if piece == 'bp':
+        return 6
+    if piece == 'bN':
+        return 7
+    if piece == 'bB':
+        return 8
+    if piece == 'bR':
+        return 9
+    if piece == 'bQ':
+        return 10
+    if piece == 'bK':
+        return 11
+    else:
+        return -1
 
-    def hash(self, state):
-        board = state.board
-        hashed_string = ''
-        for square in np.nditer(board):
-            piece = str(square)
-            piece_type = piece[1]
-            piece_side = piece[0]
-            full = ''.join(sides[piece_side] + piece_nums[piece_type])
 
-            hashed_string += full
+def computeHash(board):
+    hashNum = 0
+    for i in range(8):
+        for j in range(8):
+            if board[i][j] != '--':
+                piece = idxing(board[i][j])
+                hashNum ^= zobTable[i][j][piece]
 
-        print('Hashed String:', hashed_string)
+    return hashNum
