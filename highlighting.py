@@ -4,7 +4,7 @@ pyg.init()
 
 BLUE = pyg.Color("blue")
 YELLOW = pyg.Color("yellow")
-RED = (255, 68, 68)
+RED = (255, 0, 0)
 
 
 def highlightSq(screen, gs, validMoves, sq_selected, size):
