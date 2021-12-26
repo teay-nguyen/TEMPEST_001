@@ -11,7 +11,6 @@ def get_dataset():
     for fn in os.listdir('data'):
         pgn = open(os.path.join('data', fn))
         while 1:
-            print('----------------------------------------------------------------')
             game = chess.pgn.read_game(pgn)
             if game is None:
                 break
@@ -28,7 +27,7 @@ def get_dataset():
 
             processed_file.write(res + '\n')
             gn += 1
-            print(f'PARSING GAME FINISHED, PARSING NEXT GAME: {gn}')
+            print('PARSING GAME FINISHED, PARSING NEXT GAME:', gn)
 
     print('FINISHED PARSING GAME DATA AND WRITING TO TEXT FILE...')
 

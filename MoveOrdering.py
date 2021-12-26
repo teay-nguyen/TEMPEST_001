@@ -37,7 +37,9 @@ class MoveOrdering:
                     score -= self.squareControlledByOppPenalty
 
             self.moveScores.append(score)
-        return self.SortMoves(moves)
+
+        filtered_moves = self.SortMoves(moves)
+        return filtered_moves
 
     def SortMoves(self, moves):
         tempMoves = moves

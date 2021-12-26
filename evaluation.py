@@ -74,7 +74,7 @@ piece_map_visualization = {
         [
             [7, 8, 8, 8, 8, 8, 8, 7],
             [5, 5, 5, 5, 5, 5, 5, 5],
-            [1, 1, 2, 3, 3, 2, 1, 1],
+            [1, 1, 2, 1, 1, 2, 1, 1],
             [0.5, 0.5, 1, 2.5, 2.5, 1, 0.5, 0.5],
             [0, 0, 2, 3, 3, 2, 0, 0],
             [1, 1, 1, 0, 0, 1, 1, 1],
@@ -89,7 +89,7 @@ piece_map_visualization = {
             [1, 1, 1, 0, 0, 1, 1, 1],
             [0, 0, 2, 3, 3, 2, 0, 0],
             [0.5, 0.5, 1, 2.5, 2.5, 1, 0.5, 0.5],
-            [1, 1, 2, 3, 3, 2, 1, 1],
+            [1, 1, 2, 1, 1, 2, 1, 1],
             [5, 5, 5, 5, 5, 5, 5, 5],
             [7, 8, 8, 8, 8, 8, 8, 7],
         ]
@@ -134,6 +134,12 @@ class Evaluate:
 
         return material
 
+    def mopUpEval(self, state, friendIdx, enemyIdx, myMaterial, oppMaterial, endgameWeight):
+        moppUpScore = 0
+        if (myMaterial > oppMaterial + piece_value["p"] * 2) and endgameWeight > 0:
+            friendKingSq = state.whiteKingLocation if friendIdx == 'w' else state.blackKingLocation
+            oppKingSq = state.blackKingLocation if enemyIdx == 'b' else state.whiteKingLocation
+
     def ForceKingToCornerEndgameVal(self, friendKingSquare, oppKingSquare, endgameWeight):
         evaluation = 0
 
@@ -156,7 +162,7 @@ class Evaluate:
 
         return int(evaluation * 10 * endgameWeight)
 
-    def engamePhaseWeight(self, materialCountWithoutPawns):
+    def endgamePhaseWeight(self, materialCountWithoutPawns):
         multiplier = 1 / self.endgameMaterialStart
         return 1 - min(1, materialCountWithoutPawns * multiplier)
 
@@ -164,8 +170,15 @@ class Evaluate:
         blackEval = 0
         whiteEval = 0
 
-        whiteMaterial, blackMaterial = self.countMaterial(
-            state, "w"), self.countMaterial(state, "b")
+        whiteMaterial = self.countMaterial(state, 'w')
+        blackMaterial = self.countMaterial(state, 'b')
+
+        whiteMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'w')
+        blackMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'b')
+        whiteEndgamePhaseWeight = self.endgamePhaseWeight(
+            whiteMaterialWithoutPawns)
+        blackEndgamePhaseWeight = self.endgamePhaseWeight(
+            blackMaterialWithoutPawns)
 
         whiteEval += whiteMaterial
         blackEval += blackMaterial
