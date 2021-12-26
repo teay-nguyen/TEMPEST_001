@@ -50,3 +50,16 @@ class MoveOrdering:
                     tempMoves[i], tempMoves[j] = tempMoves[j], tempMoves[i]
 
         return tempMoves
+
+
+if __name__ == '__main__':
+    from engine import State
+
+    e = State()
+    m = MoveOrdering()
+
+    moves = e.FilterValidMoves()
+    ordered_moves = m.OrderMoves(e, moves)
+
+    for i, ordered_move in enumerate(ordered_moves):
+        print(ordered_move, moves[i], m.moveScores[i])

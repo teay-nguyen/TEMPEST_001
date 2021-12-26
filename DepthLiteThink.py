@@ -81,7 +81,7 @@ class DepthLite1():
         MoveOrder = MoveOrdering()
         if currentDepth == 0:
             evaluation = Evaluate()
-            return evaluation.evaluate(state)
+            return self.QuiescenceSearch(state, alpha, beta)
 
         if len(moves) == 0:
             if state.inCheck():
@@ -113,24 +113,26 @@ class DepthLite1():
 
         return alpha
 
-    def QuiescenceSearch(self, state, alpha, beta, moves):
+    def QuiescenceSearch(self, state, alpha, beta):
         EvalClass = Evaluate()
+        OrderClass = MoveOrdering()
         eval = EvalClass.evaluate(state)
+        moves = state.FilterValidMoves(onlyCaptures=True)
+        ordered_moves = OrderClass.OrderMoves(state, moves)
 
         if (eval >= beta):
             return beta
-        if (eval > alpha):
-            alpha = eval
 
-        for move in moves:
+        alpha = max(eval, alpha)
+
+        for move in ordered_moves:
             state.make_move(move)
-            oppMoves = state.FilterValidMoves(onlyCaptures=True)
-            eval = -self.QuiescenceSearch(state, -beta, -alpha, oppMoves)
+            eval = -self.QuiescenceSearch(state, -beta, -alpha)
             state.undo_move()
 
             if (eval >= beta):
                 return beta
-            if (eval > alpha):
-                alpha = eval
+
+            alpha = max(eval, alpha)
 
         return alpha
