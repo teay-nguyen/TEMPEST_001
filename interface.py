@@ -3,7 +3,7 @@ import pygame as pyg
 import os
 from engine import State, Move
 from draw_board import DrawState, animatemove
-from ai import ChessAi
+from DepthLiteThink import DepthLite1
 from multiprocessing import Process, Queue
 
 pyg.init()
@@ -40,6 +40,7 @@ class Interface:
         return PIECES
 
     def app_main_exec(self):
+        DepthLite = DepthLite1()
         screen = pyg.display.set_mode((WIDTH+PANEL_WIDTH, HEIGHT))
         clock = pyg.time.Clock()
         state = State()
@@ -132,19 +133,12 @@ class Interface:
             if not human_turn:
                 if not AIThinking:
                     AIThinking = True
-                    AI = ChessAi()
                     print('THINKING...')
 
-                    returnQueue = Queue()
-                    movefinderprocess = Process(
-                        target=AI.startSearch, args=(state, returnQueue))
-                    movefinderprocess.start()
-
-                if not movefinderprocess.is_alive():
-                    print('FINISHED THINKING...')
-                    AIMove = returnQueue.get()
+                    AIMove = DepthLite.startSearch(state)
                     if AIMove is None:
-                        AIMove = AI.rand_move_ai(valid_moves)
+                        AIMove = DepthLite.random_move(state)
+
                     state.make_move(AIMove)
                     moveMade = True
                     animate = True
