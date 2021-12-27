@@ -4,16 +4,6 @@ from evaluation import Evaluate
 import time
 from MoveOrdering import MoveOrdering
 
-piece_vals = {
-    "K": 0,
-    "Q": 10,
-    "R": 5,
-    "B": 3,
-    "N": 3,
-    "p": 1,
-}
-
-
 class DepthLite1():
 
     def __init__(self):
