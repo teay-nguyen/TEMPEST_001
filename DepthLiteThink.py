@@ -18,6 +18,7 @@ class DepthLite1():
         self.NEGATIVE_INF = -self.POSITIVE_INF
         self.numNodes = 0
         self.abortSearch = False
+        self.LowPerformanceMode = True
 
     def random_move(self, state):
         moves = state.FilterValidMoves()
@@ -27,16 +28,21 @@ class DepthLite1():
         self.bestMoveFound = self.bestMoveInIteration = None
         self.bestEvalFound = self.bestEvalInIteration = 0
         self.abortSearch = False
+
         MoveOrder = MoveOrdering()
         moves = state.FilterValidMoves()
         start = time.time()
 
         orderedMoves = MoveOrder.OrderMoves(state, moves)
+        currentIterativeSearchDepth = 0
+        highPerformantDepth = 4
+        lowPerformantDepth = self.DefaultDepth
+        targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
 
         if self.useIterativeDeepening:
-            for _ in range(self.DefaultDepth):
-                print('Searching Depth:', _ + 1)
-                depth = _ + 1
+
+            for depth in range(1, targetDepth + 1):
+                print('Searching Depth:', depth)
                 eval = self.Search(
                     state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves, 0)
 
@@ -44,10 +50,11 @@ class DepthLite1():
                 if (searchTime - start) > 4 or self.abortSearch:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
-                    print('TIME LIMIT EXCEEDED! EXITING SEARCH:',
+                    print('TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH:',
                           (searchTime - start))
                     break
                 else:
+                    currentIterativeSearchDepth = depth
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
 
@@ -55,7 +62,7 @@ class DepthLite1():
                         print('MATE FOUND, EXITING SEARCH')
                         break
         else:
-            eval = self.Search(state, self.DefaultDepth,
+            eval = self.Search(state, targetDepth,
                                self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves, 0)
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
@@ -70,12 +77,22 @@ class DepthLite1():
 
         rQueue.put(self.bestMoveFound)
 
+    def GetSearchResult(self):
+        return (self.bestMoveFound, self.bestEvalFound)
+
+    def EndSearch(self):
+        self.abortSearch = True
+
     def Search(self, state, currentDepth, alpha, beta, moves, plyFromRoot):
+        if (self.abortSearch):
+            return 0
+
         self.count += 1
         MoveOrder = MoveOrdering()
+
         if currentDepth == 0:
-            #evaluation = Evaluate()
-            return self.QuiescenceSearch(state, alpha, beta)
+            eval = self.QuiescenceSearch(state, alpha, beta)
+            return eval
 
         if len(moves) == 0:
             if state.inCheck():
@@ -116,8 +133,8 @@ class DepthLite1():
 
         if (eval >= beta):
             return beta
-
-        alpha = max(eval, alpha)
+        if (eval > alpha):
+            alpha = eval
 
         for move in ordered_moves:
             state.make_move(move)
@@ -126,7 +143,7 @@ class DepthLite1():
 
             if (eval >= beta):
                 return beta
-
-            alpha = max(eval, alpha)
+            if (eval > alpha):
+                alpha = eval
 
         return alpha

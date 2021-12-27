@@ -1,19 +1,19 @@
 
 piece_vals = {
-    "K": 0,
-    "Q": 10,
-    "R": 5,
-    "B": 3,
-    "N": 3,
-    "p": 1,
+    "K": 9999999,
+    "Q": 900,
+    "R": 500,
+    "B": 320,
+    "N": 300,
+    "p": 100,
 }
 
 
 class MoveOrdering:
     def __init__(self):
         self.maxMoveCount = 218
-        self.squareControlledByOppPenalty = 2.5
-        self.capturedPieceMult = 2
+        self.squareControlledByOppPenalty = 25
+        self.capturedPieceMult = 10
         self.moveScores = []
 
     def OrderMoves(self, state, moves):

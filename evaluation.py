@@ -12,14 +12,14 @@ piece_value = {
 piece_map_visualization = {
     "K": np.array(
         [
-            [2, 3, 1, 0, 0, 1, 3, 2],
-            [2, 2, 0, 0, 0, 0, 2, 2],
-            [-3, -4, -4, -5, -5, -4, -4, -3],
-            [-3, -4, -4, -6, -6, -4, -4, -3],
-            [-3, -4, -4, -6, -6, -4, -4, -3],
-            [-3, -4, -4, -5, -5, -4, -4, -3],
-            [2, 2, 0, 0, 0, 0, 2, 2],
-            [2, 3, 1, 0, 0, 1, 3, 2],
+            [-30,-40,-40,-50,-50,-40,-40,-30],
+			[-30,-40,-40,-50,-50,-40,-40,-30],
+			[-30,-40,-40,-50,-50,-40,-40,-30],
+			[-30,-40,-40,-50,-50,-40,-40,-30],
+			[-20,-30,-30,-40,-40,-30,-30,-20],
+			[-10,-20,-20,-20,-20,-20,-20,-10],
+			[20, 20,  0,  0,  0,  0, 20, 20],
+			[20, 30, 10,  0,  0, 10, 30, 20]
         ]
     ),
     "Q": np.array(
@@ -70,7 +70,7 @@ piece_map_visualization = {
 			[-50,-40,-30,-30,-30,-30,-40,-50],
         ]
     ),
-    "wp": np.array(
+    "p": np.array(
         [
             [0,  0,  0,  0,  0,  0,  0,  0],
 			[50, 50, 50, 50, 50, 50, 50, 50],
@@ -83,9 +83,6 @@ piece_map_visualization = {
         ]
     ),
 }
-
-piece_map_visualization['bp'] = np.flipud(piece_map_visualization['wp'])
-
 
 class Evaluate:
     def __init__(self):
@@ -156,6 +153,25 @@ class Evaluate:
         multiplier = 1 / self.endgameMaterialStart
         return 1 - min(1, materialCountWithoutPawns * multiplier)
 
+    def evalPieceSquareTbls(self, state, colorIndex):
+        score = 0
+        for row in range(len(state.board)):
+            for col in range(len(state.board[row])):
+                square = state.board[row][col]
+                pieceSide = square[0]
+                pieceType = square[1]
+                if square != '--' and pieceSide == colorIndex:
+                    if colorIndex == 'w':
+                        pos_val = piece_map_visualization[pieceType][row][col]
+                        score += pos_val * 0.111
+                    elif colorIndex == 'b':
+                        reverse_map = np.flipud(piece_map_visualization[pieceType])
+                        pos_val = reverse_map[row][col]
+                        score += pos_val * 0.111
+
+        return score
+
+
     def evaluate(self, state):
         blackEval = 0
         whiteEval = 0
@@ -173,25 +189,11 @@ class Evaluate:
         whiteEval += whiteMaterial
         blackEval += blackMaterial
 
-        for row in range(len(state.board)):
-            for col in range(len(state.board[row])):
-                square = state.board[row, col]
-                if square != "--":
-                    if square[1] == "p":
-                        if square[0] == "w":
-                            pos_val = piece_map_visualization['wp'][row][col]
-                            whiteEval += pos_val * 0.111
-                        elif square[0] == "b":
-                            pos_val = piece_map_visualization['bp'][row][col]
-                            blackEval += pos_val * 0.111
-                    else:
-                        if square[0] == "w":
-                            pos_val = piece_map_visualization[square[1]][row][col]
-                            whiteEval += pos_val * 0.111
-                        elif square[0] == "b":
-                            reverse_map = np.flipud(piece_map_visualization[square[1]])
-                            pos_val = reverse_map[row][col]
-                            blackEval += pos_val * 0.111
+        whitePieceSquareTableEval = self.evalPieceSquareTbls(state, 'w')
+        blackPieceSquareTableEval = self.evalPieceSquareTbls(state, 'b')
+
+        whiteEval += whitePieceSquareTableEval
+        blackEval += blackPieceSquareTableEval
 
         #print("BLACK MATERIAL:", blackMaterial)
         #print("WHITE MATERIAL:", whiteMaterial)
