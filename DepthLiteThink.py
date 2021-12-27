@@ -84,7 +84,7 @@ class DepthLite1():
         self.count += 1
         MoveOrder = MoveOrdering()
         if currentDepth == 0:
-            evaluation = Evaluate()
+            #evaluation = Evaluate()
             return self.QuiescenceSearch(state, alpha, beta)
 
         if len(moves) == 0:
