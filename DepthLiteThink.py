@@ -50,8 +50,7 @@ class DepthLite1():
                 if (searchTime - start) > 4 or self.abortSearch:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
-                    print('TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH:',
-                          (searchTime - start))
+                    print('TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH:', (searchTime - start))
                     break
                 else:
                     currentIterativeSearchDepth = depth
@@ -97,7 +96,8 @@ class DepthLite1():
         if len(moves) == 0:
             if state.inCheck():
                 return self.NEGATIVE_INF
-            return 0
+            else:
+                return 0
 
         bestMoveInPosition = None
 

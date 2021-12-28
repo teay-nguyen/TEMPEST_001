@@ -191,6 +191,11 @@ class Evaluate:
         whiteEval += whitePieceSquareTableEval
         blackEval += blackPieceSquareTableEval
 
+        if state.whitesturn:
+            whiteEval += self.ForceKingToCornerEndgameVal(state.whiteKingLocation, state.blackKingLocation, whiteEndgamePhaseWeight)
+        else:
+            blackEval += self.ForceKingToCornerEndgameVal(state.blackKingLocation, state.whiteKingLocation, blackEndgamePhaseWeight) 
+
         #print("BLACK MATERIAL:", blackMaterial)
         #print("WHITE MATERIAL:", whiteMaterial)
 
