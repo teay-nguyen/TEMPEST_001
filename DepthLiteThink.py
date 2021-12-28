@@ -15,8 +15,10 @@ class DepthLite1():
         self.useIterativeDeepening = True
         self.DefaultDepth = 2
         self.POSITIVE_INF = 999999999
-        self.NEGATIVE_INF = -self.POSITIVE_INF
+        self.NEGATIVE_INF = -999999999
+        self.immediateMateScore = 100000
         self.numNodes = 0
+        self.numCutoffs = 0
         self.abortSearch = False
         self.LowPerformanceMode = True
 
@@ -26,25 +28,20 @@ class DepthLite1():
 
     def startSearch(self, state, rQueue):
         self.bestMoveFound = self.bestMoveInIteration = None
-        self.bestEvalFound = self.bestEvalInIteration = 0
+        self.bestEvalFound = self.numCutoffs = self.bestEvalInIteration = 0
         self.abortSearch = False
 
-        MoveOrder = MoveOrdering()
-        moves = state.FilterValidMoves()
         start = time.time()
-
-        orderedMoves = MoveOrder.OrderMoves(state, moves)
         currentIterativeSearchDepth = 0
         highPerformantDepth = 4
         lowPerformantDepth = self.DefaultDepth
-        targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
 
         if self.useIterativeDeepening:
-
+            targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
+            
             for depth in range(1, targetDepth + 1):
                 print('Searching Depth:', depth)
-                eval = self.Search(
-                    state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves, 0)
+                self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
 
                 searchTime = time.time()
                 if (searchTime - start) > 4 or self.abortSearch:
@@ -57,12 +54,11 @@ class DepthLite1():
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
 
-                    if self.bestEvalFound >= self.POSITIVE_INF:
+                    if self.isMateScore(self.bestEvalFound):
                         print('MATE FOUND, EXITING SEARCH')
                         break
         else:
-            eval = self.Search(state, targetDepth,
-                               self.NEGATIVE_INF, self.POSITIVE_INF, orderedMoves, 0)
+            self.Search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
 
@@ -82,20 +78,29 @@ class DepthLite1():
     def EndSearch(self):
         self.abortSearch = True
 
-    def Search(self, state, currentDepth, alpha, beta, moves, plyFromRoot):
+    def Search(self, state, depth, alpha, beta, plyFromRoot):
         if (self.abortSearch):
             return 0
 
+        if (plyFromRoot > 0):
+            alpha = max(alpha, -self.immediateMateScore + plyFromRoot)
+            beta = min(beta, self.immediateMateScore - plyFromRoot)
+            if alpha >= beta:
+                return alpha
+
         self.count += 1
         MoveOrder = MoveOrdering()
+        moves = state.FilterValidMoves()
+        ordered_moves = MoveOrder.OrderMoves(state, moves)
 
-        if currentDepth == 0:
+        if depth == 0:
             eval = self.QuiescenceSearch(state, alpha, beta)
             return eval
 
         if len(moves) == 0:
             if state.inCheck():
-                return self.NEGATIVE_INF
+                mateScore = self.immediateMateScore - plyFromRoot
+                return -mateScore
             else:
                 return 0
 
@@ -103,14 +108,12 @@ class DepthLite1():
 
         for move in moves:
             state.make_move(move)
-            oppMoves = state.FilterValidMoves()
-            orderedMoves = MoveOrder.OrderMoves(state, oppMoves)
-            eval = -self.Search(state, currentDepth -
-                                1, -beta, -alpha, orderedMoves, plyFromRoot + 1)
+            eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
             state.undo_move()
             self.numNodes += 1
 
             if (eval >= beta):
+                self.numCutoffs += 1
                 return beta
 
             if (eval > alpha):
@@ -128,13 +131,14 @@ class DepthLite1():
         EvalClass = Evaluate()
         OrderClass = MoveOrdering()
         eval = EvalClass.evaluate(state)
-        moves = state.FilterValidMoves(onlyCaptures=True)
-        ordered_moves = OrderClass.OrderMoves(state, moves)
 
         if (eval >= beta):
             return beta
         if (eval > alpha):
             alpha = eval
+
+        moves = state.FilterValidMoves(onlyCaptures=True)
+        ordered_moves = OrderClass.OrderMoves(state, moves)
 
         for move in ordered_moves:
             state.make_move(move)
@@ -142,8 +146,13 @@ class DepthLite1():
             state.undo_move()
 
             if (eval >= beta):
+                self.numCutoffs += 1
                 return beta
             if (eval > alpha):
                 alpha = eval
 
         return alpha
+
+    def isMateScore(self, score):
+        maxMateDepth = 1000
+        return abs(score) > (self.immediateMateScore - maxMateDepth)
