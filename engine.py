@@ -81,7 +81,7 @@ class State:
 
     def fenToPos(self):
         self.init_board_pieces = []
-        fen = '7r/8/8/8/8/4k3/8/4K3 b - - 0 1'
+        fen = '8/8/8/8/4k3/8/2r5/4K3 b - - 0 1'
         #fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         self.board = np.array(
             [
