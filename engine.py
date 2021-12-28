@@ -81,7 +81,7 @@ class State:
 
     def fenToPos(self):
         self.init_board_pieces = []
-        fen = '8/8/8/8/4k3/8/2r5/4K3 b - - 0 1'
+        fen = '8/2k5/8/2r5/1r6/8/8/4K3 b - - 0 1'
         #fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
         self.board = np.array(
             [
@@ -426,8 +426,7 @@ class State:
         if len(moves) == 0:
             if self.inCheck():
                 self.checkmate = True
-                # print(
-                #    f"Checkmate! {'WHITE' if not self.whitesturn else 'BLACK'} wins")
+                # print(f"Checkmate! {'WHITE' if not self.whitesturn else 'BLACK'} wins")
             else:
                 self.stalemate = True
                 # print("Stalemate!")
@@ -450,12 +449,6 @@ class State:
 
         self.epPossible = tempEpPossible
         self.currCastleRights = tempcastleRights
-
-        # '''
-        # for move in moves:
-        #    if move.getChessNotation(True) == 'd7c8':
-        #        print(move)
-        # ''''
 
         if onlyCaptures:
             for i in range(len(moves) - 1, -1, -1):

@@ -151,7 +151,7 @@ class Evaluate:
         multiplier = 1 / self.endgameMaterialStart
         return 1 - min(1, materialCountWithoutPawns * multiplier)
 
-    def evalPieceSquareTbls(self, state, colorIndex):
+    def evalPieceSquareTbls(self, state, colorIndex, endgamePhaseWeight):
         score = 0
         for row in range(len(state.board)):
             for col in range(len(state.board[row])):
@@ -159,14 +159,22 @@ class Evaluate:
                 pieceSide = square[0]
                 pieceType = square[1]
                 if square != '--' and pieceSide == colorIndex:
-                    if colorIndex == 'w':
-                        pos_val = piece_map_visualization[pieceType][row][col]
-                        score += pos_val * 0.5
-                    elif colorIndex == 'b':
-                        reverse_map = np.flipud(piece_map_visualization[pieceType])
-                        pos_val = reverse_map[row][col]
-                        score += pos_val * 0.5
-
+                    if pieceType != 'K':
+                        if colorIndex == 'w':
+                            pos_val = piece_map_visualization[pieceType][row][col]
+                            score += pos_val * 0.5
+                        elif colorIndex == 'b':
+                            reverse_map = np.flipud(piece_map_visualization[pieceType])
+                            pos_val = reverse_map[row][col]
+                            score += pos_val * 0.5
+                    else:
+                        if colorIndex == 'w':
+                            pos_val = piece_map_visualization[pieceType][row][col]
+                            score += int(pos_val * (1 - endgamePhaseWeight))
+                        elif colorIndex == 'b':
+                            reverse_map = np.flipud(piece_map_visualization[pieceType])
+                            pos_val = reverse_map[row][col]
+                            score += int(pos_val * (1 - endgamePhaseWeight))
         return score
 
 
@@ -185,8 +193,8 @@ class Evaluate:
         whiteEval += whiteMaterial
         blackEval += blackMaterial
 
-        whitePieceSquareTableEval = self.evalPieceSquareTbls(state, 'w')
-        blackPieceSquareTableEval = self.evalPieceSquareTbls(state, 'b')
+        whitePieceSquareTableEval = self.evalPieceSquareTbls(state, 'w', whiteEndgamePhaseWeight)
+        blackPieceSquareTableEval = self.evalPieceSquareTbls(state, 'b', blackEndgamePhaseWeight)
 
         whiteEval += whitePieceSquareTableEval
         blackEval += blackPieceSquareTableEval
