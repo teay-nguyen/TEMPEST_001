@@ -12,7 +12,7 @@ piece_vals = {
 class MoveOrdering:
     def __init__(self):
         self.maxMoveCount = 218
-        self.squareControlledByOppPenalty = 25
+        self.squareControlledByOppPenalty = 350
         self.capturedPieceMult = 10
         self.moveScores = []
 

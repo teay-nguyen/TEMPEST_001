@@ -76,7 +76,7 @@ def animatemove(move, screen, board, clock, size, loaded_pieces):
     dR = move.endRow - move.startRow
     dC = move.endCol - move.startCol
 
-    fps = 5
+    fps = 3
     frameCount = (abs(dR) + abs(dC)) * fps
 
     for frame in range(frameCount + 1):
