@@ -436,13 +436,17 @@ class State:
 
         if onlyCaptures == False:
             if self.whitesturn:
-                self.getCastleMoves(
-                    self.whiteKingLocation[0], self.whiteKingLocation[1], moves
-                )
+                if self.whiteKingLocation == (7, 4):
+                    if self.currCastleRights.wks or self.currCastleRights.wqs:
+                        self.getCastleMoves(
+                            self.whiteKingLocation[0], self.whiteKingLocation[1], moves
+                        )
             else:
-                self.getCastleMoves(
-                    self.blackKingLocation[0], self.blackKingLocation[1], moves
-                )
+                if self.blackKingLocation == (0, 4):
+                    if self.currCastleRights.bks or self.currCastleRights.bqs:
+                        self.getCastleMoves(
+                            self.blackKingLocation[0], self.blackKingLocation[1], moves
+                        )
 
         self.epPossible = tempEpPossible
         self.currCastleRights = tempcastleRights
