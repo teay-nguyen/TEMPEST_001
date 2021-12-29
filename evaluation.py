@@ -178,13 +178,14 @@ class Evaluate:
                             score += pos_val
                     else:
                         if colorIndex == 'w':
-                            pos_val = piece_map_visualization[pieceType][row][col]
+                            pos_val = piece_map_visualization['K'][row][col]
                             score += int(pos_val * (1 - endgamePhaseWeight))
                         elif colorIndex == 'b':
                             reverse_map = np.flipud(
-                                piece_map_visualization[pieceType])
+                                piece_map_visualization['K'])
                             pos_val = reverse_map[row][col]
                             score += int(pos_val * (1 - endgamePhaseWeight))
+
         return score
 
     def evaluate(self, state):
@@ -204,6 +205,11 @@ class Evaluate:
         whiteEval += whiteMaterial
         blackEval += blackMaterial
 
+        whiteEval += self.mopUpEval(state, 'w', 'b', whiteMaterial,
+                                    blackMaterial, whiteEndgamePhaseWeight)
+        blackEval += self.mopUpEval(state, 'b', 'w', blackMaterial,
+                                    whiteMaterial, blackEndgamePhaseWeight)
+
         whitePieceSquareTableEval = self.evalPieceSquareTbls(
             state, 'w', whiteEndgamePhaseWeight)
         blackPieceSquareTableEval = self.evalPieceSquareTbls(
@@ -211,11 +217,6 @@ class Evaluate:
 
         whiteEval += whitePieceSquareTableEval
         blackEval += blackPieceSquareTableEval
-
-        whiteEval += self.mopUpEval(state, 'w', 'b', whiteMaterial,
-                                    blackMaterial, whiteEndgamePhaseWeight)
-        blackEval += self.mopUpEval(state, 'b', 'w', blackMaterial,
-                                    whiteMaterial, blackEndgamePhaseWeight)
 
         #print("BLACK MATERIAL:", blackMaterial)
         #print("WHITE MATERIAL:", whiteMaterial)
