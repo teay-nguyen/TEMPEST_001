@@ -1,4 +1,5 @@
 import numpy as np
+from PrecomputedMoveData import PrecomputedMoveData
 
 piece_value = {
     "K": 10 ** 10,
@@ -87,6 +88,7 @@ piece_map_visualization = {
 
 class Evaluate:
     def __init__(self):
+        self.preComputedMoveData = PrecomputedMoveData()
         self.endgameMaterialStart = piece_value["R"] * \
             2 + piece_value["B"] + piece_value['N']
 
@@ -125,27 +127,16 @@ class Evaluate:
     def mopUpEval(self, state, friendIdx, enemyIdx, myMaterial, oppMaterial, endgameWeight):
         mopUpScore = 0
         if (myMaterial > (oppMaterial + piece_value["p"] * 2)) and (endgameWeight > 0):
-            print(friendIdx)
+
             friendKingSq = state.whiteKingLocation if friendIdx == 'w' else state.blackKingLocation
             oppKingSq = state.whiteKingLocation if enemyIdx == 'w' else state.blackKingLocation
 
             oppKingRank = oppKingSq[0]
             oppKingCol = oppKingSq[1]
 
-            oppKingDstFromCentreCol = max(3 - oppKingCol, oppKingCol - 4)
-            oppKingDstFromCentreRank = max(3 - oppKingRank, oppKingRank - 4)
-            centreManhattanDistance = (
-                oppKingDstFromCentreCol + oppKingDstFromCentreRank)
-
-            mopUpScore += (centreManhattanDistance * 10)
-
-            friendKingRank = friendKingSq[0]
-            friendKingCol = friendKingSq[1]
-
-            dstBetweenKingsCol = abs(friendKingCol - oppKingCol)
-            dstBetweenKingsRank = abs(friendKingRank - oppKingRank)
-            dstBetweenKings = dstBetweenKingsCol + dstBetweenKingsRank
-            mopUpScore += (14 - dstBetweenKings) * 4
+            mopUpScore += self.preComputedMoveData.centreManhattonDistance[oppKingRank, oppKingCol] * 10
+            mopUpScore += (14 - self.preComputedMoveData.NumRookMovesToReachSquare(
+                friendKingSq, oppKingSq)) * 4
 
             return int(mopUpScore * endgameWeight)
 
@@ -166,12 +157,12 @@ class Evaluate:
                     if pieceType != 'K':
                         if colorIndex == 'w':
                             pos_val = piece_map_visualization[pieceType][row][col]
-                            score += pos_val * 0.9
+                            score += pos_val
                         elif colorIndex == 'b':
                             reverse_map = np.flipud(
                                 piece_map_visualization[pieceType])
                             pos_val = reverse_map[row][col]
-                            score += pos_val * 0.9
+                            score += pos_val
                     else:
                         if colorIndex == 'w':
                             pos_val = piece_map_visualization[pieceType][row][col]
