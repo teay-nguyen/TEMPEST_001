@@ -12,81 +12,83 @@ piece_value = {
 piece_map_visualization = {
     "K": np.array(
         [
-            [-30,-40,-40,-50,-50,-40,-40,-30],
-			[-30,-40,-40,-50,-50,-40,-40,-30],
-			[-30,-40,-40,-50,-50,-40,-40,-30],
-			[-30,-40,-40,-50,-50,-40,-40,-30],
-			[-20,-30,-30,-40,-40,-30,-30,-20],
-			[-10,-20,-20,-20,-20,-20,-20,-10],
-			[20, 20,  0,  0,  0,  0, 20, 20],
-			[20, 30, 10,  0,  0, 10, 30, 20]
+            [-30, -40, -40, -50, -50, -40, -40, -30],
+            [-30, -40, -40, -50, -50, -40, -40, -30],
+            [-30, -40, -40, -50, -50, -40, -40, -30],
+            [-30, -40, -40, -50, -50, -40, -40, -30],
+            [-20, -30, -30, -40, -40, -30, -30, -20],
+            [-10, -20, -20, -20, -20, -20, -20, -10],
+            [20, 20,  0,  0,  0,  0, 20, 20],
+            [20, 30, 10,  0,  0, 10, 30, 20]
         ]
     ),
     "Q": np.array(
         [
-            [-20,-10,-10, -5, -5,-10,-10,-20],
-			[-10,  0,  0,  0,  0,  0,  0,-10],
-			[-10,  0,  5,  5,  5,  5,  0,-10],
-			[-5,  0,  5,  5,  5,  5,  0, -5],
-			[0,  0,  5,  5,  5,  5,  0, -5],
-			[-10,  5,  5,  5,  5,  5,  0,-10],
-			[-10,  0,  5,  0,  0,  0,  0,-10],
-			[-20,-10,-10, -5, -5,-10,-10,-20]
+            [-20, -10, -10, -5, -5, -10, -10, -20],
+            [-10,  0,  0,  0,  0,  0,  0, -10],
+            [-10,  0,  5,  5,  5,  5,  0, -10],
+            [-5,  0,  5,  5,  5,  5,  0, -5],
+            [0,  0,  5,  5,  5,  5,  0, -5],
+            [-10,  5,  5,  5,  5,  5,  0, -10],
+            [-10,  0,  5,  0,  0,  0,  0, -10],
+            [-20, -10, -10, -5, -5, -10, -10, -20]
         ]
     ),
     "R": np.array(
         [
             [0,  0,  0,  0,  0,  0,  0,  0],
-			[5, 10, 10, 10, 10, 10, 10,  5],
-			[-5,  0,  0,  0,  0,  0,  0, -5],
-			[-5,  0,  0,  0,  0,  0,  0, -5],
-			[-5,  0,  0,  0,  0,  0,  0, -5],
-			[-5,  0,  0,  0,  0,  0,  0, -5],
-			[-5,  0,  0,  0,  0,  0,  0, -5],
-			[0,  0,  0,  5,  5,  0,  0,  0]
+            [5, 10, 10, 10, 10, 10, 10,  5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [-5,  0,  0,  0,  0,  0,  0, -5],
+            [0,  0,  0,  5,  5,  0,  0,  0]
         ]
     ),
     "B": np.array(
         [
-            [-20,-10,-10,-10,-10,-10,-10,-20],
-			[-10,  0,  0,  0,  0,  0,  0,-10],
-			[-10,  0,  5, 10, 10,  5,  0,-10],
-			[-10,  5,  5, 10, 10,  5,  5,-10],
-			[-10,  0, 10, 10, 10, 10,  0,-10],
-			[-10, 10, 10, 10, 10, 10, 10,-10],
-			[-10,  5,  0,  0,  0,  0,  5,-10],
-			[-20,-10,-10,-10,-10,-10,-10,-20],
+            [-20, -10, -10, -10, -10, -10, -10, -20],
+            [-10,  0,  0,  0,  0,  0,  0, -10],
+            [-10,  0,  5, 10, 10,  5,  0, -10],
+            [-10,  5,  5, 10, 10,  5,  5, -10],
+            [-10,  0, 10, 10, 10, 10,  0, -10],
+            [-10, 10, 10, 10, 10, 10, 10, -10],
+            [-10,  5,  0,  0,  0,  0,  5, -10],
+            [-20, -10, -10, -10, -10, -10, -10, -20],
         ]
     ),
     "N": np.array(
         [
-            [-50,-40,-30,-30,-30,-30,-40,-50],
-			[-40,-20,  0,  0,  0,  0,-20,-40],
-			[-30,  0, 10, 15, 15, 10,  0,-30],
-			[-30,  5, 15, 20, 20, 15,  5,-30],
-			[-30,  0, 15, 20, 20, 15,  0,-30],
-			[-30,  5, 10, 15, 15, 10,  5,-30],
-			[-40,-20,  0,  5,  5,  0,-20,-40],
-			[-50,-40,-30,-30,-30,-30,-40,-50],
+            [-50, -40, -30, -30, -30, -30, -40, -50],
+            [-40, -20,  0,  0,  0,  0, -20, -40],
+            [-30,  0, 10, 15, 15, 10,  0, -30],
+            [-30,  5, 15, 20, 20, 15,  5, -30],
+            [-30,  0, 15, 20, 20, 15,  0, -30],
+            [-30,  5, 10, 15, 15, 10,  5, -30],
+            [-40, -20,  0,  5,  5,  0, -20, -40],
+            [-50, -40, -30, -30, -30, -30, -40, -50],
         ]
     ),
     "p": np.array(
         [
             [0,  0,  0,  0,  0,  0,  0,  0],
-			[50, 50, 50, 50, 50, 50, 50, 50],
-			[10, 10, 20, 30, 30, 20, 10, 10],
-			[5,  5, 10, 25, 25, 10,  5,  5],
-			[0,  0,  0, 20, 20,  0,  0,  0],
-			[5, -5,-10,  0,  0,-10, -5,  5],
-			[5, 10, 10,-20,-20, 10, 10,  5],
-			[0,  0,  0,  0,  0,  0,  0,  0]
+            [50, 50, 50, 50, 50, 50, 50, 50],
+            [10, 10, 20, 30, 30, 20, 10, 10],
+            [5,  5, 10, 25, 25, 10,  5,  5],
+            [0,  0,  0, 20, 20,  0,  0,  0],
+            [5, -5, -10,  0,  0, -10, -5,  5],
+            [5, 10, 10, -20, -20, 10, 10,  5],
+            [0,  0,  0,  0,  0,  0,  0,  0]
         ]
     ),
 }
 
+
 class Evaluate:
     def __init__(self):
-        self.endgameMaterialStart = piece_value["R"] * 2 + piece_value["B"] + piece_value['N']
+        self.endgameMaterialStart = piece_value["R"] * \
+            2 + piece_value["B"] + piece_value['N']
 
     def countMaterial(self, state, colorIndex):
         board = state.board
@@ -122,7 +124,8 @@ class Evaluate:
 
     def mopUpEval(self, state, friendIdx, enemyIdx, myMaterial, oppMaterial, endgameWeight):
         mopUpScore = 0
-        if (myMaterial > oppMaterial + piece_value["p"] * 2) and (endgameWeight > 0):
+        if (myMaterial > (oppMaterial + piece_value["p"] * 2)) and (endgameWeight > 0):
+            print(friendIdx)
             friendKingSq = state.whiteKingLocation if friendIdx == 'w' else state.blackKingLocation
             oppKingSq = state.whiteKingLocation if enemyIdx == 'w' else state.blackKingLocation
 
@@ -131,7 +134,8 @@ class Evaluate:
 
             oppKingDstFromCentreCol = max(3 - oppKingCol, oppKingCol - 4)
             oppKingDstFromCentreRank = max(3 - oppKingRank, oppKingRank - 4)
-            centreManhattanDistance = (oppKingDstFromCentreCol + oppKingDstFromCentreRank)
+            centreManhattanDistance = (
+                oppKingDstFromCentreCol + oppKingDstFromCentreRank)
 
             mopUpScore += (centreManhattanDistance * 10)
 
@@ -164,7 +168,8 @@ class Evaluate:
                             pos_val = piece_map_visualization[pieceType][row][col]
                             score += pos_val * 0.9
                         elif colorIndex == 'b':
-                            reverse_map = np.flipud(piece_map_visualization[pieceType])
+                            reverse_map = np.flipud(
+                                piece_map_visualization[pieceType])
                             pos_val = reverse_map[row][col]
                             score += pos_val * 0.9
                     else:
@@ -172,7 +177,8 @@ class Evaluate:
                             pos_val = piece_map_visualization[pieceType][row][col]
                             score += int(pos_val * (1 - endgamePhaseWeight))
                         elif colorIndex == 'b':
-                            reverse_map = np.flipud(piece_map_visualization[pieceType])
+                            reverse_map = np.flipud(
+                                piece_map_visualization[pieceType])
                             pos_val = reverse_map[row][col]
                             score += int(pos_val * (1 - endgamePhaseWeight))
         return score
@@ -186,20 +192,26 @@ class Evaluate:
 
         whiteMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'w')
         blackMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'b')
-        whiteEndgamePhaseWeight = self.endgamePhaseWeight(whiteMaterialWithoutPawns)
-        blackEndgamePhaseWeight = self.endgamePhaseWeight(blackMaterialWithoutPawns)
+        whiteEndgamePhaseWeight = self.endgamePhaseWeight(
+            whiteMaterialWithoutPawns)
+        blackEndgamePhaseWeight = self.endgamePhaseWeight(
+            blackMaterialWithoutPawns)
 
         whiteEval += whiteMaterial
         blackEval += blackMaterial
 
-        whitePieceSquareTableEval = self.evalPieceSquareTbls(state, 'w', whiteEndgamePhaseWeight)
-        blackPieceSquareTableEval = self.evalPieceSquareTbls(state, 'b', blackEndgamePhaseWeight)
+        whitePieceSquareTableEval = self.evalPieceSquareTbls(
+            state, 'w', whiteEndgamePhaseWeight)
+        blackPieceSquareTableEval = self.evalPieceSquareTbls(
+            state, 'b', blackEndgamePhaseWeight)
 
         whiteEval += whitePieceSquareTableEval
         blackEval += blackPieceSquareTableEval
 
-        whiteEval += self.mopUpEval(state, 'w', 'b', whiteMaterial, blackMaterial, whiteEndgamePhaseWeight)
-        blackEval += self.mopUpEval(state, 'b', 'w', blackMaterial, whiteMaterial, blackEndgamePhaseWeight) 
+        whiteEval += self.mopUpEval(state, 'w', 'b', whiteMaterial,
+                                    blackMaterial, whiteEndgamePhaseWeight)
+        blackEval += self.mopUpEval(state, 'b', 'w', blackMaterial,
+                                    whiteMaterial, blackEndgamePhaseWeight)
 
         #print("BLACK MATERIAL:", blackMaterial)
         #print("WHITE MATERIAL:", whiteMaterial)
