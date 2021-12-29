@@ -121,32 +121,31 @@ class Evaluate:
         return material
 
     def mopUpEval(self, state, friendIdx, enemyIdx, myMaterial, oppMaterial, endgameWeight):
-        moppUpScore = 0
+        mopUpScore = 0
         if (myMaterial > oppMaterial + piece_value["p"] * 2) and (endgameWeight > 0):
             friendKingSq = state.whiteKingLocation if friendIdx == 'w' else state.blackKingLocation
             oppKingSq = state.whiteKingLocation if enemyIdx == 'w' else state.blackKingLocation
 
+            oppKingRank = oppKingSq[0]
+            oppKingCol = oppKingSq[1]
 
-    def ForceKingToCornerEndgameVal(self, friendKingSquare, oppKingSquare, endgameWeight):
-        evaluation = 0
+            oppKingDstFromCentreCol = max(3 - oppKingCol, oppKingCol - 4)
+            oppKingDstFromCentreRank = max(3 - oppKingRank, oppKingRank - 4)
+            centreManhattanDistance = (oppKingDstFromCentreCol + oppKingDstFromCentreRank)
 
-        oppKingRank = oppKingSquare[0]
-        oppKingCol = oppKingSquare[1]
+            mopUpScore += (centreManhattanDistance * 10)
 
-        oppKingDstFromCentreCol = max(3 - oppKingCol, oppKingCol - 4)
-        oppKingDstFromCentreRank = max(3 - oppKingRank, oppKingRank - 4)
-        oppKingDstFromCentre = (oppKingDstFromCentreCol + oppKingDstFromCentreRank)
-        evaluation += oppKingDstFromCentre
+            friendKingRank = friendKingSq[0]
+            friendKingCol = friendKingSq[1]
 
-        friendKingRank = friendKingSquare[0]
-        friendKingCol = friendKingSquare[1]
+            dstBetweenKingsCol = abs(friendKingCol - oppKingCol)
+            dstBetweenKingsRank = abs(friendKingRank - oppKingRank)
+            dstBetweenKings = dstBetweenKingsCol + dstBetweenKingsRank
+            mopUpScore += (14 - dstBetweenKings) * 4
 
-        dstBetweenKingsRank = abs(friendKingRank - oppKingRank)
-        dstBetweenKingsCol = abs(friendKingCol - oppKingCol)
-        dstBetweenKings = dstBetweenKingsRank + dstBetweenKingsCol
-        evaluation += 14 - dstBetweenKings
+            return int(mopUpScore * endgameWeight)
 
-        return int(evaluation * 10 * endgameWeight)
+        return 0
 
     def endgamePhaseWeight(self, materialCountWithoutPawns):
         multiplier = 1 / self.endgameMaterialStart
@@ -199,10 +198,8 @@ class Evaluate:
         whiteEval += whitePieceSquareTableEval
         blackEval += blackPieceSquareTableEval
 
-        if state.whitesturn:
-            whiteEval += self.ForceKingToCornerEndgameVal(state.whiteKingLocation, state.blackKingLocation, whiteEndgamePhaseWeight)
-        else:
-            blackEval += self.ForceKingToCornerEndgameVal(state.blackKingLocation, state.whiteKingLocation, blackEndgamePhaseWeight) 
+        whiteEval += self.mopUpEval(state, 'w', 'b', whiteMaterial, blackMaterial, whiteEndgamePhaseWeight)
+        blackEval += self.mopUpEval(state, 'b', 'w', blackMaterial, whiteMaterial, blackEndgamePhaseWeight) 
 
         #print("BLACK MATERIAL:", blackMaterial)
         #print("WHITE MATERIAL:", whiteMaterial)
