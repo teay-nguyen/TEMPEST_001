@@ -1,7 +1,7 @@
 import numpy as np
 
 piece_value = {
-    "K": 0,
+    "K": 10 ** 10,
     "Q": 900,
     "R": 500,
     "B": 320,
@@ -122,9 +122,10 @@ class Evaluate:
 
     def mopUpEval(self, state, friendIdx, enemyIdx, myMaterial, oppMaterial, endgameWeight):
         moppUpScore = 0
-        if (myMaterial > oppMaterial + piece_value["p"] * 2) and endgameWeight > 0:
+        if (myMaterial > oppMaterial + piece_value["p"] * 2) and (endgameWeight > 0):
             friendKingSq = state.whiteKingLocation if friendIdx == 'w' else state.blackKingLocation
-            oppKingSq = state.blackKingLocation if enemyIdx == 'b' else state.whiteKingLocation
+            oppKingSq = state.whiteKingLocation if enemyIdx == 'w' else state.blackKingLocation
+
 
     def ForceKingToCornerEndgameVal(self, friendKingSquare, oppKingSquare, endgameWeight):
         evaluation = 0
@@ -162,11 +163,11 @@ class Evaluate:
                     if pieceType != 'K':
                         if colorIndex == 'w':
                             pos_val = piece_map_visualization[pieceType][row][col]
-                            score += pos_val * 0.5
+                            score += pos_val * 0.9
                         elif colorIndex == 'b':
                             reverse_map = np.flipud(piece_map_visualization[pieceType])
                             pos_val = reverse_map[row][col]
-                            score += pos_val * 0.5
+                            score += pos_val * 0.9
                     else:
                         if colorIndex == 'w':
                             pos_val = piece_map_visualization[pieceType][row][col]
@@ -176,7 +177,6 @@ class Evaluate:
                             pos_val = reverse_map[row][col]
                             score += int(pos_val * (1 - endgamePhaseWeight))
         return score
-
 
     def evaluate(self, state):
         blackEval = 0

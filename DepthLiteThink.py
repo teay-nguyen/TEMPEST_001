@@ -58,6 +58,7 @@ class DepthLite1():
                         print('MATE FOUND, EXITING SEARCH')
                         break
         else:
+            targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
             self.Search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
