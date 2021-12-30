@@ -43,3 +43,7 @@ def computeHash(board):
                 hashNum ^= zobTable[i][j][piece]
 
     return hashNum
+
+
+if __name__ == '__main__':
+    print(zobTable)
