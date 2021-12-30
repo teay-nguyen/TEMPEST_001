@@ -1,5 +1,6 @@
 import numpy as np
 import random
+
 zobTable = [[[random.randint(1, 2**64 - 1) for i in range(12)]
              for j in range(8)]for k in range(8)]
 

@@ -23,6 +23,7 @@ class DepthLite1():
         self.abortSearch = False
         self.LowPerformanceMode = True
         self.searchDebugInfo = None
+        self.LogDebugInfoConfirm = True
 
     def random_move(self, state):
         moves = state.FilterValidMoves()
@@ -63,11 +64,9 @@ class DepthLite1():
                     self.searchDebugInfo.eval = self.bestEvalFound
                     self.searchDebugInfo.moveVal = 0
 
-                    try:
+                    if (self.bestMoveFound is not None) and (self.LogDebugInfoConfirm):
                         self.searchDebugInfo.move = self.bestMoveFound.getChessNotation(
                             True)
-                    except Exception:
-                        pass
 
                     if self.isMateScore(self.bestEvalFound):
                         print('MATE FOUND, EXITING SEARCH')
