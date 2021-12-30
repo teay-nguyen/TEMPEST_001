@@ -4,6 +4,7 @@ from evaluation import Evaluate
 import time
 from MoveOrdering import MoveOrdering
 
+
 class DepthLite1():
 
     def __init__(self):
@@ -21,6 +22,7 @@ class DepthLite1():
         self.numCutoffs = 0
         self.abortSearch = False
         self.LowPerformanceMode = True
+        self.searchDebugInfo = None
 
     def random_move(self, state):
         moves = state.FilterValidMoves()
@@ -30,6 +32,7 @@ class DepthLite1():
         self.bestMoveFound = self.bestMoveInIteration = None
         self.bestEvalFound = self.numCutoffs = self.bestEvalInIteration = 0
         self.abortSearch = False
+        self.searchDebugInfo = SearchDebugInfo()
 
         start = time.time()
         currentIterativeSearchDepth = 0
@@ -38,28 +41,41 @@ class DepthLite1():
 
         if self.useIterativeDeepening:
             targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
-            
+
             for depth in range(1, targetDepth + 1):
                 print('Searching Depth:', depth)
-                self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
+                self.Search(state, depth, self.NEGATIVE_INF,
+                            self.POSITIVE_INF, 0)
 
                 searchTime = time.time()
                 if (searchTime - start) > 4 or self.abortSearch:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
-                    print('TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH:', (searchTime - start))
+                    print(
+                        'TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH:', (searchTime - start))
                     break
                 else:
                     currentIterativeSearchDepth = depth
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
 
+                    self.searchDebugInfo.lastCompletedDepth = depth
+                    self.searchDebugInfo.eval = self.bestEvalFound
+                    self.searchDebugInfo.moveVal = 0
+
+                    try:
+                        self.searchDebugInfo.move = self.bestMoveFound.getChessNotation(
+                            True)
+                    except Exception:
+                        pass
+
                     if self.isMateScore(self.bestEvalFound):
                         print('MATE FOUND, EXITING SEARCH')
                         break
         else:
             targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
-            self.Search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
+            self.Search(state, targetDepth, self.NEGATIVE_INF,
+                        self.POSITIVE_INF, 0)
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
 
@@ -107,9 +123,10 @@ class DepthLite1():
 
         bestMoveInPosition = None
 
-        for move in moves:
+        for move in ordered_moves:
             state.make_move(move)
-            eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
+            eval = -self.Search(state, depth - 1, -
+                                beta, -alpha, plyFromRoot + 1)
             state.undo_move()
             self.numNodes += 1
 
@@ -157,3 +174,13 @@ class DepthLite1():
     def isMateScore(self, score):
         maxMateDepth = 1000
         return abs(score) > (self.immediateMateScore - maxMateDepth)
+
+
+class SearchDebugInfo:
+    def __init__(self):
+        self.lastCompletedDepth = 0
+        self.moveVal = 0
+        self.move = None
+        self.eval = 0
+        self.isBook = False
+        self.numPositionsEvaluated = 0
