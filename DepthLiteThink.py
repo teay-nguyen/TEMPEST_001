@@ -49,7 +49,7 @@ class DepthLite1():
                             self.POSITIVE_INF, 0)
 
                 searchTime = time.time()
-                if (searchTime - start) > 4 or self.abortSearch:
+                if (searchTime - start) > 5 or self.abortSearch:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
                     print(
@@ -101,17 +101,18 @@ class DepthLite1():
         if (plyFromRoot > 0):
             alpha = max(alpha, -self.immediateMateScore + plyFromRoot)
             beta = min(beta, self.immediateMateScore - plyFromRoot)
-            if alpha >= beta:
+            if (alpha >= beta):
                 return alpha
 
         self.count += 1
         MoveOrder = MoveOrdering()
-        moves = state.FilterValidMoves()
-        ordered_moves = MoveOrder.OrderMoves(state, moves)
 
         if depth == 0:
             eval = self.QuiescenceSearch(state, alpha, beta)
             return eval
+
+        moves = state.FilterValidMoves()
+        ordered_moves = MoveOrder.OrderMoves(state, moves)
 
         if len(moves) == 0:
             if state.inCheck():
