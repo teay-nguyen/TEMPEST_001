@@ -1,11 +1,13 @@
 import random
 
+zobTable = [[[random.randint(1, 2**64 - 1) for i in range(12)]
+             for j in range(8)]for k in range(8)]
+
 
 class Zobrist:
     def __init__(self):
         self.seed = 592735
-        self.zobTable = [[[random.randint(
-            1, 2**64 - 1) for i in range(12)]for j in range(8)]for k in range(8)]
+        self.zobTable = zobTable
 
     def index(self, piece):
         if (piece == 'wp'):
@@ -52,7 +54,9 @@ class Zobrist:
         sideToMove = 1 if state.whitesturn else -1
         zobristKey ^= sideToMove
 
-        castleRights = state.currCastleRights
+        zobristKey += self.seed
+
+        return zobristKey
 
     def checkCastleRights(self, castleRights):
         wks = castleRights.wks
