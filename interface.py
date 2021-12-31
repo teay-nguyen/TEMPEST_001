@@ -146,6 +146,8 @@ class Interface:
                     AIMove = returnQueue.get()
                     if AIMove is None:
                         AIMove = DepthLite.random_move(state)
+                    elif AIMove == 1:
+                        running = False
 
                     state.make_move(AIMove)
                     moveMade = True

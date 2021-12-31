@@ -27,7 +27,11 @@ class DepthLite1():
 
     def random_move(self, state):
         moves = state.FilterValidMoves()
-        return choice(moves)
+
+        if len(moves) == 0:
+            return 1
+        else:
+            return choice(moves)
 
     def startSearch(self, state, rQueue):
         self.bestMoveFound = self.bestMoveInIteration = None
