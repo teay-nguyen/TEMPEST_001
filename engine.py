@@ -1,4 +1,5 @@
 import numpy as np
+from Zobrist import Zobrist
 
 ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
 rowsToRanks = {v: k for k, v in ranksToRows.items()}
@@ -8,6 +9,7 @@ colsToFiles = {v: k for k, v in filesToCols.items()}
 
 class State:
     def __init__(self):
+        self.ZobristClass = Zobrist()
         self.currCastleRights = castlerights(True, True, True, True)
         (
             self.board,
@@ -16,7 +18,8 @@ class State:
             self.currCastleRights,
             self.init_board_pieces,
             self.epPossible,
-            self.start_fen
+            self.start_fen,
+            self.ZobristKey,
         ) = self.fenToPos()
 
         self.moveLog = []
@@ -196,6 +199,8 @@ class State:
             self.epPossible = (
                 ranksToRows[enpassantTarget[1]], filesToCols[enpassantTarget[0]])
 
+        ZobristKey = self.ZobristClass.CalculateZobristKey(self)
+
         return (
             self.board,
             self.castleLog,
@@ -204,6 +209,7 @@ class State:
             self.init_board_pieces,
             self.epPossible,
             fen,
+            ZobristKey
         )
 
     def posToFen(self):
@@ -311,11 +317,13 @@ class State:
             )
         )
 
+        self.ZobristKey = self.ZobristClass.CalculateZobristKey(self)
+
         if not inSearch:
-            if move.pieceMoved[1] and move.pieceCaptured != '--':
+            if move.pieceMoved[1] == 'p' and move.pieceCaptured != '--':
                 self.RepetitionPositionHistory.clear()
             else:
-                pass #append zobrist key
+                self.RepetitionPositionHistory.append(self.ZobristKey)
 
     def undo_move(self, inSearch=False):
         if len(self.moveLog) > 0:
@@ -363,6 +371,8 @@ class State:
 
         self.checkmate = False
         self.stalemate = False
+
+        self.ZobristKey = self.ZobristClass.CalculateZobristKey(self)
 
         if not inSearch and len(self.RepetitionPositionHistory) > 0:
             self.RepetitionPositionHistory.pop()
@@ -426,12 +436,12 @@ class State:
         )
 
         for i in range(len(moves) - 1, -1, -1):
-            self.make_move(moves[i])
+            self.make_move(moves[i], inSearch=True)
             self.whitesturn = not self.whitesturn
             if self.inCheck():
                 moves.remove(moves[i])
             self.whitesturn = not self.whitesturn
-            self.undo_move()
+            self.undo_move(inSearch=True)
 
         if len(moves) == 0:
             if self.inCheck():
