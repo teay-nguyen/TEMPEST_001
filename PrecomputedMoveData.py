@@ -3,12 +3,6 @@ import numpy as np
 
 class PrecomputedMoveData:
     def __init__(self):
-        self.ranksToRows = {"1": 7, "2": 6, "3": 5,
-                            "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
-        self.rowsToRanks = {v: k for k, v in self.ranksToRows.items()}
-        self.filesToCols = {"a": 0, "b": 1, "c": 2,
-                            "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
-        self.colsToFiles = {v: k for k, v in self.filesToCols.items()}
         self.centreManhattonDistance = np.zeros((8, 8))
         self.orthogonalDistance = np.zeros((8, 8, 8, 8))
         self.kingDistance = np.zeros((8, 8, 8, 8))
