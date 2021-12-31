@@ -27,6 +27,7 @@ class State:
         self.stalemate = False
         self.epLog = [self.epPossible]
         self.game_over = False
+        self.RepetitionPositionHistory = []
         self.moveFuncs = {
             "p": self.getPawnMoves,
             "R": self.getRookMoves,
@@ -248,7 +249,7 @@ class State:
         print(self.whiteKingLocation)
         print(self.blackKingLocation)
 
-    def make_move(self, move):
+    def make_move(self, move, inSearch=False):
 
         self.board[move.startRow, move.startCol] = "--"
         self.board[move.endRow, move.endCol] = move.pieceMoved
@@ -310,7 +311,13 @@ class State:
             )
         )
 
-    def undo_move(self):
+        if not inSearch:
+            if move.pieceMoved[1] and move.pieceCaptured != '--':
+                self.RepetitionPositionHistory.clear()
+            else:
+                pass #append zobrist key
+
+    def undo_move(self, inSearch=False):
         if len(self.moveLog) > 0:
             move = self.moveLog.pop()
             self.board[move.startRow, move.startCol] = move.pieceMoved
@@ -356,6 +363,9 @@ class State:
 
         self.checkmate = False
         self.stalemate = False
+
+        if not inSearch and len(self.RepetitionPositionHistory) > 0:
+            self.RepetitionPositionHistory.pop()
 
     def updatecastlerights(self, move):
 
@@ -679,6 +689,36 @@ class State:
             and not self.inCheck()
         ):
             moves.append(Move((r, c), (r, c - 2), self.board, castlemove=True))
+
+    def ResetorInitialize(self):
+        self.currCastleRights = castlerights(True, True, True, True)
+        (
+            self.board,
+            self.castleLog,
+            self.whitesturn,
+            self.currCastleRights,
+            self.init_board_pieces,
+            self.epPossible,
+            self.start_fen
+        ) = self.fenToPos()
+
+        self.moveLog = []
+        self.oppPawnAttackMap = {}
+        self.oppPawnAttackMap['White'], self.oppPawnAttackMap['Black'] = [], []
+        self.boardLog = [self.board]
+        self.checkmate = False
+        self.stalemate = False
+        self.epLog = [self.epPossible]
+        self.game_over = False
+        self.RepetitionPositionHistory = []
+        self.moveFuncs = {
+            "p": self.getPawnMoves,
+            "R": self.getRookMoves,
+            "N": self.getKnightMoves,
+            "K": self.getKingMoves,
+            "B": self.getBishopMoves,
+            "Q": self.getQueenMoves,
+        }
 
 
 class castlerights:
