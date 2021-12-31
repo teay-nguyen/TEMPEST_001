@@ -3,10 +3,11 @@ import random
 
 class Zobrist:
     def __init__(self):
+        self.seed = 592735
         self.zobTable = [[[random.randint(
             1, 2**64 - 1) for i in range(12)]for j in range(8)]for k in range(8)]
 
-    def index(piece):
+    def index(self, piece):
         if (piece == 'wp'):
             return 0
         if (piece == 'wN'):
@@ -33,3 +34,30 @@ class Zobrist:
             return 11
         else:
             return -1
+
+    def CalculateZobristKey(self, state):
+        board = state.board
+        zobristKey = 0
+
+        for row in range(8):
+            for col in range(8):
+                if board[row][col] != '--':
+                    piece = self.index(board[row][col])
+                    zobristKey ^= self.zobTable[row][col][piece]
+
+        epPossible = state.epPossible
+        if epPossible != ():
+            zobristKey ^= (epPossible[0] + epPossible[1])
+
+        sideToMove = 1 if state.whitesturn else -1
+        zobristKey ^= sideToMove
+
+        castleRights = state.currCastleRights
+
+    def checkCastleRights(self, castleRights):
+        wks = castleRights.wks
+        wqs = castleRights.wqs
+        bks = castleRights.bks
+        bqs = castleRights.bqs
+
+        pass
