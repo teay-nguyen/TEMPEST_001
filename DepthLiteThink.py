@@ -174,6 +174,17 @@ class DepthLite1():
         maxMateDepth = 1000
         return abs(score) > (self.immediateMateScore - maxMateDepth)
 
+    def ResetDebugInfo(self):
+        if self.searchDebugInfo is not None:
+            self.searchDebugInfo.lastCompletedDepth = 0
+            self.searchDebugInfo.moveVal = 0
+            self.searchDebugInfo.move = None
+            self.searchDebugInfo.eval = 0
+            self.searchDebugInfo.isBook = False
+            self.searchDebugInfo.numPositionsEvaluated = 0
+        else:
+            self.searchDebugInfo = SearchDebugInfo()
+
 
 class SearchDebugInfo:
     def __init__(self):
