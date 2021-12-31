@@ -103,6 +103,9 @@ class DepthLite1():
             return 0
 
         if (plyFromRoot > 0):
+            if state.ZobristKey in state.RepetitionPositionHistory:
+                return 0
+
             alpha = max(alpha, -self.immediateMateScore + plyFromRoot)
             beta = min(beta, self.immediateMateScore - plyFromRoot)
             if (alpha >= beta):
@@ -128,10 +131,10 @@ class DepthLite1():
         bestMoveInPosition = None
 
         for move in ordered_moves:
-            state.make_move(move)
+            state.make_move(move, inSearch = True)
             eval = -self.Search(state, depth - 1, -
                                 beta, -alpha, plyFromRoot + 1)
-            state.undo_move()
+            state.undo_move(inSearch = True)
             self.numNodes += 1
 
             if (eval >= beta):
@@ -163,9 +166,9 @@ class DepthLite1():
         ordered_moves = OrderClass.OrderMoves(state, moves)
 
         for move in ordered_moves:
-            state.make_move(move)
+            state.make_move(move, inSearch = True)
             eval = -self.QuiescenceSearch(state, -beta, -alpha)
-            state.undo_move()
+            state.undo_move(inSearch = True)
 
             if (eval >= beta):
                 self.numCutoffs += 1

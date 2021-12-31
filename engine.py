@@ -320,7 +320,7 @@ class State:
         self.ZobristKey = self.ZobristClass.CalculateZobristKey(self)
 
         if not inSearch:
-            if move.pieceMoved[1] == 'p' and move.pieceCaptured != '--':
+            if move.pieceMoved[1] == 'p' or move.pieceCaptured != '--':
                 self.RepetitionPositionHistory.clear()
             else:
                 self.RepetitionPositionHistory.append(self.ZobristKey)
