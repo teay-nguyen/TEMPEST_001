@@ -54,14 +54,26 @@ class Zobrist:
         sideToMove = 1 if state.whitesturn else -1
         zobristKey ^= sideToMove
 
-        zobristKey += self.seed
+        zobristKey ^= self.checkCastleRights(state.currCastleRights)
+        zobristKey ^= self.seed
 
         return zobristKey
 
     def checkCastleRights(self, castleRights):
+        castle_key = 2
+
         wks = castleRights.wks
         wqs = castleRights.wqs
         bks = castleRights.bks
         bqs = castleRights.bqs
 
-        pass
+        if wks:
+            castle_key ^= 16
+        if wqs:
+            castle_key ^= 17
+        if bks:
+            castle_key ^= 18
+        if bqs:
+            castle_key ^= 19
+
+        return castle_key
