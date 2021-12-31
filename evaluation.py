@@ -98,17 +98,14 @@ piece_map_visualization = {
     ),
 }
 
-def ReadSquare(table, row, col, isWhite):
-    row = 7 - row
-    square = row * 8 + col
-
-    return table[square]
-
 class Evaluate:
     def __init__(self):
         self.preComputedMoveData = PrecomputedMoveData()
         self.endgameMaterialStart = piece_value["R"] * \
             2 + piece_value["B"] + piece_value['N']
+
+    def ReadSquare(self, table, row, col):
+        return table[row * 8 + col]
 
     def countMaterial(self, state, colorIndex):
         board = state.board
