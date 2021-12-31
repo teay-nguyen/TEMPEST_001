@@ -24,6 +24,7 @@ class DepthLite1():
         self.LowPerformanceMode = True
         self.searchDebugInfo = None
         self.LogDebugInfoConfirm = True
+        self.currentIterativeSearchDepth = 0
 
     def random_move(self, state):
         moves = state.FilterValidMoves()
@@ -40,7 +41,7 @@ class DepthLite1():
         self.searchDebugInfo = SearchDebugInfo()
 
         start = time.time()
-        currentIterativeSearchDepth = 0
+        self.currentIterativeSearchDepth = 0
         highPerformantDepth = 4
         lowPerformantDepth = self.DefaultDepth
 
@@ -60,7 +61,7 @@ class DepthLite1():
                         'TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH:', (searchTime - start))
                     break
                 else:
-                    currentIterativeSearchDepth = depth
+                    self.currentIterativeSearchDepth = depth
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
 
@@ -193,6 +194,13 @@ class DepthLite1():
         else:
             self.searchDebugInfo = SearchDebugInfo()
 
+class StaticMethods:
+    def __init__(self):
+        self.immediateMateScore = 100000
+
+    def isMateScore(self, score):
+        maxMateDepth = 1000
+        return abs(score) > (self.immediateMateScore - maxMateDepth)
 
 class SearchDebugInfo:
     def __init__(self):
