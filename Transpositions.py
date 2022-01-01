@@ -7,28 +7,64 @@ class TranspositionTable:
         self.UpperBound = 2
         self.lookUpFailed = -sys.maxsize - 1
         self.entries = {}
-        self.Size = maxSize
+        self.size = maxSize
         self.enabled = True
+        self.sign = lambda a: (a > 0) - (a < 0)
 
     def Clear(self):
         self.entries.clear()
 
     def Index(self, state):
-        return state.ZobristKey % self.Size
+        return state.ZobristKey % self.size
 
-    def StoreEvaluation(self, state, depth, numPlySearched, eval, evalType, move):
+    def getStoredMove(self, state):
+        return self.entries[self.Index(state)].move
+
+    def attemptEvalLookup(self, s, state, depth, plyFromRoot, alpha, beta):
+        if not self.enabled:
+            return self.lookUpFailed
+
+        entry = self.entries[self.Index(state)]
+
+        if (entry.key == state.ZobristKey):
+            if (entry.depth >= depth):
+                correctedScore = self.CorrectedRetrievedMateScore(s, entry.value, plyFromRoot)
+
+                if (entry.nodetype == self.Exact):
+                    return correctedScore
+
+                if (entry.nodetype == self.UpperBound) and (correctedScore <= alpha):
+                    return correctedScore
+
+                if (entry.nodetype == self.LowerBound) and (correctedScore >= beta):
+                    return correctedScore
+
+        return self.lookUpFailed
+
+    def storeEval(self, state, depth, numPlySearched, eval, evalType, move):
         if not self.enabled:
             return
 
-        entry = Entry(state.ZobristKey, self.CorrectScoreForStorage(eval, numPlySearched), depth, evalType, move)
-        self.entries[self.Index(state)] = entry
+        if len(self.entries.keys()) > self.size:
+            entry = Entry(state.ZobristKey, None, depth, evalType, move)
+            self.entries[self.Index(state)] = entry
+        else:
+            print('TranspositionTable full, try again when there is space!')
+            return
 
-    def CorrectScoreForStorage(self, score, numPlySearched):
-        pass
+    def CorrectedMateScore(self, s, score, numPlySearched):
+        if (s.IsMateScore(score)):
+            sign = self.sign(score)
+            return (score * sign + numPlySearched) * sign
 
-    def CorrectRetrievedScore(self, score, numPlySearched):
-        pass
+        return score
 
+    def CorrectedRetrievedMateScore(self, s, score, numPlySearched):
+        if (s.IsMateScore(score)):
+            sign = self.sign(score)
+            return (score * sign - numPlySearched) * sign
+
+        return score
 
 class Entry:
     def __init__(self, key, value, depth, nodeType, move):
