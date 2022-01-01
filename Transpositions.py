@@ -41,12 +41,12 @@ class TranspositionTable:
 
         return self.lookUpFailed
 
-    def storeEval(self, state, depth, numPlySearched, eval, evalType, move):
+    def storeEval(self, s, state, depth, numPlySearched, eval, evalType, move):
         if not self.enabled:
             return
 
         if len(self.entries.keys()) > self.size:
-            entry = Entry(state.ZobristKey, None, depth, evalType, move)
+            entry = Entry(state.ZobristKey, self.CorrectedMateScore(s, eval, numPlySearched), depth, evalType, move)
             self.entries[self.Index(state)] = entry
         else:
             print('TranspositionTable full, try again when there is space!')

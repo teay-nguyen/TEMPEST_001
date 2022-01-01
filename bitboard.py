@@ -25,14 +25,3 @@ class Bitboard:
                 if attacksq in oppPawnAttackMap:
                     self.bitboard[move.endRow, move.endCol] = 1.
                     attackSquares.append(attacksq)
-
-        print(self.bitboard)
-
-
-if __name__ == '__main__':
-    from engine import State
-
-    e = State()
-    b = Bitboard()
-
-    b.attacked_squares(e)

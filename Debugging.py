@@ -10,8 +10,8 @@ class Debug:
         self.DebugLog.append(log)
 
     def PrintFormatted(self):
-        for i, log in enumerate(self.DebugLog):
-            print()
+        for i in range(len(self.DebugLog)):
+            log = self.DebugLog[i]
+            print('\n------------------------')
+            print(f'LOG {i}: {log}')
             print('------------------------')
-            print(f'Log No. {i}: {log}')
-            print('------------------------\n')
