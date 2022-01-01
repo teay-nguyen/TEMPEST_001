@@ -194,13 +194,6 @@ class DepthLite1():
         else:
             self.searchDebugInfo = SearchDebugInfo()
 
-class StaticMethods:
-    def __init__(self):
-        self.immediateMateScore = 100000
-
-    def isMateScore(self, score):
-        maxMateDepth = 1000
-        return abs(score) > (self.immediateMateScore - maxMateDepth)
 
 class SearchDebugInfo:
     def __init__(self):
