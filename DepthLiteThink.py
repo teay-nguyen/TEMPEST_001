@@ -64,7 +64,6 @@ class DepthLite1():
                     self.searchDebugInfo.lastCompletedDepth = depth
                     self.searchDebugInfo.eval = self.bestEvalFound
                     self.searchDebugInfo.moveVal = 0
-
                     if (self.bestMoveFound is not None):
                         self.searchDebugInfo.move = self.bestMoveFound.getChessNotation(True)
 
@@ -106,13 +105,13 @@ class DepthLite1():
             if (alpha >= beta):
                 return alpha
 
-        self.count += 1
-        MoveOrder = MoveOrdering()
-
         if depth == 0:
             eval = self.QuiescenceSearch(state, alpha, beta)
             return eval
 
+        
+        self.count += 1
+        MoveOrder = MoveOrdering()
         moves = state.FilterValidMoves()
         ordered_moves = MoveOrder.OrderMoves(state, moves)
 
