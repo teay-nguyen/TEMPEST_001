@@ -24,9 +24,7 @@ class MoveOrdering:
             movePieceCaptured = move.pieceCaptured
 
             if movePieceCaptured != '--':
-                score = self.capturedPieceMult * \
-                    piece_vals[movePieceCaptured[1]] - \
-                    piece_vals[movePieceType[1]]
+                score = self.capturedPieceMult * piece_vals[movePieceCaptured[1]] - piece_vals[movePieceType[1]]
 
             if movePieceType[1] == 'p':
                 if move.isPawnPromotion:

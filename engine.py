@@ -1,5 +1,5 @@
 import numpy as np
-from Zobrist import Zobrist
+from zobrist import Zobrist
 
 ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
 rowsToRanks = {v: k for k, v in ranksToRows.items()}
@@ -32,6 +32,7 @@ class State:
         self.epLog = [self.epPossible]
         self.game_over = False
         self.RepetitionPositionHistory = []
+        self.kingMoves = []
         self.moveFuncs = {
             "p": self.getPawnMoves,
             "R": self.getRookMoves,
@@ -427,7 +428,7 @@ class State:
         for i in range(len(moves) - 1, -1, -1):
             self.make_move(moves[i], inSearch=True)
             self.whitesturn = not self.whitesturn
-            if self.inCheck():
+            if self.inCheck() or onlyCaptures:
                 moves.remove(moves[i])
             self.whitesturn = not self.whitesturn
             self.undo_move(inSearch=True)
@@ -435,12 +436,9 @@ class State:
         if len(moves) == 0:
             if self.inCheck():
                 self.checkmate = True
-                # print(f"Checkmate! {'WHITE' if not self.whitesturn else 'BLACK'} wins")
             else:
                 self.stalemate = True
-                # print("Stalemate!")
             self.game_over = True
-            # print(self.board)
 
         if onlyCaptures == False:
             if self.whitesturn:
@@ -458,11 +456,6 @@ class State:
 
         self.epPossible = tempEpPossible
         self.currCastleRights = tempcastleRights
-
-        if onlyCaptures:
-            for i in range(len(moves) - 1, -1, -1):
-                if moves[i].pieceCaptured == '--':
-                    moves.remove(moves[i])
 
         return moves
 
@@ -653,6 +646,12 @@ class State:
                 if endPiece[0] != allyColor:
                     chosen_move = Move((r, c), (endRow, endCol), self.board)
                     moves.append(chosen_move)
+                    self.kingMoves.append(chosen_move)
+
+    def filterKingMoves(self, kingMoves):
+        for move in kingMoves:
+            targetSquare = (move.endRow, move.endCol)
+            pieceOnTargetSquare = move.pieceCaptured
 
     def getCastleMoves(self, r, c, moves):
         if self.squareUnderAttack(r, c):

@@ -5,6 +5,9 @@ import numpy as np
 class Bitboard:
     def __init__(self):
         self.bitboard = np.zeros((8, 8))
+        self.knightAttackBitboards = np.zeros((8, 8))
+        self.kingAttackBitboards = np.zeros((8, 8))
+        self.pawnAttackBitboards = np.zeros((8, 8))
 
     def attacked_squares(self, state):
         state.whitesturn = not state.whitesturn

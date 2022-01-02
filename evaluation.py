@@ -2,11 +2,11 @@ import numpy as np
 from PrecomputedMoveData import PrecomputedMoveData
 
 piece_value = {
-    "K": 10 ** 10,
-    "Q": 900,
+    "K": 0,
+    "Q": 950,
     "R": 500,
-    "B": 320,
-    "N": 300,
+    "B": 350,
+    "N": 310,
     "p": 100,
 }
 
@@ -92,7 +92,7 @@ piece_map_visualization = {
 class Evaluate:
     def __init__(self):
         self.preComputedMoveData = PrecomputedMoveData()
-        self.endgameMaterialStart = piece_value["R"] * 2 + piece_value["B"] + piece_value['N']
+        self.endgameMaterialStart = (piece_value["R"] * 2) + piece_value["B"] + piece_value['N']
 
     def ReadSquare(self, table, row, col):
         square = row * 8 + col
@@ -101,16 +101,15 @@ class Evaluate:
     def countMaterial(self, state, colorIndex):
         board = state.board
         material = 0
-        for row in range(len(board)):
-            for col in range(len(board[row])):
-                piece = board[row][col]
-                if piece != "--":
-                    if colorIndex == "w":
-                        if piece[0] == "w":
-                            material += piece_value[piece[1]]
-                    elif colorIndex == "b":
-                        if piece[0] == "b":
-                            material += piece_value[piece[1]]
+        for piece in np.nditer(board):
+            if piece != "--":
+                piece = str(piece)
+                if colorIndex == "w":
+                    if piece[0] == "w":
+                        material += piece_value[piece[1]]
+                elif colorIndex == "b":
+                    if piece[0] == "b":
+                        material += piece_value[piece[1]]
 
         return material
 
@@ -141,8 +140,7 @@ class Evaluate:
             oppKingCol = oppKingSq[1]
 
             mopUpScore += self.preComputedMoveData.centreManhattonDistance[oppKingRank, oppKingCol] * 10
-            mopUpScore += (14 - self.preComputedMoveData.NumRookMovesToReachSquare(
-                friendKingSq, oppKingSq)) * 4
+            mopUpScore += (14 - self.preComputedMoveData.NumRookMovesToReachSquare(friendKingSq, oppKingSq)) * 4
 
             return int(mopUpScore * endgameWeight)
 
@@ -156,18 +154,17 @@ class Evaluate:
         score = 0
         for row in range(len(state.board)):
             for col in range(len(state.board[row])):
-                square = state.board[row][col]
-                pieceSide = square[0]
-                pieceType = square[1]
-                if square != '--' and pieceSide == colorIndex:
+                pieceSide = state.board[row][col][0]
+                pieceType = state.board[row][col][1]
+                if state.board[row][col] != '--' and pieceSide == colorIndex:
                     if pieceType != 'K':
                         if colorIndex == 'w':
                             pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col)
-                            score += pos_val * .5
+                            score += pos_val
                         elif colorIndex == 'b':
                             reverse_map = np.flipud(piece_map_visualization[pieceType])
                             pos_val = self.ReadSquare(reverse_map, row, col)
-                            score += pos_val * .5
+                            score += pos_val
                     else:
                         if colorIndex == 'w':
                             pos_val = self.ReadSquare(piece_map_visualization['KMiddle'], row, col)
@@ -212,5 +209,7 @@ class Evaluate:
         #print("BLACK MATERIAL:", blackMaterial)
         #print("WHITE MATERIAL:", whiteMaterial)
 
-        eval, perspective = whiteEval - blackEval, 1 if state.whitesturn else -1
+        eval = whiteEval - blackEval
+        perspective = 1 if state.whitesturn else -1
+
         return eval * perspective

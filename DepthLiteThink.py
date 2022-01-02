@@ -14,16 +14,15 @@ class DepthLite1():
         self.bestMoveFound = None
         self.bestEvalFound = 0
         self.useIterativeDeepening = True
-        self.transpositionTableSize = 64000
-        self.POSITIVE_INF = 999999999
-        self.NEGATIVE_INF = -999999999
+        self.transpositionTableSize = 6400
+        self.POSITIVE_INF = 99999999
+        self.NEGATIVE_INF = -99999999
         self.immediateMateScore = 100000
         self.numNodes = 0
         self.numCutoffs = 0
         self.abortSearch = False
         self.LowPerformanceMode = True
         self.searchDebugInfo = None
-        self.LogDebugInfoConfirm = True
         self.currentIterativeSearchDepth = 0
 
     def random_move(self, state):
@@ -36,12 +35,11 @@ class DepthLite1():
 
     def startSearch(self, state, rQueue):
         self.bestMoveFound = self.bestMoveInIteration = None
-        self.bestEvalFound = self.numCutoffs = self.bestEvalInIteration = 0
+        self.bestEvalFound = self.numCutoffs = self.bestEvalInIteration = self.currentIterativeSearchDepth =  0
         self.abortSearch = False
         self.searchDebugInfo = SearchDebugInfo()
 
         start = time.time()
-        self.currentIterativeSearchDepth = 0
         highPerformantDepth = 4
         lowPerformantDepth = 2
 
@@ -67,7 +65,7 @@ class DepthLite1():
                     self.searchDebugInfo.eval = self.bestEvalFound
                     self.searchDebugInfo.moveVal = 0
 
-                    if (self.bestMoveFound is not None) and (self.LogDebugInfoConfirm):
+                    if (self.bestMoveFound is not None):
                         self.searchDebugInfo.move = self.bestMoveFound.getChessNotation(True)
 
                     if self.isMateScore(self.bestEvalFound):
@@ -75,6 +73,7 @@ class DepthLite1():
         else:
             targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
             self.Search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
+            print('Searching Depth:', targetDepth)
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
 
@@ -84,7 +83,7 @@ class DepthLite1():
         print('---------------------------------------\n')
 
         end = time.time()
-        print('TIME TOOK TO GENERATE NEXT MOVE:', end - start)
+        print(f'TIME TOOK TO GENERATE NEXT MOVE: {end - start}')
 
         rQueue.put(self.bestMoveFound)
 

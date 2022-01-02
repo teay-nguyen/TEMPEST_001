@@ -6,7 +6,7 @@ zobTable = [[[random.randint(1, 2**64 - 1) for i in range(12)]
 
 class Zobrist:
     def __init__(self):
-        self.seed = 592735
+        self.seed = 129837
         self.zobTable = zobTable
 
     def index(self, piece):
