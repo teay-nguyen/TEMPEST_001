@@ -10,7 +10,8 @@ colsToFiles = {v: k for k, v in filesToCols.items()}
 class State:
     def __init__(self):
         self.ZobristClass = Zobrist()
-        self.currCastleRights = castlerights(True, True, True, True)
+        self.currCastleRights = castlerights(False, False, False, False)
+        
         (
             self.board,
             self.castleLog,
@@ -20,7 +21,7 @@ class State:
             self.epPossible,
             self.start_fen,
             self.ZobristKey,
-        ) = self.fenToPos()
+        ) = self.loadStartPosition()
 
         self.moveLog = []
         self.oppPawnAttackMap = {}
@@ -83,10 +84,17 @@ class State:
 
         print(f'Total: {nodes}')
 
-    def fenToPos(self):
-        self.init_board_pieces = []
-        #fen = '3r4/3r4/3k4/8/8/3K4/8/8 w - - 0 1'
+    def loadStartPosition(self):
         fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+        return self.fenToPos(fen)
+
+    def loadCustomPosition(self):
+        fen = '' #insert custom position
+        return self.fenToPos(fen)
+
+
+    def fenToPos(self, fen):
+        self.init_board_pieces = [] 
         self.board = np.array(
             [
                 ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -144,44 +152,25 @@ class State:
 
         for symbol in fen_castle_rights:
             if symbol != "-":
-                if symbol.lower() == "q":
-                    if symbol == "Q":
-                        self.currCastleRights = castlerights(
-                            self.currCastleRights.wks,
-                            self.currCastleRights.bks,
-                            True,
-                            self.currCastleRights.bqs,
-                        )
-                    elif symbol == "q":
-                        self.currCastlRights = castlerights(
-                            self.currCastleRights.wks,
-                            self.currCastleRights.bks,
-                            self.currCastleRights.wqs,
-                            True,
-                        )
-                elif symbol.lower() == "k":
-                    if symbol == "K":
-                        self.currCastleRights = castlerights(
-                            True,
-                            self.currCastleRights.bks,
-                            self.currCastleRights.wqs,
-                            self.currCastleRights.bqs,
-                        )
-                    elif symbol == "k":
-                        self.currCastleRights = castlerights(
-                            self.currCastleRights.wks,
-                            True,
-                            self.currCastleRights.wqs,
-                            self.currCastleRights.bqs,
-                        )
+                if symbol == 'K':
+                    self.currCastleRights = castlerights(
+                        True, self.currCastleRights.bks, self.currCastleRights.wqs, self.currCastleRights.bqs
+                    )
+                elif symbol == 'Q':
+                    self.currCastleRights = castlerights(
+                        self.currCastleRights.wks, self.currCastleRights.bks, True, self.currCastleRights.bqs
+                    )
+                elif symbol == 'k':
+                    self.currCastleRights = castlerights(
+                        self.currCastleRights.wks, True, self.currCastleRights.wqs, self.currCastleRights.bqs
+                    )
+                elif symbol == 'q':
+                    self.currCastleRights = castlerights(
+                        self.currCastleRights.wks, self.currCastleRights.bks, self.currCastleRights.wqs, True
+                    )
             else:
-                self.currCastleRights = castlerights(
-                    False, False, False, False)
-
-        if fen_castle_rights == "-":
-            self.currCastleRights = castlerights(
-                False, False, False, False
-            )
+                self.currCastleRights = castlerights(False, False, False, False)
+                break
 
         self.castleLog = [
             castlerights(
@@ -710,7 +699,7 @@ class State:
             self.init_board_pieces,
             self.epPossible,
             self.start_fen
-        ) = self.fenToPos()
+        ) = self.loadStartPosition()
 
         self.moveLog = []
         self.oppPawnAttackMap = {}
