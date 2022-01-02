@@ -1,11 +1,15 @@
 import sys
+from DepthLiteThink import DepthLite1
+
+DepthLite = DepthLite1()
 
 class TranspositionTable:
     def __init__(self, maxSize):
         self.Exact = 0
         self.LowerBound = 1
         self.UpperBound = 2
-        self.lookUpFailed = -sys.maxsize - 1
+        self.lookUpFailed = -sys.maxsize
+
         self.entries = {}
         self.size = maxSize
         self.enabled = True
@@ -14,55 +18,48 @@ class TranspositionTable:
     def Clear(self):
         self.entries.clear()
 
-    def Index(self, state):
-        return state.ZobristKey % self.size
-
     def getStoredMove(self, state):
-        return self.entries[self.Index(state)].move
+        return self.entries[state.ZobristKey % self.size].move
 
-    def attemptEvalLookup(self, s, state, depth, plyFromRoot, alpha, beta):
+    def attemptLookup(self, state, depth, plyFromRoot, alpha, beta):
         if not self.enabled:
             return self.lookUpFailed
 
-        entry = self.entries[self.Index(state)]
+        entry = self.entries[state.ZobristKey % self.size]
+        if entry.key == state.ZobristKey:
+            if entry.depth >= depth:
+                correctedScore = self.CorrectRetrievedMateScore(entry.value, plyFromRoot)
 
-        if (entry.key == state.ZobristKey):
-            if (entry.depth >= depth):
-                correctedScore = self.CorrectedRetrievedMateScore(s, entry.value, plyFromRoot)
-
-                if (entry.nodetype == self.Exact):
+                if entry.nodeType == self.Exact:
                     return correctedScore
 
-                if (entry.nodetype == self.UpperBound) and (correctedScore <= alpha):
+                if entry.nodeType == self.UpperBound and correctedScore <= alpha:
+                    return correctedScore
+                
+                if entry.nodeType == self.LowerBound and correctedScore >= beta:
                     return correctedScore
 
-                if (entry.nodetype == self.LowerBound) and (correctedScore >= beta):
-                    return correctedScore
 
         return self.lookUpFailed
 
-    def storeEval(self, s, state, depth, numPlySearched, eval, evalType, move):
+    def StoreEval(self, state, depth, plySearched, eval, evalType, move):
         if not self.enabled:
             return
 
-        if len(self.entries.keys()) > self.size:
-            entry = Entry(state.ZobristKey, self.CorrectedMateScore(s, eval, numPlySearched), depth, evalType, move)
-            self.entries[self.Index(state)] = entry
-        else:
-            print('TranspositionTable full, try again when there is space!')
-            return
+        entry = Entry(state.ZobristKey, self.CorrectMateScoreForStorage(eval, plySearched), depth, evalType, move)
+        self.entries[state.ZobristKey % self.size] = entry
 
-    def CorrectedMateScore(self, s, score, numPlySearched):
-        if (s.IsMateScore(score)):
+    def CorrectMateScoreForStorage(self, score, plySearched):
+        if (DepthLite.isMateScore(score)):
             sign = self.sign(score)
-            return (score * sign + numPlySearched) * sign
+            return (score * sign + plySearched) * sign
 
         return score
 
-    def CorrectedRetrievedMateScore(self, s, score, numPlySearched):
-        if (s.IsMateScore(score)):
+    def CorrectRetrievedMateScore(self, score, plySearched):
+        if (DepthLite.isMateScore(score)):
             sign = self.sign(score)
-            return (score * sign - numPlySearched) * sign
+            return (score * sign - plySearched) * sign
 
         return score
 
