@@ -101,9 +101,10 @@ class DepthLite1():
 
         if (plyFromRoot > 0):
             if state.ZobristKey in state.RepetitionPositionHistory:
+                print('------------------------- REPETITION DETECTED -----------------------')
                 return 0
 
-            alpha = max(alpha, -self.immediateMateScore + plyFromRoot)
+            alpha = max(alpha, -self.immediateMateScore + plyFromRoot - 1)
             beta = min(beta, self.immediateMateScore - plyFromRoot)
             if (alpha >= beta):
                 return alpha
