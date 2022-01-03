@@ -4,20 +4,8 @@ import os
 from engine import State, Move
 from draw_board import DrawState, animatemove
 from DepthLiteThink import DepthLite1
-from multiprocessing import Process, Queue
 
 pyg.init()
-
-WIDTH = HEIGHT = 800
-PANEL_WIDTH = 250
-PANEL_HEIGHT = HEIGHT
-DIMENSION = 8
-SIZE = HEIGHT//DIMENSION
-MAX_FPS = 15
-
-WHITE = pyg.Color('white')
-GREY = pyg.Color('grey')
-
 
 class human_plr:
     def __init__(self, plr1, plr2):
@@ -27,7 +15,15 @@ class human_plr:
 
 class Interface:
     def __init__(self):
-        pass
+        self.WIDTH = self.HEIGHT = 800
+        self.PANEL_WIDTH = 250
+        self.PANEL_HEIGHT = self.HEIGHT
+        self.DIMENSION = 8
+        self.SIZE = self.HEIGHT//self.DIMENSION
+        self.MAX_FPS = 15
+
+        self.WHITE = pyg.Color('white')
+        self.GREY = pyg.Color('grey')
 
     def get_pieces(self):
         PIECES = {}
@@ -35,13 +31,13 @@ class Interface:
             full_path = os.path.join('pieces', fn)
             name = fn.replace('.png', '')
             PIECES[name] = pyg.transform.scale(
-                pyg.image.load(full_path), (SIZE, SIZE))
+                pyg.image.load(full_path), (self.SIZE, self.SIZE))
 
         return PIECES
 
     def app_main_exec(self):
         DepthLite = DepthLite1()
-        screen = pyg.display.set_mode((WIDTH+PANEL_WIDTH, HEIGHT))
+        screen = pyg.display.set_mode((self.WIDTH + self.PANEL_WIDTH, self.HEIGHT))
         clock = pyg.time.Clock()
         state = State()
         pieces = self.get_pieces()
@@ -52,27 +48,26 @@ class Interface:
         valid_moves = state.FilterValidMoves()
         moveMade = False
 
-        screen.fill(WHITE)
+        screen.fill(self.WHITE)
 
-        plrChoice1 = None
-        plrChoice2 = None
+        plrChoice1 = ''
+        plrChoice2 = ''
         AIThinking = False
-        movefinderprocess = None
 
         Options = [
             'True',
             'False',
         ]
 
-        while not plrChoice1 in Options:
+        while not plrChoice1.capitalize() in Options:
             try:
-                plrChoice1 = input('1. HUMAN OR AI: True or False --> ')
+                plrChoice1 = input('1. HUMAN OR AI: True or False --> ').capitalize()
             except Exception:
                 print('NOT A VALID INPUT')
 
-        while not plrChoice2 in Options:
+        while not plrChoice2.capitalize() in Options:
             try:
-                plrChoice2 = input('2. HUMAN OR AI: True or False --> ')
+                plrChoice2 = input('2. HUMAN OR AI: True or False --> ').capitalize()
             except Exception:
                 print('NOT A VALID INPUT')
 
@@ -91,8 +86,8 @@ class Interface:
                 elif e.type == pyg.MOUSEBUTTONDOWN:
                     if human_turn:
                         location = pyg.mouse.get_pos()
-                        col = location[0]//SIZE
-                        row = location[1]//SIZE
+                        col = location[0]//self.SIZE
+                        row = location[1]//self.SIZE
                         if not col > 7:
                             if sq_selected == (row, col):
                                 sq_selected = ()
@@ -150,14 +145,14 @@ class Interface:
             if moveMade:
                 if animate:
                     animatemove(state.moveLog[-1], screen,
-                                state.board, clock, SIZE, pieces)
+                                state.board, clock, self.SIZE, pieces)
                 valid_moves = state.FilterValidMoves()
                 moveMade = False
                 animate = False
 
             DrawState(screen, state.board, pieces,
-                      valid_moves, sq_selected, state, SIZE)
-            clock.tick(MAX_FPS)
+                      valid_moves, sq_selected, state, self.SIZE)
+            clock.tick(self.MAX_FPS)
             pyg.display.flip()
 
     '''

@@ -30,6 +30,9 @@ class DepthLite1():
         self.clearTTEachMove = False
         self.tt = TranspositionTable()
 
+        self.useOpeningBook = True
+        self.maxBookMoves = 20
+
     def Timeout(self, startTime, deadline):
         return (time.time() - startTime) > deadline
 
