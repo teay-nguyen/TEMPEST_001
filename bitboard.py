@@ -1,7 +1,6 @@
 
 import numpy as np
 
-
 class Bitboard:
     def __init__(self):
         self.bitboard = [
