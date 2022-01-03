@@ -14,6 +14,7 @@ class MoveOrdering:
         self.squareControlledByOppPenalty = 350
         self.capturedPieceMult = 10
         self.moveScores = []
+        self.invalidMove = None
 
     def OrderMoves(self, state, moves):
         self.moveScores = []
