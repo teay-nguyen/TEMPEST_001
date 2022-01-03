@@ -22,6 +22,7 @@ class DepthLite1():
         self.immediateMateScore = 100000
         self.numNodes = 0
         self.numCutoffs = 0
+        self.valueWindow = 50
         self.abortSearch = False
         self.LowPerformanceMode = True
         self.searchDebugInfo = None
@@ -65,10 +66,11 @@ class DepthLite1():
 
         if self.useIterativeDeepening:
             targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
+            alpha, beta = self.NEGATIVE_INF, self.POSITIVE_INF
 
             for depth in range(1, targetDepth + 1):
                 print('Searching Depth:', depth)
-                self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
+                val = self.Search(state, depth, alpha, beta, 0)
 
                 searchTime = time.time()
                 if self.Timeout(start, 5) or self.abortSearch:
@@ -90,6 +92,20 @@ class DepthLite1():
                     if self.isMateScore(self.bestEvalFound):
                         print('-------------------- FOUND MATE, EXITING SEARCH -------------------')
                         break
+                
+                if (val <= alpha):
+                    alpha = self.NEGATIVE_INF
+                    beta = val + 1
+                    continue
+
+                if (val >= beta):
+                    beta = self.POSITIVE_INF
+                    alpha = val - 1
+                    continue
+
+                alpha = val - self.valueWindow
+                beta = val + self.valueWindow
+
         else:
             targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
             print('Searching Depth:', targetDepth)
