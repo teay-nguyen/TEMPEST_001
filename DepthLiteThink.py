@@ -26,18 +26,23 @@ class DepthLite1():
         self.searchDebugInfo = None
         self.currentIterativeSearchDepth = 0
         self.entries = {}
+        self.invalidMove = None
+        self.clearTTEachMove = False
         self.tt = TranspositionTable()
+
+    def Timeout(self, startTime, deadline):
+        return (time.time() - startTime) > deadline
 
     def random_move(self, state):
         moves = state.FilterValidMoves()
 
         if len(moves) == 0:
-            return 1
+            quit()
         else:
             return choice(moves)
 
     def startSearch(self, state):
-        self.bestMoveFound = self.bestMoveInIteration = None
+        self.bestMoveFound = self.bestMoveInIteration = self.invalidMove
         self.bestEvalFound = self.numCutoffs = self.bestEvalInIteration = self.currentIterativeSearchDepth =  0
         self.abortSearch = False
         self.searchDebugInfo = SearchDebugInfo()
@@ -45,6 +50,9 @@ class DepthLite1():
         start = time.time()
         highPerformantDepth = 4
         lowPerformantDepth = 2
+
+        if self.clearTTEachMove:
+            self.tt.ClearEntries(self.entries)
 
         if self.useIterativeDeepening:
             targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
@@ -54,7 +62,7 @@ class DepthLite1():
                 self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
 
                 searchTime = time.time()
-                if (searchTime - start) > 5 or self.abortSearch:
+                if self.Timeout(start, 5) or self.abortSearch:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
                     print('TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH:', (searchTime - start))
@@ -111,7 +119,7 @@ class DepthLite1():
         ttVal = self.tt.attemptLookup(state, self.entries, depth, plyFromRoot, alpha, beta)
         if (ttVal != self.tt.lookupFailed):
             if (plyFromRoot == 0):
-                print('------------------------- TRANSPOSITION -----------------------------')
+                print('------------------------- TRANSPOSITION FOUND -----------------------------')
                 self.bestMoveInIteration = self.tt.getStoredMove(state, self.entries)
                 self.bestEvalInIteration = self.entries[self.tt.Index(state)].value
 
@@ -135,7 +143,7 @@ class DepthLite1():
             else:
                 return 0
 
-        bestMoveInPosition = None
+        bestMoveInPosition = self.invalidMove
         evalType = self.tt.UpperBound
 
         for move in ordered_moves:

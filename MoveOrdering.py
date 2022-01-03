@@ -39,14 +39,17 @@ class MoveOrdering:
         return moves
 
     def SortMoves(self, moves):
-        for i in range(len(moves)):
-            minimum = i
+        for i in range(1, len(moves)):
+            
+            key = self.moveScores[i]
+            moveKey = moves[i]
 
-            for j in range(i + 1, len(moves)):
-                if self.moveScores[j] < self.moveScores[minimum]:
-                    minimum = j
+            j = i - 1
+            
+            while j >= 0 and key < self.moveScores[j]:
+                moves[j + 1] = moves[j]
+                self.moveScores[j + 1] = self.moveScores[j]
+                j -= 1
 
-            self.moveScores[minimum], self.moveScores[i] = self.moveScores[i], self.moveScores[minimum]
-            moves[minimum], moves[i] = moves[i], moves[minimum]
-
-        return moves
+            self.moveScores[j + 1] = key
+            moves[j + 1] = moveKey
