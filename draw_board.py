@@ -1,8 +1,6 @@
 import pygame as pyg
 from highlighting import highlightSq
 
-pyg.init()
-
 WIDTH = HEIGHT = 800
 PANEL_WIDTH = 250
 PANEL_HEIGHT = HEIGHT

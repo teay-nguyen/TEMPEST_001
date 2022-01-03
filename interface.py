@@ -1,9 +1,9 @@
 
 import pygame as pyg
-import os
 from engine import State, Move
 from draw_board import DrawState, animatemove
 from DepthLiteThink import DepthLite1
+from PieceTheme import get_pieces
 
 pyg.init()
 
@@ -26,30 +26,9 @@ class Interface:
         self.GREY = pyg.Color('grey')
 
     def get_pieces(self):
-        PIECES = {}
-        for fn in os.listdir('pieces'):
-            full_path = os.path.join('pieces', fn)
-            name = fn.replace('.png', '')
-            PIECES[name] = pyg.transform.scale(
-                pyg.image.load(full_path), (self.SIZE, self.SIZE))
-
-        return PIECES
-
-    def app_main_exec(self):
-        DepthLite = DepthLite1()
-        screen = pyg.display.set_mode((self.WIDTH + self.PANEL_WIDTH, self.HEIGHT))
-        clock = pyg.time.Clock()
-        state = State()
-        pieces = self.get_pieces()
-        running = True
-        animate = False
-        sq_selected = ()
-        plr_clicks = []
-        valid_moves = state.FilterValidMoves()
-        moveMade = False
-
-        screen.fill(self.WHITE)
-
+        return get_pieces(self)
+    
+    def initialize(self):
         plrChoice1 = ''
         plrChoice2 = ''
         AIThinking = False
@@ -74,6 +53,24 @@ class Interface:
         plr1 = eval(plrChoice1)
         plr2 = eval(plrChoice2)
 
+        return plr1, plr2, AIThinking
+
+    def app_main_exec(self):
+        DepthLite = DepthLite1()
+        screen = pyg.display.set_mode((self.WIDTH + self.PANEL_WIDTH, self.HEIGHT))
+        clock = pyg.time.Clock()
+        state = State()
+        pieces = self.get_pieces()
+        running = True
+        animate = False
+        sq_selected = ()
+        plr_clicks = []
+        valid_moves = state.FilterValidMoves()
+        moveMade = False
+
+        screen.fill(self.WHITE)
+
+        plr1, plr2, AIThinking = self.initialize()
         humanPlr = human_plr(plr1, plr2)
 
         while running:
@@ -99,6 +96,16 @@ class Interface:
                             if len(plr_clicks) == 2:
                                 move = Move(plr_clicks[0],
                                             plr_clicks[1], state.board)
+
+                                if move in valid_moves:
+                                    state.make_move(move)
+                                    moveMade = True
+                                    animate = True
+
+                                    sq_selected = ()
+                                    plr_clicks = []
+
+                                '''
                                 for i in range(len(valid_moves)):
                                     if move == valid_moves[i]:
                                         state.make_move(valid_moves[i])
@@ -107,6 +114,7 @@ class Interface:
 
                                         sq_selected = ()
                                         plr_clicks = []
+                                '''
 
                                 if not moveMade:
                                     plr_clicks = [sq_selected]
@@ -152,27 +160,6 @@ class Interface:
 
             DrawState(screen, state.board, pieces,
                       valid_moves, sq_selected, state, self.SIZE)
+            
             clock.tick(self.MAX_FPS)
             pyg.display.flip()
-
-    '''
-    def draw_state(self, screen, board, loaded_pieces):
-        self.draw_board(screen)
-        self.draw_pieces(screen, board, loaded_pieces)
-
-    def draw_board(self, screen):
-        colors = [WHITE, GREY]
-        for r in range(DIMENSION):
-            for c in range(DIMENSION):
-                color = colors[((r+c) % 2)]
-                pyg.draw.rect(screen, color, pyg.Rect(
-                    c*SIZE, r*SIZE, SIZE, SIZE))
-
-    def draw_pieces(self, screen, board, loaded_pieces):
-        for r in range(DIMENSION):
-            for c in range(DIMENSION):
-                piece = board[r, c]
-                if piece != '--':
-                    screen.blit(loaded_pieces[piece], pyg.Rect(
-                        c*SIZE, r*SIZE, SIZE, SIZE))
-    '''
