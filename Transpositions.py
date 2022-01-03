@@ -1,11 +1,13 @@
 import numpy as np
+import sys
+import random
 
 class TranspositionTable:
     def __init__(self):
         self.Exact = 0
         self.LowerBound = 1
         self.UpperBound = 2
-        self.lookupFailed = -97348573489573
+        self.lookupFailed = -sys.maxsize + random.randrange(100, 10000)
         self.enabled = True
         self.sign = np.sign
         self.immediateMateScore = 100000

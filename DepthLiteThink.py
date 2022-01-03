@@ -101,7 +101,6 @@ class DepthLite1():
 
         if (plyFromRoot > 0):
             if state.ZobristKey in state.RepetitionPositionHistory:
-                print('------------------------- REPETITION DETECTED -----------------------')
                 return 0
 
             alpha = max(alpha, -self.immediateMateScore + plyFromRoot - 1)
@@ -112,7 +111,7 @@ class DepthLite1():
         ttVal = self.tt.attemptLookup(state, self.entries, depth, plyFromRoot, alpha, beta)
         if (ttVal != self.tt.lookupFailed):
             if (plyFromRoot == 0):
-                print('------------------------- TRANSPOSITION MOVE FOUND -----------------------------')
+                print('------------------------- TRANSPOSITION -----------------------------')
                 self.bestMoveInIteration = self.tt.getStoredMove(state, self.entries)
                 self.bestEvalInIteration = self.entries[self.tt.Index(state)].value
 
