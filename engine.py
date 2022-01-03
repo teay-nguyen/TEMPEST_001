@@ -32,7 +32,6 @@ class State:
         self.epLog = [self.epPossible]
         self.game_over = False
         self.RepetitionPositionHistory = []
-        self.kingMoves = []
         self.moveFuncs = {
             "p": self.getPawnMoves,
             "R": self.getRookMoves,
@@ -646,13 +645,7 @@ class State:
                 if endPiece[0] != allyColor:
                     chosen_move = Move((r, c), (endRow, endCol), self.board)
                     moves.append(chosen_move)
-                    self.kingMoves.append(chosen_move)
-
-    def filterKingMoves(self, kingMoves):
-        for move in kingMoves:
-            targetSquare = (move.endRow, move.endCol)
-            pieceOnTargetSquare = move.pieceCaptured
-
+    
     def getCastleMoves(self, r, c, moves):
         if self.squareUnderAttack(r, c):
             return

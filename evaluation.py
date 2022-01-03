@@ -11,7 +11,7 @@ piece_value = {
 }
 
 piece_map_visualization = {
-    'p': np.array([
+    'p': ([
         0,  0,  0,  0,  0,  0,  0,  0,
         50, 50, 50, 50, 50, 50, 50, 50,
         10, 10, 20, 30, 30, 20, 10, 10,
@@ -22,7 +22,7 @@ piece_map_visualization = {
         0,  0,  0,  0,  0,  0,  0,  0
     ]),
 
-    'N': np.array([
+    'N': ([
         -50,-40,-30,-30,-30,-30,-40,-50,
         -40,-20,  0,  0,  0,  0,-20,-40,
         -30,  0, 10, 15, 15, 10,  0,-30,
@@ -33,7 +33,7 @@ piece_map_visualization = {
         -50,-40,-30,-30,-30,-30,-40,-50,
     ]),
 
-    'B': np.array([
+    'B': ([
         -20,-10,-10,-10,-10,-10,-10,-20,
         -10,  0,  0,  0,  0,  0,  0,-10,
         -10,  0,  5, 10, 10,  5,  0,-10,
@@ -44,7 +44,7 @@ piece_map_visualization = {
         -20,-10,-10,-10,-10,-10,-10,-20,
     ]),
 
-    'R': np.array([
+    'R': ([
         0,  0,  0,  0,  0,  0,  0,  0,
         5, 10, 10, 10, 10, 10, 10,  5,
         -5,  0,  0,  0,  0,  0,  0, -5,
@@ -55,7 +55,7 @@ piece_map_visualization = {
         0,  0,  0,  5,  5,  0,  0,  0
     ]),
 
-    'Q': np.array([
+    'Q': ([
         -20,-10,-10, -5, -5,-10,-10,-20,
         -10,  0,  0,  0,  0,  0,  0,-10,
         -10,  0,  5,  5,  5,  5,  0,-10,
@@ -66,7 +66,7 @@ piece_map_visualization = {
         -20,-10,-10, -5, -5,-10,-10,-20
     ]),
 
-    'KMiddle': np.array([
+    'KMiddle': ([
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
@@ -77,7 +77,7 @@ piece_map_visualization = {
         20, 30, 10,  0,  0, 10, 30, 20
     ]),
 
-    'KEnd': np.array([
+    'KEnd': ([
         -50,-40,-30,-20,-20,-30,-40,-50,
         -30,-20,-10,  0,  0,-10,-20,-30,
         -30,-10, 20, 30, 30, 20,-10,-30,
@@ -101,15 +101,16 @@ class Evaluate:
     def countMaterial(self, state, colorIndex):
         board = state.board
         material = 0
-        for piece in np.nditer(board):
-            if piece != "--":
-                piece = str(piece)
-                if colorIndex == "w":
-                    if piece[0] == "w":
-                        material += piece_value[piece[1]]
-                elif colorIndex == "b":
-                    if piece[0] == "b":
-                        material += piece_value[piece[1]]
+        for row in range(len(board)):
+            for col in range(len(board[row])):
+                piece = board[row][col]
+                if piece != "--":
+                    if colorIndex == "w":
+                        if piece[0] == "w":
+                            material += piece_value[piece[1]]
+                    elif colorIndex == "b":
+                        if piece[0] == "b":
+                            material += piece_value[piece[1]]
 
         return material
 
@@ -162,7 +163,7 @@ class Evaluate:
                             pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col)
                             score += pos_val
                         elif colorIndex == 'b':
-                            reverse_map = np.flipud(piece_map_visualization[pieceType])
+                            reverse_map = piece_map_visualization[pieceType][::-1]
                             pos_val = self.ReadSquare(reverse_map, row, col)
                             score += pos_val
                     else:
@@ -170,7 +171,7 @@ class Evaluate:
                             pos_val = self.ReadSquare(piece_map_visualization['KMiddle'], row, col)
                             score += int(pos_val * (1 - endgamePhaseWeight))
                         elif colorIndex == 'b':
-                            reverse_map = np.flipud(piece_map_visualization['KMiddle'])
+                            reverse_map = piece_map_visualization['KMiddle'][::-1]
                             pos_val = self.ReadSquare(reverse_map, row, col)
                             score += int(pos_val * (1 - endgamePhaseWeight))
 

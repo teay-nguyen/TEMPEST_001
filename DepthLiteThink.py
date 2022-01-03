@@ -140,12 +140,14 @@ class DepthLite1():
 
         for move in ordered_moves:
             state.make_move(move, inSearch = True)
+            
             if (FoundPV):
                 eval = -self.Search(state, depth - 1, -alpha - 1, -alpha, plyFromRoot + 1)
                 if eval > alpha and eval < beta:
                     eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
             else:
                 eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
+            
             state.undo_move(inSearch = True)
             self.numNodes += 1
 
