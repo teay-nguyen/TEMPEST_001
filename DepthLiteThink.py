@@ -30,8 +30,8 @@ class DepthLite1():
         self.clearTTEachMove = False
         self.tt = TranspositionTable()
 
-        self.useOpeningBook = True
-        self.maxBookMoves = 20
+        self.useOpeningBook = False
+        self.maxBookMoves = 40
 
     def Timeout(self, startTime, deadline):
         return (time.time() - startTime) > deadline
@@ -45,6 +45,10 @@ class DepthLite1():
             return choice(moves)
 
     def startSearch(self, state):
+        if self.useOpeningBook:
+            if len(state.move_log):
+                pass
+
         self.bestMoveFound = self.bestMoveInIteration = self.invalidMove
         self.bestEvalFound = self.numCutoffs = self.bestEvalInIteration = self.currentIterativeSearchDepth =  0
         self.abortSearch = False
