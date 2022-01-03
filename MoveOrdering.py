@@ -8,7 +8,6 @@ piece_vals = {
     "p": 100,
 }
 
-
 class MoveOrdering:
     def __init__(self):
         self.maxMoveCount = 218
@@ -36,16 +35,18 @@ class MoveOrdering:
 
             self.moveScores.append(score)
 
-        filtered_moves = self.SortMoves(moves)
-        return filtered_moves
+        self.SortMoves(moves)
+        return moves
 
     def SortMoves(self, moves):
-        tempMoves = moves
-        for i in range(len(tempMoves)):
-            for j in range(i+1, len(tempMoves)):
-                if self.moveScores[i] < self.moveScores[j]:
-                    self.moveScores[i], self.moveScores[j] = self.moveScores[j], self.moveScores[i]
-                    tempMoves[i], tempMoves[j] = tempMoves[j], tempMoves[i]
+        for i in range(len(moves)):
+            minimum = i
 
-        return tempMoves
+            for j in range(i + 1, len(moves)):
+                if self.moveScores[j] < self.moveScores[minimum]:
+                    minimum = j
 
+            self.moveScores[minimum], self.moveScores[i] = self.moveScores[i], self.moveScores[minimum]
+            moves[minimum], moves[i] = moves[i], moves[minimum]
+
+        return moves
