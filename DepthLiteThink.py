@@ -31,6 +31,7 @@ class DepthLite1():
         self.clearTTEachMove = False
         self.tt = TranspositionTable()
         self.SearchDebug = Debug()
+        self.currentTrackedMove = None
 
         self.useOpeningBook = False
         self.maxBookMoves = 40
@@ -173,6 +174,7 @@ class DepthLite1():
         evalType = self.tt.UpperBound
 
         for move in ordered_moves:
+            self.currentTrackedMove = move
             state.make_move(move, inSearch = True)
             
             if (FoundPV):
@@ -218,6 +220,7 @@ class DepthLite1():
         ordered_moves = OrderClass.OrderMoves(state, moves)
 
         for move in ordered_moves:
+            self.currentTrackedMove = move
             state.make_move(move, inSearch = True)
             eval = -self.QuiescenceSearch(state, -beta, -alpha)
             state.undo_move(inSearch = True)
