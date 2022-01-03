@@ -5,6 +5,7 @@ import time
 from MoveOrdering import MoveOrdering
 from Transpositions import TranspositionTable
 import sys
+from Debugging import Debug
 
 class DepthLite1():
 
@@ -29,6 +30,7 @@ class DepthLite1():
         self.invalidMove = None
         self.clearTTEachMove = False
         self.tt = TranspositionTable()
+        self.SearchDebug = Debug()
 
         self.useOpeningBook = False
         self.maxBookMoves = 40
@@ -41,8 +43,8 @@ class DepthLite1():
 
         if len(moves) == 0:
             quit()
-        else:
-            return choice(moves)
+
+        return choice(moves)
 
     def startSearch(self, state):
         if self.useOpeningBook:
@@ -99,6 +101,8 @@ class DepthLite1():
         print('NEXT MOVE:', self.bestMoveFound, self.count, self.bestEvalFound)
         print('---------------------------------------\n')
 
+        self.SearchDebug.AppendLog(self.searchDebugInfo)
+        
         end = time.time()
         print(f'TIME TOOK TO GENERATE NEXT MOVE: {end - start}')
 
