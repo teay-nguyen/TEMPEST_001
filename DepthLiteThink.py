@@ -4,7 +4,6 @@ from evaluation import Evaluate
 import time
 from MoveOrdering import MoveOrdering
 from Transpositions import TranspositionTable
-import sys
 from Debugging import Debug
 
 class DepthLite1():
@@ -17,8 +16,8 @@ class DepthLite1():
         self.bestEvalFound = 0
         self.useIterativeDeepening = True
         self.transpositionTableSize = 6400
-        self.POSITIVE_INF = sys.maxsize
-        self.NEGATIVE_INF = -sys.maxsize
+        self.POSITIVE_INF = 9999999999
+        self.NEGATIVE_INF = -9999999999
         self.immediateMateScore = 100000
         self.numNodes = 0
         self.numCutoffs = 0
@@ -146,7 +145,7 @@ class DepthLite1():
         ttVal = self.tt.attemptLookup(state, self.entries, depth, plyFromRoot, alpha, beta)
         if (ttVal != self.tt.lookupFailed):
             if (plyFromRoot == 0):
-                print('------------------------- TRANSPOSITION FOUND -----------------------------')
+                print('-------------------------------------- TRANSPOSITION FOUND --------------------------------------')
                 self.bestMoveInIteration = self.tt.getStoredMove(state, self.entries)
                 self.bestEvalInIteration = self.entries[self.tt.Index(state)].value
 
