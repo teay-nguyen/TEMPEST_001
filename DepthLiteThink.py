@@ -21,7 +21,6 @@ class DepthLite1():
         self.immediateMateScore = 100000
         self.numNodes = 0
         self.numCutoffs = 0
-        self.valueWindow = 50
         self.abortSearch = False
         self.LowPerformanceMode = True
         self.searchDebugInfo = None
@@ -65,18 +64,17 @@ class DepthLite1():
             self.tt.ClearEntries(self.entries)
 
         if self.useIterativeDeepening:
-            targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
-            alpha, beta = self.NEGATIVE_INF, self.POSITIVE_INF
+            targetDepth = (lowPerformantDepth + 1) if self.LowPerformanceMode else (highPerformantDepth + 1)
 
-            for depth in range(1, targetDepth + 1):
-                print('Searching Depth:', depth)
-                val = self.Search(state, depth, alpha, beta, 0)
+            for depth in range(1, targetDepth):
+                print('[Searching Depth]:', depth)
+                self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
 
                 searchTime = time.time()
                 if self.Timeout(start, 5) or self.abortSearch:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
-                    print('TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH:', (searchTime - start))
+                    print('[TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH]:', (searchTime - start))
                     break
                 else:
                     self.currentIterativeSearchDepth = depth
@@ -86,35 +84,22 @@ class DepthLite1():
                     self.searchDebugInfo.lastCompletedDepth = depth
                     self.searchDebugInfo.eval = self.bestEvalFound
                     self.searchDebugInfo.moveVal = 0
-                    if (self.bestMoveFound is not None):
+                    if (self.bestMoveFound != None):
                         self.searchDebugInfo.move = self.bestMoveFound.getChessNotation(True)
 
                     if self.isMateScore(self.bestEvalFound):
-                        print('-------------------- FOUND MATE, EXITING SEARCH -------------------')
+                        print('-------------------- [FOUND MATE, EXITING SEARCH] -------------------')
                         break
-                
-                if (val <= alpha):
-                    alpha = self.NEGATIVE_INF
-                    beta = val + 1
-                    continue
-
-                if (val >= beta):
-                    beta = self.POSITIVE_INF
-                    alpha = val - 1
-                    continue
-
-                alpha = val - self.valueWindow
-                beta = val + self.valueWindow
-
         else:
             targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
+            
             print('Searching Depth:', targetDepth)
             self.Search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
 
         print('\n---------------------------------------')
-        print('NEXT MOVE:', self.bestMoveFound, self.count, self.bestEvalFound)
+        print('[ NEXT MOVE:', self.bestMoveFound, self.count, self.bestEvalFound, ']')
         print('---------------------------------------\n')
 
         self.SearchDebug.AppendLog(self.searchDebugInfo)
@@ -132,13 +117,15 @@ class DepthLite1():
 
     def Search(self, state, depth, alpha, beta, plyFromRoot):
         if (self.abortSearch):
+            self.bestMoveFound = self.bestMoveInIteration
+            self.bestEvalFound = self.bestEvalInIteration
             return 0
 
         if (plyFromRoot > 0):
             if state.ZobristKey in state.RepetitionPositionHistory:
                 return 0
 
-            alpha = max(alpha, -self.immediateMateScore + plyFromRoot - 1)
+            alpha = max(alpha, -self.immediateMateScore + plyFromRoot)
             beta = min(beta, self.immediateMateScore - plyFromRoot)
             if (alpha >= beta):
                 return alpha
@@ -155,8 +142,7 @@ class DepthLite1():
         if depth == 0:
             eval = self.QuiescenceSearch(state, alpha, beta)
             return eval
-
-        
+ 
         self.count += 1
         MoveOrder = MoveOrdering()
         moves = state.FilterValidMoves()
@@ -174,12 +160,13 @@ class DepthLite1():
         evalType = self.tt.UpperBound
 
         for move in ordered_moves:
-            self.currentTrackedMove = move
             state.make_move(move, inSearch = True)
-            
+
+            self.currentTrackedMove = move
+
             if (FoundPV):
                 eval = -self.Search(state, depth - 1, -alpha - 1, -alpha, plyFromRoot + 1)
-                if eval > alpha and eval < beta:
+                if (eval > alpha) and (eval < beta):
                     eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
             else:
                 eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
@@ -220,9 +207,11 @@ class DepthLite1():
         ordered_moves = OrderClass.OrderMoves(state, moves)
 
         for move in ordered_moves:
-            self.currentTrackedMove = move
             state.make_move(move, inSearch = True)
+
+            self.currentTrackedMove = move
             eval = -self.QuiescenceSearch(state, -beta, -alpha)
+            
             state.undo_move(inSearch = True)
 
             if (eval >= beta):
