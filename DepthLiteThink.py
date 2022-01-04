@@ -43,7 +43,6 @@ class DepthLite1():
 
         if len(moves) == 0:
             quit()
-
         return choice(moves)
 
     def startSearch(self, state):
@@ -105,7 +104,7 @@ class DepthLite1():
         self.SearchDebug.AppendLog(self.searchDebugInfo)
         
         end = time.time()
-        print(f'TIME TOOK TO GENERATE NEXT MOVE: {end - start}')
+        print(f'[TIME TOOK TO GENERATE NEXT MOVE: {end - start}]')
 
         return self.bestMoveFound
 
@@ -133,7 +132,7 @@ class DepthLite1():
         ttVal = self.tt.attemptLookup(state, self.entries, depth, plyFromRoot, alpha, beta)
         if (ttVal != self.tt.lookupFailed):
             if (plyFromRoot == 0):
-                print('-------------------------------------- TRANSPOSITION FOUND --------------------------------------')
+                print('-------------------------------------- [TRANSPOSITION FOUND] --------------------------------------')
                 self.bestMoveInIteration = self.tt.getStoredMove(state, self.entries)
                 self.bestEvalInIteration = self.entries[self.tt.Index(state)].value
 
