@@ -2,11 +2,11 @@ import random
 
 zobTable = [[[random.randint(1, 2**64 - 1) for i in range(12)]
              for j in range(8)]for k in range(8)]
-
+randomSeed = random.randrange(10000, 99999)
 
 class Zobrist:
     def __init__(self):
-        self.seed = 129837
+        self.seed = randomSeed
         self.zobTable = zobTable
 
     def index(self, piece):

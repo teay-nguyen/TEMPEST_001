@@ -18,7 +18,7 @@ piece_map_visualization = {
         5,  5, 10, 25, 25, 10,  5,  5,
         0,  0,  0, 24, 24,  0,  0,  0,
         5, -5,-10, -20,-20,-10, -5,  5,
-        5, 10, 10, -20, -20, 10, 10,  5,
+        5, 10, 10, -60, -60, 10, 10,  5,
         0,  0,  0,  0,  0,  0,  0,  0
     ]),
 
@@ -67,14 +67,16 @@ piece_map_visualization = {
     ]),
 
     'KMiddle': ([
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -20,-30,-30,-40,-40,-30,-30,-20,
-        -10,-20,-20,-20,-20,-20,-20,-10,
-        20, 20,  0,  0,  0,  0, 20, 20,
-        20, 30, 10,  0,  0, 10, 30, 20
+        0,  0,   .1,   .2,   .3,   .5,   .7,   .9,
+        1.8,  2.2,  2.6,  3.0,  3.5,  3.9,  4.4,  5,
+        6.8,  7.5,  8.2,  8.5,  8.9,  9.7, 10.5, 11.3,
+        14.0, 15.0, 16.9, 18.0, 19.1, 20.2, 21.3, 22.5,
+        26.0, 27.2, 28.3, 29.5, 30.7, 31.9, 33.0, 34.2,
+        37.7, 38.9, 40.1, 41.2, 42.4, 43.6, 44.8, 45.9,
+        49, 50, 50, 50, 50, 50, 50, 50,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        50, 50, 20, 20, 20, 20, 50, 50,
     ]),
 
     'KEnd': ([
@@ -89,6 +91,17 @@ piece_map_visualization = {
     ]),
 }
 
+CenterControlTable = [
+    -50,-40,-30,-30,-30,-30,-40,-50,
+    -40,-20,  0,  0,  0,  0,-20,-40,
+    -30,  0, 10, 15, 15, 10,  0,-30,
+    -30,  5, 15, 20, 20, 15,  5,-30,
+    -30,  0, 15, 20, 20, 15,  0,-30,
+    -30,  5, 10, 15, 15, 10,  5,-30,
+    -40,-20,  0,  5,  5,  0,-20,-40,
+    -50,-40,-30,-30,-30,-30,-40,-50,
+]
+
 class Evaluate:
     def __init__(self):
         self.preComputedMoveData = PrecomputedMoveData()
@@ -98,35 +111,27 @@ class Evaluate:
         square = row * 8 + col
         return table[square]
 
-    def countMaterial(self, state, colorIndex):
+    def countMaterial(self, state, colorIndex: str) -> int:
         board = state.board
         material = 0
         for row in range(len(board)):
             for col in range(len(board[row])):
                 piece = board[row][col]
                 if piece != "--":
-                    if colorIndex == "w":
-                        if piece[0] == "w":
-                            material += piece_value[piece[1]]
-                    elif colorIndex == "b":
-                        if piece[0] == "b":
-                            material += piece_value[piece[1]]
+                    if piece[0] == colorIndex:
+                        material += piece_value[piece[1]]
 
         return material
 
-    def countMaterialWithoutPawns(self, state, colorIndex):
+    def countMaterialWithoutPawns(self, state, colorIndex: str) -> int:
         board = state.board
         material = 0
         for row in range(len(board)):
             for col in range(len(board[row])):
                 piece = board[row][col]
                 if piece != "--" and piece[1] != "p":
-                    if colorIndex == "w":
-                        if piece[0] == "w":
-                            material += piece_value[piece[1]]
-                    elif colorIndex == "b":
-                        if piece[0] == "b":
-                            material += piece_value[piece[1]]
+                    if piece[0] == colorIndex:
+                        material += piece_value[piece[1]]
 
         return material
 
@@ -143,7 +148,7 @@ class Evaluate:
             mopUpScore += self.preComputedMoveData.centreManhattonDistance[oppKingRank, oppKingCol] * 10
             mopUpScore += (14 - self.preComputedMoveData.NumRookMovesToReachSquare(friendKingSq, oppKingSq)) * 4
 
-            return int(mopUpScore * endgameWeight)
+            return int(mopUpScore * 10 * endgameWeight)
 
         return 0
 
@@ -151,7 +156,7 @@ class Evaluate:
         multiplier = 1 / self.endgameMaterialStart
         return 1 - min(1, materialCountWithoutPawns * multiplier)
 
-    def evalPieceSquareTbls(self, state, colorIndex, endgamePhaseWeight):
+    def evalPieceSquareTbls(self, state, colorIndex, endgamePhaseWeight) -> float:
         score = 0
         for row in range(len(state.board)):
             for col in range(len(state.board[row])):
@@ -159,10 +164,12 @@ class Evaluate:
                 pieceType = state.board[row][col][1]
                 if state.board[row][col] != '--' and pieceSide == colorIndex:
                     if pieceType != 'K':
+
                         if colorIndex == 'w':
                             pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col)
                             score += pos_val
                         elif colorIndex == 'b':
+
                             reverse_map = piece_map_visualization[pieceType][::-1]
                             pos_val = self.ReadSquare(reverse_map, row, col)
                             score += pos_val
@@ -170,6 +177,7 @@ class Evaluate:
                         if colorIndex == 'w':
                             pos_val = self.ReadSquare(piece_map_visualization['KMiddle'], row, col)
                             score += int(pos_val * (1 - endgamePhaseWeight))
+
                         elif colorIndex == 'b':
                             reverse_map = piece_map_visualization['KMiddle'][::-1]
                             pos_val = self.ReadSquare(reverse_map, row, col)
@@ -177,38 +185,40 @@ class Evaluate:
 
         return score
 
-    def evaluate(self, state):
+    def evaluate(self, state, lowPerformanceMode) -> float:
         blackEval = 0
         whiteEval = 0
 
-        whiteMaterial = self.countMaterial(state, 'w')
-        blackMaterial = self.countMaterial(state, 'b')
+        if lowPerformanceMode:
+            whiteEval += self.countMaterial(state, 'w')
+            blackEval += self.countMaterial(state, 'b')
+        else:
+            whiteMaterial = self.countMaterial(state, 'w')
+            blackMaterial = self.countMaterial(state, 'b')
 
-        whiteMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'w')
-        blackMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'b')
-        whiteEndgamePhaseWeight = self.endgamePhaseWeight(
-            whiteMaterialWithoutPawns)
-        blackEndgamePhaseWeight = self.endgamePhaseWeight(
-            blackMaterialWithoutPawns)
+            whiteMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'w')
+            blackMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'b')
+            whiteEndgamePhaseWeight = self.endgamePhaseWeight(whiteMaterialWithoutPawns)
+            blackEndgamePhaseWeight = self.endgamePhaseWeight(blackMaterialWithoutPawns)
 
-        whiteEval += whiteMaterial
-        blackEval += blackMaterial
+            whiteEval += whiteMaterial
+            blackEval += blackMaterial
 
-        whiteEval += self.mopUpEval(state, 'w', 'b', whiteMaterial,
-                                    blackMaterial, whiteEndgamePhaseWeight)
-        blackEval += self.mopUpEval(state, 'b', 'w', blackMaterial,
-                                    whiteMaterial, blackEndgamePhaseWeight)
+            whiteEval += self.mopUpEval(state, 'w', 'b', whiteMaterial, blackMaterial, whiteEndgamePhaseWeight)
+            blackEval += self.mopUpEval(state, 'b', 'w', blackMaterial, whiteMaterial, blackEndgamePhaseWeight)
 
-        whitePieceSquareTableEval = self.evalPieceSquareTbls(
-            state, 'w', whiteEndgamePhaseWeight)
-        blackPieceSquareTableEval = self.evalPieceSquareTbls(
-            state, 'b', blackEndgamePhaseWeight)
+            whitePieceSquareTableEval = self.evalPieceSquareTbls(
+                state, 'w', whiteEndgamePhaseWeight)
+            blackPieceSquareTableEval = self.evalPieceSquareTbls(
+                state, 'b', blackEndgamePhaseWeight)
 
-        whiteEval += whitePieceSquareTableEval
-        blackEval += blackPieceSquareTableEval
+            whiteEval += whitePieceSquareTableEval
+            blackEval += blackPieceSquareTableEval
 
-        #print("BLACK MATERIAL:", blackMaterial)
-        #print("WHITE MATERIAL:", whiteMaterial)
+        if state.whitesturn:
+            whiteEval += 40
+        else:
+            blackEval += 40
 
         eval = whiteEval - blackEval
         perspective = 1 if state.whitesturn else -1

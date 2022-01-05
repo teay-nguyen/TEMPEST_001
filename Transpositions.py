@@ -7,14 +7,14 @@ class TranspositionTable:
         self.Exact = 0
         self.LowerBound = 1
         self.UpperBound = 2
-        self.lookupFailed = -sys.maxsize + random.randrange(100, 10000)
+        self.lookupFailed = -sys.maxsize
         self.enabled = True
         self.sign = np.sign
         self.immediateMateScore = 100000
-        self.size = 64
+        self.size = 1
 
     def Index(self, state):
-        return state.ZobristKey % self.size
+        return state.ZobristKey
 
     def ClearEntries(self, entries):
         entries.clear()
@@ -22,7 +22,7 @@ class TranspositionTable:
     def getStoredMove(self, state, entries):
         return entries[self.Index(state)].move
 
-    def attemptLookup(self, state, entries, depth, plyFromRoot, alpha, beta):
+    def attemptLookup(self, state, entries, depth, plyFromRoot, alpha, beta) -> int:
         if (not self.enabled) or not self.Index(state) in entries:
             return self.lookupFailed
 
@@ -50,21 +50,21 @@ class TranspositionTable:
         entry = Entry(state.ZobristKey, self.CorrectScoreForStorage(eval, plySearched), depth, evalType, move)
         entries[self.Index(state)] = entry
 
-    def CorrectScoreForStorage(self, score, plySearched):
+    def CorrectScoreForStorage(self, score, plySearched) -> int:
         if (self.isMateScore(score)):
             sign = self.sign(score)
             return (score * sign + plySearched) * sign
 
         return score
 
-    def CorrectRetrievedScore(self, score, plySearched):
+    def CorrectRetrievedScore(self, score, plySearched) -> int:
         if (self.isMateScore(score)):
             sign = self.sign(score)
             return (score * sign - plySearched) * sign
 
         return score
 
-    def isMateScore(self, score):
+    def isMateScore(self, score) -> bool:
         maxMateDepth = 1000
         return abs(score) > (self.immediateMateScore - maxMateDepth)
 

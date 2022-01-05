@@ -20,5 +20,5 @@ class PrecomputedMoveData:
                         self.orthogonalDistance[row1, col1, row2, col2] = fileDistance + rankDistance
                         self.kingDistance[row1, col1, row2, col2] = max(fileDistance, rankDistance)
 
-    def NumRookMovesToReachSquare(self, startSquare, targetSquare):
+    def NumRookMovesToReachSquare(self, startSquare, targetSquare) -> int:
         return self.orthogonalDistance[startSquare[0], startSquare[1], targetSquare[0], targetSquare[1]]

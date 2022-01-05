@@ -31,6 +31,8 @@ class DepthLite1():
         self.tt = TranspositionTable()
         self.SearchDebug = Debug()
         self.currentTrackedMove = None
+        self.PVFound = False
+        self.tagPVLINE = tagPVLINE()
 
         self.useOpeningBook = False
         self.maxBookMoves = 40
@@ -54,6 +56,7 @@ class DepthLite1():
         self.bestEvalFound = self.numCutoffs = self.bestEvalInIteration = self.currentIterativeSearchDepth =  0
         self.abortSearch = False
         self.searchDebugInfo = SearchDebugInfo()
+        self.count = 0
 
         start = time.time()
         highPerformantDepth = 4
@@ -98,7 +101,7 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
 
         print('\n---------------------------------------')
-        print('[ NEXT MOVE:', self.bestMoveFound, self.count, self.bestEvalFound, ']')
+        print('[ [NEXT MOVE]:', self.bestMoveFound, ' [Nodes Searched]:', self.count, ' [Move Evaluation]:', self.bestEvalFound, ']')
         print('---------------------------------------\n')
 
         self.SearchDebug.AppendLog(self.searchDebugInfo)
@@ -120,8 +123,18 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
             return 0
 
+        if (depth >= 2 and state.inCheck() == False):
+            state.whitesturn = not state.whitesturn
+            state.epPossible = ()
+            eval = -self.Search(state, depth - 1 - 2, -beta, -beta + 1, plyFromRoot + 1)
+            state.whitesturn = not state.whitesturn
+            if (eval >= beta):
+                return beta
+
         if (plyFromRoot > 0):
             if state.ZobristKey in state.RepetitionPositionHistory:
+                self.bestMoveFound = self.bestMoveInIteration
+                self.bestEvalFound = self.bestEvalInIteration
                 return 0
 
             alpha = max(alpha, -self.immediateMateScore + plyFromRoot)
@@ -146,7 +159,8 @@ class DepthLite1():
         MoveOrder = MoveOrdering()
         moves = state.FilterValidMoves()
         ordered_moves = MoveOrder.OrderMoves(state, moves)
-        FoundPV = False
+        self.FoundPV = False
+        self.tagPVLINE.PVLINE = []
 
         if len(moves) == 0:
             if state.inCheck():
@@ -163,7 +177,7 @@ class DepthLite1():
 
             self.currentTrackedMove = move
 
-            if (FoundPV):
+            if (self.FoundPV):
                 eval = -self.Search(state, depth - 1, -alpha - 1, -alpha, plyFromRoot + 1)
                 if (eval > alpha) and (eval < beta):
                     eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
@@ -182,10 +196,10 @@ class DepthLite1():
                 evalType = self.tt.Exact
                 bestMoveInPosition = move
                 alpha = eval
-                FoundPV = True
+                self.FoundPV = True
 
                 if plyFromRoot == 0:
-                    print('New Best Move Found:', move, eval)
+                    print('[New Best Move Found]:', move, ' [Move Evaluation]', eval, ' [Nodes Searched]', self.count)
                     self.bestEvalInIteration = eval
                     self.bestMoveInIteration = move
 
@@ -195,7 +209,7 @@ class DepthLite1():
     def QuiescenceSearch(self, state, alpha, beta):
         EvalClass = Evaluate()
         OrderClass = MoveOrdering()
-        eval = EvalClass.evaluate(state)
+        eval = EvalClass.evaluate(state, False)
 
         if (eval >= beta):
             return beta
@@ -204,6 +218,9 @@ class DepthLite1():
 
         moves = state.FilterValidMoves(onlyCaptures=True)
         ordered_moves = OrderClass.OrderMoves(state, moves)
+
+        if len(ordered_moves) > 50:
+            ordered_moves = ordered_moves[:-50]
 
         for move in ordered_moves:
             state.make_move(move, inSearch = True)
@@ -236,6 +253,10 @@ class DepthLite1():
         else:
             self.searchDebugInfo = SearchDebugInfo()
 
+class tagPVLINE:
+    def __init__(self) -> None:
+        self.PVLINE = []
+        self.numMovesInLine = 15
 
 class SearchDebugInfo:
     def __init__(self):

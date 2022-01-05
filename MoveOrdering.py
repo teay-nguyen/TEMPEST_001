@@ -34,10 +34,13 @@ class MoveOrdering:
                 if endSquare in state.oppPawnAttackMap:
                     score -= self.squareControlledByOppPenalty
 
+            if move.castlemove:
+                score += 100
+
             self.moveScores.append(score)
 
-        self.SortMoves(moves)
-        return moves
+        ordered_moves = self.SortMoves(moves)
+        return ordered_moves
 
     def SortMoves(self, moves):
         for i in range(1, len(moves)):
@@ -54,3 +57,8 @@ class MoveOrdering:
 
             self.moveScores[j + 1] = key
             moves[j + 1] = moveKey
+        return moves
+
+    @property
+    def getCurrentMoveScores(self):
+        return self.moveScores
