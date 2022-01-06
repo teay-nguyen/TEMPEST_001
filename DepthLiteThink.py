@@ -100,9 +100,9 @@ class DepthLite1():
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
 
-        print('\n---------------------------------------')
-        print('[ [NEXT MOVE]:', self.bestMoveFound, ' [Nodes Searched]:', self.count, ' [Move Evaluation]:', self.bestEvalFound, ']')
-        print('---------------------------------------\n')
+        print('\n-------------------------------------------------')
+        print('[ [NEXT MOVE]:', self.bestMoveFound, ' [Nodes Searched]:', self.count, ' [Move Evaluation]:', self.bestEvalFound, '\n    [State ZobristKey]:', state.ZobristKey, ']')
+        print('-------------------------------------------------\n')
 
         self.SearchDebug.AppendLog(self.searchDebugInfo)
         
@@ -123,7 +123,7 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
             return 0
 
-        if (depth >= 2 and state.inCheck() == False):
+        if (depth >= 2 and not state.inCheck()):
             state.whitesturn = not state.whitesturn
             state.epPossible = ()
             eval = -self.Search(state, depth - 1 - 2, -beta, -beta + 1, plyFromRoot + 1)
@@ -132,10 +132,12 @@ class DepthLite1():
                 return beta
 
         if (plyFromRoot > 0):
-            if state.ZobristKey in state.RepetitionPositionHistory:
-                self.bestMoveFound = self.bestMoveInIteration
-                self.bestEvalFound = self.bestEvalInIteration
-                return 0
+            if self.bestEvalInIteration >= -500:
+                if state.ZobristKey in state.RepetitionPositionHistory:
+                    self.bestMoveFound = self.bestMoveInIteration
+                    self.bestEvalFound = self.bestEvalInIteration
+                    print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
+                    return 0
 
             alpha = max(alpha, -self.immediateMateScore + plyFromRoot)
             beta = min(beta, self.immediateMateScore - plyFromRoot)

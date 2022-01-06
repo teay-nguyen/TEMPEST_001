@@ -12,14 +12,14 @@ piece_value = {
 
 piece_map_visualization = {
     'p': ([
-        0,  0,  0,  0,  0,  0,  0,  0,
-        50, 50, 50, 50, 50, 50, 50, 50,
-        10, 10, 20, 30, 30, 20, 10, 10,
-        5,  5, 10, 25, 25, 10,  5,  5,
-        0,  0,  0, 24, 24,  0,  0,  0,
-        5, -5,-10, -20,-20,-10, -5,  5,
-        5, 10, 10, -60, -60, 10, 10,  5,
-        0,  0,  0,  0,  0,  0,  0,  0
+        0,0,0,0,0,0,0,0,
+        30,30,100,190,160,190,70,-50,
+        -9,-15,11,15,32,22,5,-22,
+        -4,-23,6,20,4,17,4,-8,
+        13,0,-13,1,11,-2,-13,5,
+        5,-12,-7,-8,-8,-5,-15,-8,
+        -7,7,-3,-13,50,-16,10,-8,
+        0,0,0,0,0,0,0,0
     ]),
 
     'N': ([
@@ -95,8 +95,8 @@ CenterControlTable = [
     -50,-40,-30,-30,-30,-30,-40,-50,
     -40,-20,  0,  0,  0,  0,-20,-40,
     -30,  0, 10, 15, 15, 10,  0,-30,
-    -30,  5, 15, 20, 20, 15,  5,-30,
-    -30,  0, 15, 20, 20, 15,  0,-30,
+    -30,  5, 15, 50, 50, 15,  5,-30,
+    -30,  0, 15, 50, 50, 15,  0,-30,
     -30,  5, 10, 15, 15, 10,  5,-30,
     -40,-20,  0,  5,  5,  0,-20,-40,
     -50,-40,-30,-30,-30,-30,-40,-50,
@@ -281,16 +281,38 @@ class Evaluate:
             whiteEval += whitePieceSquareTableEval
             blackEval += blackPieceSquareTableEval
 
+        CastlePenalty = 100
+
         if state.whitesturn:
-            whiteEval += 40
+            whiteEval += CastlePenalty
         else:
-            blackEval += 40
+            blackEval += CastlePenalty
 
         if state.inCheck():
             if state.whitesturn:
-                whiteEval -= 100
+                whiteEval -= CastlePenalty
             else:
-                blackEval -= 100
+                blackEval -= CastlePenalty
+
+        if not state.currCastleRights.wks:
+            whiteEval -= CastlePenalty
+        else:
+            whiteEval += CastlePenalty
+
+        if not state.currCastleRights.wqs:
+            whiteEval -= CastlePenalty
+        else:
+            whiteEval += CastlePenalty
+
+        if not state.currCastleRights.bks:
+            blackEval -= CastlePenalty
+        else:
+            blackEval += CastlePenalty
+
+        if not state.currCastleRights.bqs:
+            blackEval -= CastlePenalty
+        else:
+            blackEval += CastlePenalty
 
         eval = whiteEval - blackEval
         perspective = 1 if state.whitesturn else -1
