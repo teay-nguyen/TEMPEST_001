@@ -21,7 +21,7 @@ class State:
             self.epPossible,
             self.start_fen,
             self.ZobristKey,
-        ) = self.loadStartPosition()
+        ) = self.loadCustomPosition()
 
         self.moveLog = []
         self.oppPawnAttackMap = {}
@@ -89,7 +89,7 @@ class State:
         return self.fenToPos(fen)
 
     def loadCustomPosition(self):
-        fen = '8/8/8/8/8/5qk1/2Q2r2/1QK5 w - - 0 1' #insert custom position
+        fen = '1kr5/2p5/1p6/8/1P1K4/3R4/3R4/8 w - - 0 1' #insert custom position
         return self.fenToPos(fen)
 
 

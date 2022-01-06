@@ -29,6 +29,7 @@ class TranspositionTable:
 
         if entry.key == state.ZobristKey:
             if entry.depth >= depth:
+
                 if entry.nodeType == self.Exact:
                     return entry.value
 
@@ -46,27 +47,6 @@ class TranspositionTable:
 
         entry = Entry(state.ZobristKey, eval, depth, evalType, move)
         entries[self.Index(state)] = entry
-
-    '''
-    def CorrectScoreForStorage(self, score, plySearched) -> int:
-        if (self.isMateScore(score)):
-            sign = self.sign(score)
-            return (score * sign + plySearched) * sign
-
-        return score
-
-    def CorrectRetrievedScore(self, score, plySearched) -> int:
-        if (self.isMateScore(score)):
-            sign = self.sign(score)
-            return (score * sign - plySearched) * sign
-
-        return score
-
-    def isMateScore(self, score) -> bool:
-        maxMateDepth = 1000
-        return abs(score) > (self.immediateMateScore - maxMateDepth)
-    '''
-
 
 class Entry:
     def __init__(self, key, val, depth, nodeType, move):
