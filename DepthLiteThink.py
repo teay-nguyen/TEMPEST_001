@@ -105,7 +105,7 @@ class DepthLite1():
         print('[[NEXT MOVE]:', self.bestMoveFound, ' [Nodes Searched]:', self.count, ' [Move Evaluation]:', self.bestEvalFound, '\n   [State ZobristKey]:', state.ZobristKey, ']')
         print('-------------------------------------------------\n')
 
-        print('\n', state.board)
+        print('\n', state.board ,'\n')
 
         self.SearchDebug.AppendLog(self.searchDebugInfo)
         
