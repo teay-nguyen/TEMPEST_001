@@ -12,14 +12,14 @@ piece_value = {
 
 piece_map_visualization = {
     'p': ([
-        0,0,0,0,0,0,0,0,
-        30,30,100,190,160,190,70,-50,
-        -9,-15,11,15,32,22,5,-22,
-        -4,-23,6,20,4,17,4,-8,
-        13,0,-13,1,11,-2,-13,5,
-        5,-12,-7,-8,-8,-5,-15,-8,
-        -7,7,-3,-13,50,-16,10,-8,
-        0,0,0,0,0,0,0,0
+        0,  0,  0,  0,  0,  0,  0,  0,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        10, 10, 20, 30, 30, 20, 10, 10,
+        5,  5, 10, 25, 25, 10,  5,  5,
+        0,  0,  0, 20, 20,  0,  0,  0,
+        5, -5,-10,-60,-60,-10, -5,  5,
+        5, 10, 10,-20,-20, 10, 10,  5,
+        0,  0,  0,  0,  0,  0,  0,  0
     ]),
 
     'N': ([
@@ -40,7 +40,7 @@ piece_map_visualization = {
         -10,  5,  5, 10, 10,  5,  5,-10,
         -10,  0, 10, 10, 10, 10,  0,-10,
         -10, 10, 10,  5,  5, 10, 10,-10,
-        -10,  5,  0,  0,  0,  0,  5,-10,
+        -10, 10,  0,  0,  0,  0, 10,-10,
         -20,-10,-10,-10,-10,-10,-10,-20,
     ]),
 
@@ -256,6 +256,7 @@ class Evaluate:
     def evaluate(self, state, lowPerformanceMode) -> float:
         blackEval = 0
         whiteEval = 0
+        pieceMovedPenalties = ['Q','K','R']
 
         if lowPerformanceMode:
             whiteEval += self.countMaterial(state, 'w')
@@ -313,6 +314,13 @@ class Evaluate:
             blackEval -= CastlePenalty
         else:
             blackEval += CastlePenalty
+
+        if len(state.moveLog) <= 10:
+            if state.moveLog[-1] in pieceMovedPenalties:
+                if state.moveLog[-1].pieceMoved[0] == 'w':
+                    whiteEval -= 50
+                elif state.moveLog[-1].pieceMoved[0] == 'b':
+                    blackEval -= 50
 
         eval = whiteEval - blackEval
         perspective = 1 if state.whitesturn else -1

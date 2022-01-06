@@ -174,10 +174,7 @@ class DepthLite1():
 
         self.bestMoveInPosition = self.invalidMove
         evalType = self.tt.UpperBound
-
-        if len(ordered_moves) > 50:
-            ordered_moves = ordered_moves[:50]
-
+        
         for move in ordered_moves:
             state.make_move(move, inSearch = True)
 
