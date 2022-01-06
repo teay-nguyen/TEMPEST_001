@@ -30,7 +30,8 @@ class DepthLite1():
         self.clearTTEachMove = False
         self.tt = TranspositionTable()
         self.SearchDebug = Debug()
-        self.currentTrackedMove = None
+        self.currentTrackedMove = self.invalidMove
+        self.bestMoveInPosition = self.invalidMove
         self.PVFound = False
         self.tagPVLINE = tagPVLINE()
 
@@ -101,7 +102,7 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
 
         print('\n-------------------------------------------------')
-        print('[ [NEXT MOVE]:', self.bestMoveFound, ' [Nodes Searched]:', self.count, ' [Move Evaluation]:', self.bestEvalFound, '\n    [State ZobristKey]:', state.ZobristKey, ']')
+        print('[[NEXT MOVE]:', self.bestMoveFound, ' [Nodes Searched]:', self.count, ' [Move Evaluation]:', self.bestEvalFound, '\n   [State ZobristKey]:', state.ZobristKey, ']')
         print('-------------------------------------------------\n')
 
         self.SearchDebug.AppendLog(self.searchDebugInfo)
@@ -171,7 +172,7 @@ class DepthLite1():
             else:
                 return 0
 
-        bestMoveInPosition = self.invalidMove
+        self.bestMoveInPosition = self.invalidMove
         evalType = self.tt.UpperBound
 
         if len(ordered_moves) > 50:
@@ -199,7 +200,7 @@ class DepthLite1():
 
             if (eval > alpha):
                 evalType = self.tt.Exact
-                bestMoveInPosition = move
+                self.bestMoveInPosition = move
                 alpha = eval
                 self.FoundPV = True
 
@@ -208,7 +209,7 @@ class DepthLite1():
                     self.bestEvalInIteration = eval
                     self.bestMoveInIteration = move
 
-        self.tt.storeEval(state, self.entries, depth, plyFromRoot, alpha, evalType, bestMoveInPosition)
+        self.tt.storeEval(state, self.entries, depth, plyFromRoot, alpha, evalType, self.bestMoveInPosition)
         return alpha
 
     def QuiescenceSearch(self, state, alpha, beta):

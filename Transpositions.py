@@ -1,6 +1,5 @@
 import numpy as np
 import sys
-import random
 
 class TranspositionTable:
     def __init__(self):
@@ -11,10 +10,10 @@ class TranspositionTable:
         self.enabled = True
         self.sign = np.sign
         self.immediateMateScore = 100000
-        self.size = 1
+        self.size = 64
 
     def Index(self, state):
-        return state.ZobristKey
+        return state.ZobristKey % self.size
 
     def ClearEntries(self, entries):
         entries.clear()
@@ -30,16 +29,14 @@ class TranspositionTable:
 
         if entry.key == state.ZobristKey:
             if entry.depth >= depth:
-                correctedScore = self.CorrectRetrievedScore(entry.value, plyFromRoot)
-
                 if entry.nodeType == self.Exact:
-                    return correctedScore
+                    return entry.value
 
-                if entry.nodeType == self.UpperBound and correctedScore <= alpha:
-                    return correctedScore
+                if entry.nodeType == self.UpperBound and entry.value <= alpha:
+                    return alpha
 
-                if entry.nodeType == self.LowerBound and correctedScore >= beta:
-                    return correctedScore
+                if entry.nodeType == self.LowerBound and entry.value >= beta:
+                    return beta
 
         return self.lookupFailed
 
@@ -47,9 +44,10 @@ class TranspositionTable:
         if not self.enabled:
             return
 
-        entry = Entry(state.ZobristKey, self.CorrectScoreForStorage(eval, plySearched), depth, evalType, move)
+        entry = Entry(state.ZobristKey, eval, depth, evalType, move)
         entries[self.Index(state)] = entry
 
+    '''
     def CorrectScoreForStorage(self, score, plySearched) -> int:
         if (self.isMateScore(score)):
             sign = self.sign(score)
@@ -67,7 +65,7 @@ class TranspositionTable:
     def isMateScore(self, score) -> bool:
         maxMateDepth = 1000
         return abs(score) > (self.immediateMateScore - maxMateDepth)
-
+    '''
 
 
 class Entry:
