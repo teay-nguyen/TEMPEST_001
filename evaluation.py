@@ -3,11 +3,11 @@ from PrecomputedMoveData import PrecomputedMoveData
 
 piece_value = {
     "K": 0,
-    "Q": 950,
-    "R": 500,
-    "B": 350,
-    "N": 310,
-    "p": 100,
+    "Q": 2538,
+    "R": 1276,
+    "B": 825,
+    "N": 781,
+    "p": 124,
 }
 
 piece_map_visualization = {
@@ -102,10 +102,44 @@ CenterControlTable = [
     -50,-40,-30,-30,-30,-30,-40,-50,
 ]
 
+KingDirections = [
+    (-1, 0),
+    (-1, 1),
+    (-1, -1),
+    (1, 0),
+    (1, -1),
+    (1, 1),
+    (0, 1),
+    (0, -1),
+]
+
 class Evaluate:
     def __init__(self):
         self.preComputedMoveData = PrecomputedMoveData()
         self.endgameMaterialStart = (piece_value["R"] * 2) + piece_value["B"] + piece_value['N']
+
+        self.whiteKingSquareAttack = np.array([
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+            ])
+        
+        self.blackKingSquareAttack = np.array([
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
+            ])
+
 
     def ReadSquare(self, table, row, col):
         square = row * 8 + col
@@ -135,6 +169,37 @@ class Evaluate:
 
         return material
 
+    def generateKingAttackHeatMap(self, state):
+        whiteKingLocation = state.whiteKingLocation
+        blackKingLocation = state.blackKingLocation
+        for direction in KingDirections:
+            rank, file = direction[0], direction[1]
+            whiteKingRank, whiteKingFile = whiteKingLocation[0], whiteKingLocation[1]
+            blackKingRank, blackKingFile = blackKingLocation[0], blackKingLocation[1]
+
+            squareAroundWhiteKing = (whiteKingRank + rank, whiteKingFile + file)
+            squareAroundBlackKing = (blackKingRank + rank, blackKingFile + file)
+
+            passCriteria = [
+                squareAroundWhiteKing[0] < 8,
+                squareAroundWhiteKing[0] >= 0,
+                squareAroundWhiteKing[1] < 8,
+                squareAroundWhiteKing[1] >= 0,
+
+                squareAroundBlackKing[0] < 8,
+                squareAroundBlackKing[0] >= 0,
+                squareAroundBlackKing[1] < 8,
+                squareAroundBlackKing[1] >= 0,
+
+            ]
+
+            if all(passCriteria):
+                squareAroundWhiteKingIdx = squareAroundWhiteKing[0] * 8 + squareAroundWhiteKing[1]
+                squareAroundBlackKingIdx = squareAroundBlackKing[0] * 8 + squareAroundBlackKing[1]
+
+                self.whiteKingSquareAttack[squareAroundWhiteKingIdx] = 20
+                self.blackKingSquareAttack[squareAroundBlackKingIdx] = 20
+
     def mopUpEval(self, state, friendIdx, enemyIdx, myMaterial, oppMaterial, endgameWeight):
         mopUpScore = 0
         if (myMaterial > (oppMaterial + piece_value["p"] * 2)) and (endgameWeight > 0):
@@ -157,6 +222,7 @@ class Evaluate:
         return 1 - min(1, materialCountWithoutPawns * multiplier)
 
     def evalPieceSquareTbls(self, state, colorIndex, endgamePhaseWeight) -> float:
+        self.generateKingAttackHeatMap(state)
         score = 0
         for row in range(len(state.board)):
             for col in range(len(state.board[row])):
@@ -166,21 +232,23 @@ class Evaluate:
                     if pieceType != 'K':
 
                         if colorIndex == 'w':
-                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col)
-                            score += pos_val
-                        elif colorIndex == 'b':
+                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col) + self.ReadSquare(CenterControlTable, row, col)
+                            kingAttackSquare = self.ReadSquare(self.blackKingSquareAttack, row, col)
+                            score += pos_val + kingAttackSquare
 
+                        elif colorIndex == 'b':
                             reverse_map = piece_map_visualization[pieceType][::-1]
-                            pos_val = self.ReadSquare(reverse_map, row, col)
-                            score += pos_val
+                            pos_val = self.ReadSquare(reverse_map, row, col) + self.ReadSquare(CenterControlTable, row, col)
+                            kingAttackSquare = self.ReadSquare(self.blackKingSquareAttack, row, col)
+                            score += pos_val + kingAttackSquare
                     else:
                         if colorIndex == 'w':
-                            pos_val = self.ReadSquare(piece_map_visualization['KMiddle'], row, col)
+                            pos_val = self.ReadSquare(piece_map_visualization['KMiddle'], row, col) + self.ReadSquare(CenterControlTable, row, col)
                             score += int(pos_val * (1 - endgamePhaseWeight))
 
                         elif colorIndex == 'b':
                             reverse_map = piece_map_visualization['KMiddle'][::-1]
-                            pos_val = self.ReadSquare(reverse_map, row, col)
+                            pos_val = self.ReadSquare(reverse_map, row, col) + self.ReadSquare(CenterControlTable, row, col)
                             score += int(pos_val * (1 - endgamePhaseWeight))
 
         return score
@@ -207,10 +275,8 @@ class Evaluate:
             whiteEval += self.mopUpEval(state, 'w', 'b', whiteMaterial, blackMaterial, whiteEndgamePhaseWeight)
             blackEval += self.mopUpEval(state, 'b', 'w', blackMaterial, whiteMaterial, blackEndgamePhaseWeight)
 
-            whitePieceSquareTableEval = self.evalPieceSquareTbls(
-                state, 'w', whiteEndgamePhaseWeight)
-            blackPieceSquareTableEval = self.evalPieceSquareTbls(
-                state, 'b', blackEndgamePhaseWeight)
+            whitePieceSquareTableEval = self.evalPieceSquareTbls(state, 'w', whiteEndgamePhaseWeight)
+            blackPieceSquareTableEval = self.evalPieceSquareTbls(state, 'b', blackEndgamePhaseWeight)
 
             whiteEval += whitePieceSquareTableEval
             blackEval += blackPieceSquareTableEval
