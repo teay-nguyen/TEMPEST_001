@@ -89,7 +89,7 @@ class State:
         return self.fenToPos(fen)
 
     def loadCustomPosition(self):
-        fen = '8/3k4/3r4/8/3K4/3R4/3R4/8 w - - 0 1' #insert custom position
+        fen = '8/8/8/8/8/5qk1/2Q2r2/1QK5 w - - 0 1' #insert custom position
         return self.fenToPos(fen)
 
 

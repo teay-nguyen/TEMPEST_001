@@ -181,14 +181,14 @@ class Evaluate:
             squareAroundBlackKing = (blackKingRank + rank, blackKingFile + file)
 
             passCriteria = [
-                squareAroundWhiteKing[0] < 8,
+                squareAroundWhiteKing[0] <= 7,
                 squareAroundWhiteKing[0] >= 0,
-                squareAroundWhiteKing[1] < 8,
+                squareAroundWhiteKing[1] <= 7,
                 squareAroundWhiteKing[1] >= 0,
 
-                squareAroundBlackKing[0] < 8,
+                squareAroundBlackKing[0] <= 7,
                 squareAroundBlackKing[0] >= 0,
-                squareAroundBlackKing[1] < 8,
+                squareAroundBlackKing[1] <= 7,
                 squareAroundBlackKing[1] >= 0,
 
             ]
@@ -285,6 +285,12 @@ class Evaluate:
             whiteEval += 40
         else:
             blackEval += 40
+
+        if state.inCheck():
+            if state.whitesturn:
+                whiteEval -= 100
+            else:
+                blackEval -= 100
 
         eval = whiteEval - blackEval
         perspective = 1 if state.whitesturn else -1
