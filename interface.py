@@ -20,7 +20,7 @@ class Interface:
         self.PANEL_HEIGHT = self.HEIGHT
         self.DIMENSION = 8
         self.SIZE = self.HEIGHT//self.DIMENSION
-        self.MAX_FPS = 15
+        self.MAX_FPS = 60
 
         self.WHITE = pyg.Color('white')
         self.GREY = pyg.Color('grey')
@@ -97,15 +97,6 @@ class Interface:
                                 move = Move(plr_clicks[0],
                                             plr_clicks[1], state.board)
 
-                                if move in valid_moves:
-                                    state.make_move(move)
-                                    moveMade = True
-                                    animate = True
-
-                                    sq_selected = ()
-                                    plr_clicks = []
-
-                                '''
                                 for i in range(len(valid_moves)):
                                     if move == valid_moves[i]:
                                         state.make_move(valid_moves[i])
@@ -114,7 +105,6 @@ class Interface:
 
                                         sq_selected = ()
                                         plr_clicks = []
-                                '''
 
                                 if not moveMade:
                                     plr_clicks = [sq_selected]
@@ -143,6 +133,7 @@ class Interface:
                         AIMove = DepthLite.random_move(state)
                     elif AIMove == 1:
                         running = False
+                        quit()
 
                     state.make_move(AIMove)
                     moveMade = True
