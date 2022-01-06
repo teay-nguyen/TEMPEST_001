@@ -76,7 +76,7 @@ piece_map_visualization = {
         49, 50, 50, 50, 50, 50, 50, 50,
         50, 50, 50, 50, 50, 50, 50, 50,
         50, 50, 50, 50, 50, 50, 50, 50,
-        50, 50, 20, 20, 20, 20, 50, 50,
+        50, 100, 20, 20, 20, 20, 100, 50,
     ]),
 
     'KEnd': ([
@@ -281,47 +281,7 @@ class Evaluate:
 
             whiteEval += whitePieceSquareTableEval
             blackEval += blackPieceSquareTableEval
-
-        CastlePenalty = 100
-
-        if state.whitesturn:
-            whiteEval += CastlePenalty
-        else:
-            blackEval += CastlePenalty
-
-        if state.inCheck():
-            if state.whitesturn:
-                whiteEval -= CastlePenalty
-            else:
-                blackEval -= CastlePenalty
-
-        if not state.currCastleRights.wks:
-            whiteEval -= CastlePenalty
-        else:
-            whiteEval += CastlePenalty
-
-        if not state.currCastleRights.wqs:
-            whiteEval -= CastlePenalty
-        else:
-            whiteEval += CastlePenalty
-
-        if not state.currCastleRights.bks:
-            blackEval -= CastlePenalty
-        else:
-            blackEval += CastlePenalty
-
-        if not state.currCastleRights.bqs:
-            blackEval -= CastlePenalty
-        else:
-            blackEval += CastlePenalty
-
-        if len(state.moveLog) <= 10:
-            if state.moveLog[-1] in pieceMovedPenalties:
-                if state.moveLog[-1].pieceMoved[0] == 'w':
-                    whiteEval -= 50
-                elif state.moveLog[-1].pieceMoved[0] == 'b':
-                    blackEval -= 50
-
+        
         eval = whiteEval - blackEval
         perspective = 1 if state.whitesturn else -1
 
