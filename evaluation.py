@@ -3,11 +3,11 @@ from PrecomputedMoveData import PrecomputedMoveData
 
 piece_value = {
     "K": 0,
-    "Q": 2538,
-    "R": 1276,
-    "B": 825,
-    "N": 781,
-    "p": 124,
+    "Q": 2682,
+    "R": 1380,
+    "B": 915,
+    "N": 854,
+    "p": 206,
 }
 
 piece_map_visualization = {
@@ -17,7 +17,7 @@ piece_map_visualization = {
         10, 10, 20, 30, 30, 20, 10, 10,
         5,  5, 10, 25, 25, 10,  5,  5,
         0,  0,  0, 20, 20,  0,  0,  0,
-        5, -5,-10,-60,-60,-10, -5,  5,
+        0, -5,-10,-60,-60,-10, -5,  0,
         5, 10, 10,-20,-20, 10, 10,  5,
         0,  0,  0,  0,  0,  0,  0,  0
     ]),
@@ -40,7 +40,7 @@ piece_map_visualization = {
         -10,  5,  5, 10, 10,  5,  5,-10,
         -10,  0, 10, 10, 10, 10,  0,-10,
         -10, 10, 10,  5,  5, 10, 10,-10,
-        -10, 10,  0,  0,  0,  0, 10,-10,
+        -10,  5,  0,  0,  0,  0,  5,-10,
         -20,-10,-10,-10,-10,-10,-10,-20,
     ]),
 
@@ -59,24 +59,22 @@ piece_map_visualization = {
         -20,-10,-10, -5, -5,-10,-10,-20,
         -10,  0,  0,  0,  0,  0,  0,-10,
         -10,  0,  5,  5,  5,  5,  0,-10,
-        -5,  0,  5,  5,  5,  5,  0, -5,
-        0,  0,  5,  5,  5,  5,  0, -5,
+         -5,  0,  5,  5,  5,  5,  0, -5,
+          0,  0,  5,  5,  5,  5,  0, -5,
         -10,  5,  5,  5,  5,  5,  0,-10,
         -10,  0,  5,  0,  0,  0,  0,-10,
-        -20,-10,-10, -5, -5,-10,-10,-20
+        -20,-10,-10, -5, -5,-10,-10,-20,
     ]),
 
     'KMiddle': ([
-        0,  0,   .1,   .2,   .3,   .5,   .7,   .9,
-        1.8,  2.2,  2.6,  3.0,  3.5,  3.9,  4.4,  5,
-        6.8,  7.5,  8.2,  8.5,  8.9,  9.7, 10.5, 11.3,
-        14.0, 15.0, 16.9, 18.0, 19.1, 20.2, 21.3, 22.5,
-        26.0, 27.2, 28.3, 29.5, 30.7, 31.9, 33.0, 34.2,
-        37.7, 38.9, 40.1, 41.2, 42.4, 43.6, 44.8, 45.9,
-        49, 50, 50, 50, 50, 50, 50, 50,
-        50, 50, 50, 50, 50, 50, 50, 50,
-        50, 50, 50, 50, 50, 50, 50, 50,
-        50, 100, 20, 20, 20, 20, 100, 50,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -20,-30,-30,-40,-40,-30,-30,-20,
+        -10,-20,-20,-20,-20,-20,-20,-10,
+         20, 20,  0,  0,  0,  0, 20, 20,
+         20, 30, 10,  0,  0, 10, 30, 20,
     ]),
 
     'KEnd': ([
@@ -118,31 +116,17 @@ class Evaluate:
         self.preComputedMoveData = PrecomputedMoveData()
         self.endgameMaterialStart = (piece_value["R"] * 2) + piece_value["B"] + piece_value['N']
 
-        self.whiteKingSquareAttack = np.array([
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-            ])
-        
-        self.blackKingSquareAttack = np.array([
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0,
-            ])
+        self.whiteKingSquareAttack = np.zeros(64)
+        self.blackKingSquareAttack = np.zeros(64)
 
 
-    def ReadSquare(self, table, row, col):
-        square = row * 8 + col
+    def ReadSquare(self, table, row, col, isWhite):
+        if not isWhite:
+            rank = 7 - row
+            square = rank * 8 + col
+        else:
+            square = row * 8 + col
+
         return table[square]
 
     def countMaterial(self, state, colorIndex: str) -> int:
@@ -172,8 +156,8 @@ class Evaluate:
     def generateKingAttackHeatMap(self, state):
         whiteKingLocation = state.whiteKingLocation
         blackKingLocation = state.blackKingLocation
-        for direction in KingDirections:
-            rank, file = direction[0], direction[1]
+        for i in range(8):
+            rank, file = KingDirections[i][0], KingDirections[i][1]
             whiteKingRank, whiteKingFile = whiteKingLocation[0], whiteKingLocation[1]
             blackKingRank, blackKingFile = blackKingLocation[0], blackKingLocation[1]
 
@@ -181,15 +165,10 @@ class Evaluate:
             squareAroundBlackKing = (blackKingRank + rank, blackKingFile + file)
 
             passCriteria = [
-                squareAroundWhiteKing[0] <= 7,
-                squareAroundWhiteKing[0] >= 0,
-                squareAroundWhiteKing[1] <= 7,
-                squareAroundWhiteKing[1] >= 0,
-
-                squareAroundBlackKing[0] <= 7,
-                squareAroundBlackKing[0] >= 0,
-                squareAroundBlackKing[1] <= 7,
-                squareAroundBlackKing[1] >= 0,
+                0 <= squareAroundWhiteKing[0] < 8,
+                0 <= squareAroundWhiteKing[1] < 8,
+                0 <= squareAroundBlackKing[0] < 8,
+                0 <= squareAroundBlackKing[1] < 8,
 
             ]
 
@@ -213,8 +192,7 @@ class Evaluate:
             mopUpScore += self.preComputedMoveData.centreManhattonDistance[oppKingRank, oppKingCol] * 10
             mopUpScore += (14 - self.preComputedMoveData.NumRookMovesToReachSquare(friendKingSq, oppKingSq)) * 4
 
-            return int(mopUpScore * 10 * endgameWeight)
-
+            return int(mopUpScore * endgameWeight)
         return 0
 
     def endgamePhaseWeight(self, materialCountWithoutPawns):
@@ -232,23 +210,21 @@ class Evaluate:
                     if pieceType != 'K':
 
                         if colorIndex == 'w':
-                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col) + self.ReadSquare(CenterControlTable, row, col)
-                            kingAttackSquare = self.ReadSquare(self.blackKingSquareAttack, row, col)
+                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, True) + self.ReadSquare(CenterControlTable, row, col, True)
+                            kingAttackSquare = self.ReadSquare(self.blackKingSquareAttack, row, col, True)
                             score += pos_val + kingAttackSquare
 
                         elif colorIndex == 'b':
-                            reverse_map = piece_map_visualization[pieceType][::-1]
-                            pos_val = self.ReadSquare(reverse_map, row, col) + self.ReadSquare(CenterControlTable, row, col)
-                            kingAttackSquare = self.ReadSquare(self.blackKingSquareAttack, row, col)
+                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, False) + self.ReadSquare(CenterControlTable, row, col, False)
+                            kingAttackSquare = self.ReadSquare(self.whiteKingSquareAttack, row, col, False)
                             score += pos_val + kingAttackSquare
                     else:
                         if colorIndex == 'w':
-                            pos_val = self.ReadSquare(piece_map_visualization['KMiddle'], row, col) + self.ReadSquare(CenterControlTable, row, col)
+                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, True) + self.ReadSquare(CenterControlTable, row, col, True)
                             score += int(pos_val * (1 - endgamePhaseWeight))
 
                         elif colorIndex == 'b':
-                            reverse_map = piece_map_visualization['KMiddle'][::-1]
-                            pos_val = self.ReadSquare(reverse_map, row, col) + self.ReadSquare(CenterControlTable, row, col)
+                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, False) + self.ReadSquare(CenterControlTable, row, col, False)
                             score += int(pos_val * (1 - endgamePhaseWeight))
 
         return score
@@ -256,7 +232,6 @@ class Evaluate:
     def evaluate(self, state, lowPerformanceMode) -> float:
         blackEval = 0
         whiteEval = 0
-        pieceMovedPenalties = ['Q','K','R']
 
         if lowPerformanceMode:
             whiteEval += self.countMaterial(state, 'w')
