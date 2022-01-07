@@ -37,6 +37,9 @@ class DepthLite1():
 
         self.useOpeningBook = False
         self.maxBookMoves = 40
+        self.highPerformantDepth = 4
+        self.lowPerformantDepth = 2
+        self.MoveOrdering = MoveOrdering()
 
     def Timeout(self, startTime, deadline):
         return (time.time() - startTime) > deadline
@@ -60,21 +63,19 @@ class DepthLite1():
         self.count = 0
 
         start = time.time()
-        highPerformantDepth = 4
-        lowPerformantDepth = 2
 
         if self.clearTTEachMove:
             self.tt.ClearEntries(self.entries)
 
         if self.useIterativeDeepening:
-            targetDepth = (lowPerformantDepth + 1) if self.LowPerformanceMode else (highPerformantDepth + 1)
+            targetDepth = (self.lowPerformantDepth + 1) if self.LowPerformanceMode else (self.highPerformantDepth + 1)
 
             for depth in range(1, targetDepth):
                 print('[Searching Depth]:', depth)
                 self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
 
                 searchTime = time.time()
-                if self.Timeout(start, 5) or self.abortSearch:
+                if self.Timeout(start, 10) or self.abortSearch:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
                     print('[TIME LIMIT EXCEEDED OR ABORT SEARCH ACTIVATED! EXITING SEARCH]:', (searchTime - start))
@@ -94,7 +95,7 @@ class DepthLite1():
                         print('-------------------- [FOUND MATE, EXITING SEARCH] -------------------')
                         break
         else:
-            targetDepth = lowPerformantDepth if self.LowPerformanceMode else highPerformantDepth
+            targetDepth = self.lowPerformantDepth if self.LowPerformanceMode else self.highPerformantDepth
             
             print('Searching Depth:', targetDepth)
             self.Search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
@@ -102,7 +103,7 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
 
         print('\n-------------------------------------------------')
-        print('[[NEXT MOVE]:', self.bestMoveFound, ' [Nodes Searched]:', self.count, ' [Move Evaluation]:', self.bestEvalFound, '\n   [State ZobristKey]:', state.ZobristKey, ']')
+        print('[[NEXT MOVE]:', self.bestMoveFound, ' [Total Nodes Searched]:', self.numNodes, ' [Move Evaluation]:', self.bestEvalFound, '\n   [State ZobristKey]:', state.ZobristKey, '[Nodes Searched]:', self.count, ']')
         print('-------------------------------------------------\n')
 
         print('\n', state.board ,'\n')
@@ -161,9 +162,8 @@ class DepthLite1():
             return eval
  
         self.count += 1
-        MoveOrder = MoveOrdering()
         moves = state.FilterValidMoves()
-        ordered_moves = MoveOrder.OrderMoves(state, moves)
+        ordered_moves = self.MoveOrdering.OrderMoves(state, moves)
         self.FoundPV = False
         self.tagPVLINE.PVLINE = []
 
@@ -213,7 +213,6 @@ class DepthLite1():
 
     def QuiescenceSearch(self, state, alpha, beta):
         EvalClass = Evaluate()
-        OrderClass = MoveOrdering()
         eval = EvalClass.evaluate(state, False)
 
         if (eval >= beta):
@@ -222,7 +221,7 @@ class DepthLite1():
             alpha = eval
 
         moves = state.FilterValidMoves(onlyCaptures=True)
-        ordered_moves = OrderClass.OrderMoves(state, moves)
+        ordered_moves = self.MoveOrdering.OrderMoves(state, moves)
 
         if len(ordered_moves) > 50:
             ordered_moves = ordered_moves[:50]

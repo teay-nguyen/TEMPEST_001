@@ -11,6 +11,21 @@ class State:
     def __init__(self):
         self.ZobristClass = Zobrist()
         self.currCastleRights = castlerights(False, False, False, False)
+        self.pieceCount = {
+            'wK': 0,
+            'wQ': 0,
+            'wR': 0,
+            'wB': 0,
+            'wN': 0,
+            'wp': 0,
+
+            'bK': 0,
+            'bQ': 0,
+            'bR': 0,
+            'bB': 0,
+            'bN': 0,
+            'bp': 0,
+        }
         
         (
             self.board,
@@ -21,7 +36,7 @@ class State:
             self.epPossible,
             self.start_fen,
             self.ZobristKey,
-        ) = self.loadStartPosition()
+        ) = self.loadCustomPosition()
 
         self.moveLog = []
         self.oppPawnAttackMap = {}
@@ -143,6 +158,8 @@ class State:
                         elif piece_color == "b":
                             self.blackKingLocation = (row, col)
 
+                    self.pieceCount[piece_color + pieceType] += 1
+
                     col += 1
 
         fen_turn = fen.split()[1]
@@ -251,8 +268,13 @@ class State:
         self.moveLog.append(move)
         self.whitesturn = not self.whitesturn
 
+        if move.isCapture:
+            self.pieceCount[move.pieceCaptured] -= 1
+
         if move.isPawnPromotion:
             self.board[move.endRow, move.endCol] = move.pieceMoved[0] + "Q"
+            self.pieceCount[move.pieceMoved[0]+'Q'] += 1
+            self.pieceCount[move.pieceMoved[0]+'p'] -= 1
 
         if move.epMove:
             self.board[move.startRow, move.endCol] = "--"
@@ -320,6 +342,13 @@ class State:
             self.board[move.startRow, move.startCol] = move.pieceMoved
             self.board[move.endRow, move.endCol] = move.pieceCaptured
             self.whitesturn = not self.whitesturn
+
+            if move.isPawnPromotion:
+                self.pieceCount[move.pieceMoved[0]+'Q'] -= 1
+                self.pieceCount[move.pieceMoved[0]+'p'] += 1
+
+            if move.isCapture:
+                self.pieceCount[move.pieceCaptured] += 1
 
             if move.pieceMoved == "wK":
                 self.whiteKingLocation = (move.startRow, move.startCol)

@@ -2,7 +2,7 @@ import numpy as np
 from PrecomputedMoveData import PrecomputedMoveData
 
 piece_value = {
-    "K": 0,
+    "K": 10 ** 10,
     "Q": 2682,
     "R": 1380,
     "B": 915,
@@ -66,7 +66,7 @@ piece_map_visualization = {
         -20,-10,-10, -5, -5,-10,-10,-20,
     ]),
 
-    'KMiddle': ([
+    'K': ([
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
@@ -129,6 +129,9 @@ class Evaluate:
 
         return table[square]
 
+    def bishop_pair(self, bishop_count):
+        return True if bishop_count >= 2 else False
+
     def countMaterial(self, state, colorIndex: str) -> int:
         board = state.board
         material = 0
@@ -141,6 +144,18 @@ class Evaluate:
 
         return material
 
+    def countMaterialNew(self, state, colorIndex: str) -> int:
+        pieceCount = state.pieceCount
+        material = 0
+
+        material += piece_value['Q'] * pieceCount[colorIndex + 'Q']
+        material += piece_value['R'] * pieceCount[colorIndex + 'R']
+        material += piece_value['B'] * pieceCount[colorIndex + 'B']
+        material += piece_value['N'] * pieceCount[colorIndex + 'N']
+        material += piece_value['p'] * pieceCount[colorIndex + 'p']
+
+        return material
+
     def countMaterialWithoutPawns(self, state, colorIndex: str) -> int:
         board = state.board
         material = 0
@@ -150,6 +165,17 @@ class Evaluate:
                 if piece != "--" and piece[1] != "p":
                     if piece[0] == colorIndex:
                         material += piece_value[piece[1]]
+
+        return material
+
+    def countMaterialWithoutPawnsNew(self, state, colorIndex: str) -> int:
+        pieceCount = state.pieceCount
+        material = 0
+
+        material += piece_value['Q'] * pieceCount[colorIndex + 'Q']
+        material += piece_value['R'] * pieceCount[colorIndex + 'R']
+        material += piece_value['B'] * pieceCount[colorIndex + 'B']
+        material += piece_value['N'] * pieceCount[colorIndex + 'N']
 
         return material
 
@@ -176,8 +202,8 @@ class Evaluate:
                 squareAroundWhiteKingIdx = squareAroundWhiteKing[0] * 8 + squareAroundWhiteKing[1]
                 squareAroundBlackKingIdx = squareAroundBlackKing[0] * 8 + squareAroundBlackKing[1]
 
-                self.whiteKingSquareAttack[squareAroundWhiteKingIdx] = 20
-                self.blackKingSquareAttack[squareAroundBlackKingIdx] = 20
+                self.whiteKingSquareAttack[squareAroundWhiteKingIdx] = 50
+                self.blackKingSquareAttack[squareAroundBlackKingIdx] = 50
 
     def mopUpEval(self, state, friendIdx, enemyIdx, myMaterial, oppMaterial, endgameWeight):
         mopUpScore = 0
@@ -202,6 +228,7 @@ class Evaluate:
     def evalPieceSquareTbls(self, state, colorIndex, endgamePhaseWeight) -> float:
         self.generateKingAttackHeatMap(state)
         score = 0
+        bishop_count = 0
         for row in range(len(state.board)):
             for col in range(len(state.board[row])):
                 pieceSide = state.board[row][col][0]
@@ -227,6 +254,10 @@ class Evaluate:
                             pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, False) + self.ReadSquare(CenterControlTable, row, col, False)
                             score += int(pos_val * (1 - endgamePhaseWeight))
 
+                    if pieceType == 'B':
+                        bishop_count += 1
+
+        if self.bishop_pair(bishop_count): score += 100
         return score
 
     def evaluate(self, state, lowPerformanceMode) -> float:
@@ -234,14 +265,14 @@ class Evaluate:
         whiteEval = 0
 
         if lowPerformanceMode:
-            whiteEval += self.countMaterial(state, 'w')
-            blackEval += self.countMaterial(state, 'b')
+            whiteEval += self.countMaterialNew(state, 'w')
+            blackEval += self.countMaterialNew(state, 'b')
         else:
-            whiteMaterial = self.countMaterial(state, 'w')
-            blackMaterial = self.countMaterial(state, 'b')
+            whiteMaterial = self.countMaterialNew(state, 'w')
+            blackMaterial = self.countMaterialNew(state, 'b')
 
-            whiteMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'w')
-            blackMaterialWithoutPawns = self.countMaterialWithoutPawns(state, 'b')
+            whiteMaterialWithoutPawns = self.countMaterialWithoutPawnsNew(state, 'w')
+            blackMaterialWithoutPawns = self.countMaterialWithoutPawnsNew(state, 'b')
             whiteEndgamePhaseWeight = self.endgamePhaseWeight(whiteMaterialWithoutPawns)
             blackEndgamePhaseWeight = self.endgamePhaseWeight(blackMaterialWithoutPawns)
 
