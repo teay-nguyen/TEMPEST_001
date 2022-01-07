@@ -36,7 +36,7 @@ class State:
             self.epPossible,
             self.start_fen,
             self.ZobristKey,
-        ) = self.loadCustomPosition()
+        ) = self.loadStartPosition()
 
         self.moveLog = []
         self.oppPawnAttackMap = {}

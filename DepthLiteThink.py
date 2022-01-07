@@ -34,6 +34,7 @@ class DepthLite1():
         self.bestMoveInPosition = self.invalidMove
         self.PVFound = False
         self.tagPVLINE = tagPVLINE()
+        self.usePrincipalVariation = True
 
         self.useOpeningBook = False
         self.maxBookMoves = 40
@@ -103,7 +104,7 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
 
         print('\n-------------------------------------------------')
-        print('[[NEXT MOVE]:', self.bestMoveFound, ' [Total Nodes Searched]:', self.numNodes, ' [Move Evaluation]:', self.bestEvalFound, '\n   [State ZobristKey]:', state.ZobristKey, '[Nodes Searched]:', self.count, ']')
+        print('[[NEXT MOVE]:', self.bestMoveFound, ' [Total Nodes Searched]:', self.numNodes, ' [Move Evaluation]:', self.bestEvalFound, '\n   [State ZobristKey]:', state.ZobristKey, '[Num Recursions]:', self.count, ']')
         print('-------------------------------------------------\n')
 
         print('\n', state.board ,'\n')
@@ -127,7 +128,7 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
             return 0
 
-        if (depth >= 2 and not state.inCheck()):
+        if (depth >= 3 and not state.inCheck()):
             state.whitesturn = not state.whitesturn
             state.epPossible = ()
             eval = -self.Search(state, depth - 1 - 2, -beta, -beta + 1, plyFromRoot + 1)
@@ -182,9 +183,12 @@ class DepthLite1():
 
             self.currentTrackedMove = move
 
-            if (self.FoundPV):
-                eval = -self.Search(state, depth - 1, -alpha - 1, -alpha, plyFromRoot + 1)
-                if (eval > alpha) and (eval < beta):
+            if (self.usePrincipalVariation):
+                if (self.FoundPV):
+                    eval = -self.Search(state, depth - 1, -alpha - 1, -alpha, plyFromRoot + 1)
+                    if (eval > alpha) and (eval < beta):
+                        eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
+                else:
                     eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
             else:
                 eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
