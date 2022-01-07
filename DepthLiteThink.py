@@ -123,6 +123,7 @@ class DepthLite1():
         self.abortSearch = True
 
     def Search(self, state, depth, alpha, beta, plyFromRoot):
+        start = time.time()
         if (self.abortSearch):
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration

@@ -1,4 +1,5 @@
 from PrecomputedMoveData import PrecomputedMoveData
+import time
 
 piece_value = {
     "K": 0,
@@ -200,6 +201,7 @@ class Evaluate:
         return score
 
     def evaluate(self, state, lowPerformanceMode) -> float:
+        start = time.time()
         blackEval = 0
         whiteEval = 0
 
@@ -229,5 +231,6 @@ class Evaluate:
         
         eval = whiteEval - blackEval
         perspective = 1 if state.whitesturn else -1
+        funcDuration = time.time() - start
 
         return eval * perspective
