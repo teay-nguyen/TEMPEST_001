@@ -5,6 +5,7 @@ import time
 from MoveOrdering import MoveOrdering
 from Transpositions import TranspositionTable
 from Debugging import Debug
+import numpy as np
 
 class DepthLite1():
 
@@ -16,8 +17,8 @@ class DepthLite1():
         self.bestEvalFound = 0
         self.useIterativeDeepening = True
         self.transpositionTableSize = 6400
-        self.POSITIVE_INF = 9999999999
-        self.NEGATIVE_INF = -9999999999
+        self.POSITIVE_INF = np.inf
+        self.NEGATIVE_INF = -np.inf
         self.immediateMateScore = 100000
         self.numNodes = 0
         self.numCutoffs = 0

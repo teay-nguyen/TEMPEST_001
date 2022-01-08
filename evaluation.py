@@ -16,7 +16,7 @@ piece_map_visualization = {
         50, 50, 50, 50, 50, 50, 50, 50,
         10, 10, 20, 30, 30, 20, 10, 10,
         5,  5, 10, 25, 25, 10,  5,  5,
-        0,  0,  0, 20, 20,  0,  0,  0,
+        0,  0,  0, 35, 35,  0,  0,  0,
         0, -5,-10,-60,-60,-10, -5,  0,
         5, 10, 10,-20,-20, 10, 10,  5,
         0,  0,  0,  0,  0,  0,  0,  0
@@ -40,19 +40,19 @@ piece_map_visualization = {
         -10,  5,  5, 10, 10,  5,  5,-10,
         -10,  0, 10, 10, 10, 10,  0,-10,
         -10, 10, 10,  5,  5, 10, 10,-10,
-        -10,  5,  0,  0,  0,  0,  5,-10,
+        -10, 10,  0,  0,  0,  0, 10,-10,
         -20,-10,-10,-10,-10,-10,-10,-20,
     ]),
 
     'R': ([
         0,  0,  0,  0,  0,  0,  0,  0,
-        5, 10, 10, 10, 10, 10, 10,  5,
+        5, 15, 15, 15, 15, 15, 15,  5,
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
         -5,  0,  0,  0,  0,  0,  0, -5,
-        0,  0,  0,  5,  5,  0,  0,  0
+        -5, -3, -3,  5,  5,  -3,-3, -5
     ]),
 
     'Q': ([
@@ -73,7 +73,7 @@ piece_map_visualization = {
         -30,-40,-40,-50,-50,-40,-40,-30,
         -20,-30,-30,-40,-40,-30,-30,-20,
         -10,-20,-20,-20,-20,-20,-20,-10,
-         20, 20,  0,  0,  0,  0, 20, 20,
+         20, 20,-10,-10,-10,-10, 20, 20,
          20, 30, 10,  0,  0, 10, 30, 20,
     ]),
 
@@ -176,10 +176,10 @@ class Evaluate:
                     if pieceType != 'K':
                         if colorIndex == 'w':
                             pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, True) + self.ReadSquare(CenterControlTable, row, col, True)
-                            score += pos_val
+                            score += pos_val * 2
                         elif colorIndex == 'b':
                             pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, False) + self.ReadSquare(CenterControlTable, row, col, False)
-                            score += pos_val
+                            score += pos_val * 2
 
         if not self.isEG:
             if colorIndex == 'w':
