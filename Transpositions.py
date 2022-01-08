@@ -1,5 +1,3 @@
-import numpy as np
-import sys
 
 class TranspositionTable:
     def __init__(self):
@@ -7,8 +5,6 @@ class TranspositionTable:
         self.LowerBound = 1
         self.UpperBound = 2
         self.NoneBound = 3
-        self.lookupFailed = -sys.maxsize
-        self.enabled = True
         self.value = 0
 
     def Index(self, state):
@@ -26,24 +22,21 @@ class TranspositionTable:
         return None
 
     def attemptLookup(self, state, entries, depth, alpha, beta) -> int:
-        if (not self.enabled) or not self.Index(state) in entries:
-            return self.lookupFailed
+        if not self.Index(state) in entries:
+            return 0
 
+        self.value = 0
         entry = entries[self.Index(state)]
 
         if entry.key == state.ZobristKey and entry.depth >= depth:
-            if (entry.nodeType == self.Exact) or \
-                    (entry.nodeType == self.UpperBound and entry.value <= alpha) or \
+            if (entry.nodeType == self.Exact) | \
+                    (entry.nodeType == self.UpperBound and entry.value <= alpha) | \
                     (entry.nodeType == self.LowerBound and entry.value >= beta):
                         self.value = entry.value
                         return 1
-
-        return self.lookupFailed
+        return 0
 
     def storeEval(self, state, entries, depth, eval, evalType):
-        if not self.enabled:
-            return
-
         entry = Entry(state.ZobristKey, eval)
 
         if entry.depth <= depth:

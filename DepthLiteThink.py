@@ -28,7 +28,7 @@ class DepthLite1():
         self.currentIterativeSearchDepth = 0
         self.entries = {}
         self.invalidMove = None
-        self.clearTTEachMove = False
+        self.clearTTEachMove = True
         self.tt = TranspositionTable()
         self.SearchDebug = Debug()
         self.currentTrackedMove = self.invalidMove
@@ -102,6 +102,7 @@ class DepthLite1():
             targetDepth = self.lowPerformantDepth if self.LowPerformanceMode else self.highPerformantDepth
             
             print('Searching Depth:', targetDepth)
+
             self.root_search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
@@ -158,7 +159,7 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
             return 0
 
-        if (self.tt.attemptLookup(state, self.entries, depth, alpha, beta)) != self.tt.lookupFailed:
+        if (self.tt.attemptLookup(state, self.entries, depth, alpha, beta)):
             if (plyFromRoot == 0):
                 print('----------------------------- [TRANSPOSITION FOUND] -----------------------------')
                 self.bestMoveFound = self.tt.getStoredMove(state, self.entries, state.ZobristKey)
@@ -171,11 +172,15 @@ class DepthLite1():
             self.tt.storeEval(state, self.entries, depth, eval, self.tt.Exact)
             return eval
 
-        if (depth >= 3):
+        if (depth >= 3 and not state.inCheck()):
+            tempEP = state.epPossible
+
             state.whitesturn = not state.whitesturn
             state.epPossible = ()
             eval = -self.main_search(state, depth - 1 - 2, -beta, -beta + 1, plyFromRoot + 1)
             state.whitesturn = not state.whitesturn
+
+            state.epPossible = tempEP
             if (eval >= beta):
                 self.tt.storeEval(state, self.entries, depth, beta, self.tt.LowerBound)
                 return beta
