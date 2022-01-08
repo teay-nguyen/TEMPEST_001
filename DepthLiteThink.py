@@ -39,8 +39,8 @@ class DepthLite1():
 
         self.useOpeningBook = False
         self.maxBookMoves = 40
-        self.highPerformantDepth = 4
-        self.lowPerformantDepth = 2
+        self.highPerformantDepth = 10
+        self.lowPerformantDepth = 3
         self.MoveOrdering = MoveOrdering()
 
     def Timeout(self, startTime, deadline):
@@ -55,7 +55,7 @@ class DepthLite1():
 
     def startSearch(self, state):
         if self.useOpeningBook:
-            if len(state.move_log):
+            if len(state.move_log) <= self.maxBookMoves:
                 pass
 
         self.bestMoveFound = self.bestMoveInIteration = self.invalidMove
@@ -75,7 +75,7 @@ class DepthLite1():
             for depth in range(1, targetDepth):
                 print('[Searching Depth]:', depth)
 
-                self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
+                self.root_search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
 
                 searchTime = time.time()
                 if self.Timeout(start, 10) or self.abortSearch:
@@ -102,15 +102,13 @@ class DepthLite1():
             targetDepth = self.lowPerformantDepth if self.LowPerformanceMode else self.highPerformantDepth
             
             print('Searching Depth:', targetDepth)
-            self.Search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
+            self.root_search(state, targetDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
             self.bestMoveFound = self.bestMoveInIteration
             self.bestEvalFound = self.bestEvalInIteration
 
         print('\n-------------------------------------------------')
         print('[[NEXT MOVE]:', self.bestMoveFound, ' [Total Nodes Searched]:', self.numNodes, ' [Move Evaluation]:', self.bestEvalFound, '\n   [State ZobristKey]:', state.ZobristKey, '[Num Recursions]:', self.count, ']')
         print('-------------------------------------------------\n')
-
-        print('\n', state.board ,'\n')
 
         self.SearchDebug.AppendLog(self.searchDebugInfo)
         
@@ -125,7 +123,35 @@ class DepthLite1():
     def EndSearch(self):
         self.abortSearch = True
 
-    def Search(self, state, depth, alpha, beta, plyFromRoot):
+    def root_search(self, state, depth, alpha, beta, plyFromRoot):
+        moves = state.FilterValidMoves()
+        ordered_moves = self.MoveOrdering.OrderMoves(state, moves)
+
+        self.bestMoveInPosition = self.invalidMove
+
+        for move in ordered_moves:
+            self.numNodes += 1
+            state.make_move(move, inSearch = True)
+            score = -self.main_search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
+            state.undo_move(inSearch = True)
+
+            if (self.abortSearch):
+                return 0
+
+            if (score > alpha):
+                alpha = score
+                self.bestMoveInPosition = move
+                if (plyFromRoot == 0):
+                    print('[New Best Move Found]:', move, ' [Move Evaluation]', score, ' [Nodes Searched]', self.count)
+                    self.bestMoveInIteration = move
+                    self.bestEvalInIteration = score
+
+        if self.bestMoveInPosition != None:
+            self.tt.storeMove(state, self.entries, depth, self.bestMoveInPosition)
+
+        return alpha
+
+    def main_search(self, state, depth, alpha, beta, plyFromRoot):
         start = time.time()
         if (self.abortSearch):
             self.bestMoveFound = self.bestMoveInIteration
@@ -148,7 +174,7 @@ class DepthLite1():
         if (depth >= 3):
             state.whitesturn = not state.whitesturn
             state.epPossible = ()
-            eval = -self.Search(state, depth - 1 - 2, -beta, -beta + 1, plyFromRoot + 1)
+            eval = -self.main_search(state, depth - 1 - 2, -beta, -beta + 1, plyFromRoot + 1)
             state.whitesturn = not state.whitesturn
             if (eval >= beta):
                 self.tt.storeEval(state, self.entries, depth, beta, self.tt.LowerBound)
@@ -190,13 +216,13 @@ class DepthLite1():
 
             if (self.usePrincipalVariation):
                 if (self.FoundPV):
-                    eval = -self.Search(state, depth - 1, -alpha - 1, -alpha, plyFromRoot + 1)
+                    eval = -self.main_search(state, depth - 1, -alpha - 1, -alpha, plyFromRoot + 1)
                     if (eval > alpha) and (eval < beta):
-                        eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
+                        eval = -self.main_search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
                 else:
-                    eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
+                    eval = -self.main_search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
             else:
-                eval = -self.Search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
+                eval = -self.main_search(state, depth - 1, -beta, -alpha, plyFromRoot + 1)
             
             state.undo_move(inSearch = True)
             self.numNodes += 1
@@ -273,7 +299,7 @@ class DepthLite1():
 class tagPVLINE:
     def __init__(self) -> None:
         self.PVLINE = []
-        self.numMovesInLine = 15
+        self.PVLength = 9
 
 class SearchDebugInfo:
     def __init__(self):
