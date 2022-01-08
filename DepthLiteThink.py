@@ -74,8 +74,6 @@ class DepthLite1():
             for depth in range(1, targetDepth):
                 print('[Searching Depth]:', depth)
 
-                lo = 20
-                hi = 20
                 self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
 
                 searchTime = time.time()

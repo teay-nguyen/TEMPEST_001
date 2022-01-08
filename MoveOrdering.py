@@ -35,10 +35,10 @@ class MoveOrdering:
                     score -= self.squareControlledByOppPenalty
 
             if move.castlemove:
-                score += 200
+                score += 100
 
             if move.isCapture:
-                score += 150
+                score += 50
 
             self.moveScores.append(score)
 
