@@ -89,17 +89,6 @@ piece_map_visualization = {
     ]),
 }
 
-CenterControlTable = [
-    -50,-40,-30,-30,-30,-30,-40,-50,
-    -40,-20,  0,  0,  0,  0,-20,-40,
-    -30,  0, 10, 15, 15, 10,  0,-30,
-    -30,  5, 15, 50, 50, 15,  5,-30,
-    -30,  0, 15, 50, 50, 15,  0,-30,
-    -30,  5, 10, 15, 15, 10,  5,-30,
-    -40,-20,  0,  5,  5,  0,-20,-40,
-    -50,-40,-30,-30,-30,-30,-40,-50,
-]
-
 class Evaluate:
     def __init__(self):
         self.preComputedMoveData = PrecomputedMoveData()
@@ -175,10 +164,10 @@ class Evaluate:
                 if state.board[row][col] != '--' and pieceSide == colorIndex:
                     if pieceType != 'K':
                         if colorIndex == 'w':
-                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, True) + self.ReadSquare(CenterControlTable, row, col, True)
+                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, True)
                             score += pos_val * 2
                         elif colorIndex == 'b':
-                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, False) + self.ReadSquare(CenterControlTable, row, col, False)
+                            pos_val = self.ReadSquare(piece_map_visualization[pieceType], row, col, False)
                             score += pos_val * 2
 
         if not self.isEG:
