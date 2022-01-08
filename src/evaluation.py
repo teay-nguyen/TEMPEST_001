@@ -89,6 +89,13 @@ piece_map_visualization = {
     ]),
 }
 
+class Endgames:
+    def __init__(self):
+        pass
+
+    def push_to_corner(self, row, col):
+        return abs(7 - row - col)
+
 class Evaluate:
     def __init__(self):
         self.preComputedMoveData = PrecomputedMoveData()

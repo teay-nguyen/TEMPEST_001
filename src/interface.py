@@ -12,6 +12,23 @@ class human_plr:
         self.plr1 = plr1
         self.plr2 = plr2
 
+class uni_pieces:
+    def __init__(self):
+        self.uni_pieces = {
+            'wK':'K',
+            'wQ':'Q',
+            'wR':'R',
+            'wB':'B',
+            'wN':'N',
+            'wp':'P',
+            'bK':'k',
+            'bQ':'q',
+            'bR':'r',
+            'bB':'b',
+            'bN':'n',
+            'bp':'p',
+            '--':"'",
+        }
 
 class Interface:
     def __init__(self):
@@ -24,6 +41,8 @@ class Interface:
 
         self.WHITE = pyg.Color('white')
         self.GREY = pyg.Color('grey')
+
+        self.unipieces = uni_pieces()
 
     def get_pieces(self):
         return get_pieces(self)
@@ -54,6 +73,16 @@ class Interface:
         plr2 = eval(plrChoice2)
 
         return plr1, plr2, AIThinking
+
+    def render(self, state: State):
+        rendered_string = '\n'
+        for row in range(len(state.board)):
+            for col in range(len(state.board[row])):
+                char = state.board[row][col]
+                if char in self.unipieces.uni_pieces:
+                    rendered_string += self.unipieces.uni_pieces[char] + ' '
+            rendered_string += '\n'
+        return rendered_string
 
     def app_main_exec(self):
         DepthLite = DepthLite1()
@@ -106,6 +135,8 @@ class Interface:
                                         sq_selected = ()
                                         plr_clicks = []
 
+                                        print(self.render(state))
+
                                 if not moveMade:
                                     plr_clicks = [sq_selected]
 
@@ -140,6 +171,8 @@ class Interface:
                     animate = True
                     AIThinking = False
                     print('DONE THINKING')
+
+                    print(self.render(state))
 
             if moveMade:
                 if animate:

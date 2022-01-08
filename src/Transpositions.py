@@ -2,8 +2,8 @@
 class TranspositionTable:
     def __init__(self):
         self.Exact = 0
-        self.LowerBound = 1
-        self.UpperBound = 2
+        self.BetaBound = 1
+        self.AlphaBound = 2
         self.NoneBound = 3
         self.value = 0
 
@@ -28,13 +28,12 @@ class TranspositionTable:
         if not self.Index(state) in entries:
             return 0
 
-        self.value = 0
         entry = entries[self.Index(state)]
 
         if entry.key == state.ZobristKey and entry.depth >= depth:
             if (entry.nodeType == self.Exact) | \
-                    (entry.nodeType == self.UpperBound and entry.value <= alpha) | \
-                    (entry.nodeType == self.LowerBound and entry.value >= beta):
+                    (entry.nodeType == self.AlphaBound and entry.value <= alpha) | \
+                    (entry.nodeType == self.BetaBound and entry.value >= beta):
                         self.value = entry.value
                         return 1
         return 0
