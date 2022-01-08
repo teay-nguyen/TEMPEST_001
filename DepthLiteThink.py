@@ -34,7 +34,7 @@ class DepthLite1():
         self.bestMoveInPosition = self.invalidMove
         self.PVFound = False
         self.tagPVLINE = tagPVLINE()
-        self.usePrincipalVariation = True
+        self.usePrincipalVariation = False
 
         self.useOpeningBook = False
         self.maxBookMoves = 40
@@ -73,6 +73,9 @@ class DepthLite1():
 
             for depth in range(1, targetDepth):
                 print('[Searching Depth]:', depth)
+
+                lo = 20
+                hi = 20
                 self.Search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0)
 
                 searchTime = time.time()
@@ -89,6 +92,7 @@ class DepthLite1():
                     self.searchDebugInfo.lastCompletedDepth = depth
                     self.searchDebugInfo.eval = self.bestEvalFound
                     self.searchDebugInfo.moveVal = 0
+
                     if (self.bestMoveFound != None):
                         self.searchDebugInfo.move = self.bestMoveFound.getChessNotation(True)
 
@@ -129,12 +133,26 @@ class DepthLite1():
             self.bestEvalFound = self.bestEvalInIteration
             return 0
 
-        if (depth >= 3 and not state.inCheck()):
+        if (self.tt.attemptLookup(state, self.entries, depth, alpha, beta)) != self.tt.lookupFailed:
+            if (plyFromRoot == 0):
+                print('----------------------------- [TRANSPOSITION FOUND] -----------------------------')
+                self.bestMoveFound = self.tt.getStoredMove(state, self.entries, state.ZobristKey)
+                self.bestEvalFound = self.tt.value
+
+            return self.tt.value
+
+        if depth <= 0:
+            eval = self.QuiescenceSearch(state, alpha, beta)
+            self.tt.storeEval(state, self.entries, depth, eval, self.tt.Exact)
+            return eval
+
+        if (depth >= 3):
             state.whitesturn = not state.whitesturn
             state.epPossible = ()
             eval = -self.Search(state, depth - 1 - 2, -beta, -beta + 1, plyFromRoot + 1)
             state.whitesturn = not state.whitesturn
             if (eval >= beta):
+                self.tt.storeEval(state, self.entries, depth, beta, self.tt.LowerBound)
                 return beta
 
         if (plyFromRoot > 0):
@@ -150,19 +168,6 @@ class DepthLite1():
             if (alpha >= beta):
                 return alpha
 
-        ttVal = self.tt.attemptLookup(state, self.entries, depth, plyFromRoot, alpha, beta)
-        if (ttVal != self.tt.lookupFailed):
-            if (plyFromRoot == 0):
-                print('-------------------------------------- [TRANSPOSITION FOUND] --------------------------------------')
-                self.bestMoveInIteration = self.tt.getStoredMove(state, self.entries)
-                self.bestEvalInIteration = self.entries[self.tt.Index(state)].value
-
-            return ttVal
-
-        if depth == 0:
-            eval = self.QuiescenceSearch(state, alpha, beta)
-            return eval
- 
         self.count += 1
         moves = state.FilterValidMoves()
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves)
@@ -171,8 +176,8 @@ class DepthLite1():
 
         if len(moves) == 0:
             if state.inCheck():
-                mateScore = self.immediateMateScore - plyFromRoot
-                return -mateScore
+                mateScore = -self.immediateMateScore + plyFromRoot
+                return mateScore
             else:
                 return 0
 
@@ -197,8 +202,12 @@ class DepthLite1():
             state.undo_move(inSearch = True)
             self.numNodes += 1
 
+            if (self.abortSearch):
+                return 0
+
             if (eval >= beta):
-                self.tt.storeEval(state, self.entries, depth, plyFromRoot, beta, self.tt.LowerBound, move)
+                self.tt.storeEval(state, self.entries, depth, beta, self.tt.LowerBound)
+                self.tt.storeMove(state, self.entries, depth, move)
                 self.numCutoffs += 1
                 return beta
 
@@ -208,12 +217,15 @@ class DepthLite1():
                 alpha = eval
                 self.FoundPV = True
 
+                self.tt.storeMove(state, self.entries, depth, move)
+
                 if plyFromRoot == 0:
                     print('[New Best Move Found]:', move, ' [Move Evaluation]', eval, ' [Nodes Searched]', self.count)
                     self.bestEvalInIteration = eval
                     self.bestMoveInIteration = move
 
-        self.tt.storeEval(state, self.entries, depth, plyFromRoot, alpha, evalType, self.bestMoveInPosition)
+        self.tt.storeEval(state, self.entries, depth, alpha, evalType)
+        self.tt.storeMove(state, self.entries, depth, self.bestMoveInPosition)
         return alpha
 
     def QuiescenceSearch(self, state, alpha, beta):
@@ -227,9 +239,6 @@ class DepthLite1():
 
         moves = state.FilterValidMoves(onlyCaptures=True)
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves)
-
-        if len(ordered_moves) > 50:
-            ordered_moves = ordered_moves[:50]
 
         for move in ordered_moves:
             state.make_move(move, inSearch = True)
