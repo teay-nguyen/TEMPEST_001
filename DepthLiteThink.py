@@ -126,7 +126,7 @@ class DepthLite1():
 
     def root_search(self, state, depth, alpha, beta, plyFromRoot):
         moves = state.FilterValidMoves()
-        ordered_moves = self.MoveOrdering.OrderMoves(state, moves)
+        ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.entries)
 
         self.bestMoveInPosition = self.invalidMove
 
@@ -200,7 +200,7 @@ class DepthLite1():
 
         self.count += 1
         moves = state.FilterValidMoves()
-        ordered_moves = self.MoveOrdering.OrderMoves(state, moves)
+        ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.entries)
         self.FoundPV = False
         self.tagPVLINE.PVLINE = []
 
@@ -250,7 +250,7 @@ class DepthLite1():
                 self.tt.storeMove(state, self.entries, depth, move)
 
                 if plyFromRoot == 0:
-                    print('[New Best Move Found]:', move, ' [Move Evaluation]', eval, ' [Nodes Searched]', self.count)
+                    print('[New Best Move Found]:', move, ' [Move Evaluation]:', eval, ' [Nodes Searched]:', self.count)
                     self.bestEvalInIteration = eval
                     self.bestMoveInIteration = move
 
@@ -268,7 +268,7 @@ class DepthLite1():
             alpha = eval
 
         moves = state.FilterValidMoves(onlyCaptures=True)
-        ordered_moves = self.MoveOrdering.OrderMoves(state, moves)
+        ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.entries)
 
         for move in ordered_moves:
             state.make_move(move, inSearch = True)

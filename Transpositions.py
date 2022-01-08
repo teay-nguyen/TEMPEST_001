@@ -14,6 +14,9 @@ class TranspositionTable:
         entries.clear()
 
     def getStoredMove(self, state, entries, key):
+        if not self.Index(state) in entries:
+            return 0
+
         entry = entries[self.Index(state)]
 
         if entry.key == key:

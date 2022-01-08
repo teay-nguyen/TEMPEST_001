@@ -1,3 +1,4 @@
+from Transpositions import TranspositionTable
 
 piece_vals = {
     "K": 0,
@@ -15,8 +16,11 @@ class MoveOrdering:
         self.capturedPieceMult = 10
         self.moveScores = []
         self.invalidMove = None
+        self.tt = TranspositionTable()
 
-    def OrderMoves(self, state, moves):
+    def OrderMoves(self, state, moves, entries):
+        hashMove = self.tt.getStoredMove(state, entries, state.ZobristKey)
+
         self.moveScores = []
         for move in moves:
             score = 0
@@ -39,6 +43,9 @@ class MoveOrdering:
 
             if move.isCapture:
                 score += 50
+
+            if (move == hashMove):
+                score += 10000
 
             self.moveScores.append(score)
 
