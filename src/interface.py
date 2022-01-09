@@ -37,7 +37,7 @@ class Interface:
         self.PANEL_HEIGHT = self.HEIGHT
         self.DIMENSION = 8
         self.SIZE = self.HEIGHT//self.DIMENSION
-        self.MAX_FPS = 60
+        self.MAX_FPS = 30
 
         self.WHITE = pyg.Color('white')
         self.GREY = pyg.Color('grey')
@@ -90,7 +90,7 @@ class Interface:
         clock = pyg.time.Clock()
         state = State()
         pieces = self.get_pieces()
-        running = True
+        running = 1
         animate = False
         sq_selected = ()
         plr_clicks = []
@@ -108,12 +108,12 @@ class Interface:
 
             for e in pyg.event.get():
                 if e.type == pyg.QUIT:
-                    running = False
+                    running = 0
                 elif e.type == pyg.MOUSEBUTTONDOWN:
                     if human_turn:
                         location = pyg.mouse.get_pos()
-                        col = location[0]//self.SIZE
-                        row = location[1]//self.SIZE
+                        col = location[0] // self.SIZE
+                        row = location[1] // self.SIZE
                         if not col > 7:
                             if sq_selected == (row, col):
                                 sq_selected = ()
@@ -152,7 +152,7 @@ class Interface:
                         moveMade = False
                         animate = False
                     if e.key == pyg.K_q:
-                        running = False
+                        running = 0
 
             if not human_turn:
                 if not AIThinking:
@@ -163,7 +163,7 @@ class Interface:
                     if AIMove is None:
                         AIMove = DepthLite.random_move(state)
                     elif AIMove == 1:
-                        running = False
+                        running = 0
                         quit()
 
                     state.make_move(AIMove)
