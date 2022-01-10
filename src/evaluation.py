@@ -190,8 +190,8 @@ class Evaluate:
         v += (self.material(state, 'w', eg) - self.material(state, 'b', eg))
         v += (self.psqt_(state, 'w', eg) - self.psqt_(state, 'b', eg))
 
-        perspective = 1 if state.whitesturn else -1
-        return perspective * v
+        res = v if state.whitesturn else -v
+        return res
 
     def evaluate(self, state):
         return self.middle_game_eval(state, self.eg)

@@ -45,10 +45,19 @@ class TranspositionTable:
                 return 1
         return 0
 
+    def getStoredScore(self, state, entries):
+        if self.Index(state) > self.entries_size: return
+        entry = entries[self.Index(state)]
+        if (entry.key == state.ZobristKey): return entry.value
+        return None
+
     def storeEval(self, state, entries, depth, eval, evalType):
         if self.Index(state) > self.entries_size: return
         entry = entries[self.Index(state)]
         if (entry.depth > depth) & (entry.key == state.ZobristKey): return
+        assert (isinstance(eval, int))
+        assert (isinstance(depth, int))
+        assert (isinstance(state.ZobristKey, int))
         entry.key = state.ZobristKey
         entry.value = eval
         entry.depth = depth
@@ -58,10 +67,20 @@ class TranspositionTable:
         if self.Index(state) > self.entries_size: return
         entry = entries[self.Index(state)]
         if (entry.depth > depth) & (entry.key == state.ZobristKey): return
+        assert (isinstance(depth, int))
+        assert (isinstance(state.ZobristKey, int))
         entry.key = state.ZobristKey
         entry.depth = depth
         entry.nodeType = self.MoveBound
         entry.move = move
+
+    def storeScore(self, state, entries, score):
+        if self.Index(state) > self.entries_size: return
+        entry = entries[self.Index(state)]
+        assert (isinstance(state.ZobristKey, int))
+        assert (isinstance(score, int))
+        entry.value = score
+        entry.key = state.ZobristKey
 
 class Entry:
     def __init__(self, key, val):
