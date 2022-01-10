@@ -4,17 +4,23 @@ class TranspositionTable:
         self.Exact = 0
         self.BetaBound = 1
         self.AlphaBound = 2
-        self.NoneBound = 3
+        self.MoveBound = 3
         self.value = 0
+        self.entries_size = 640000
+
+    def init_entries(self):
+        entries = [Entry(None, None) for _ in range(self.entries_size)]
+        return entries
 
     def Index(self, state):
-        return state.ZobristKey
+        return state.ZobristKey % self.entries_size
 
     def ClearEntries(self, entries):
-        entries.clear()
+        for entry in range(len(entries)):
+            entries[entry] = Entry(None, None)
 
     def getStoredMove(self, state, entries, key):
-        if not self.Index(state) in entries:
+        if entries[self.Index(state)].key == None:
             return 0
 
         entry = entries[self.Index(state)]
@@ -24,41 +30,38 @@ class TranspositionTable:
 
         return None
 
-    def attemptLookup(self, state, entries, depth, alpha, beta) -> int:
-        if not self.Index(state) in entries:
-            return 0
-
+    def getStoredEval(self, state, entries, depth, alpha, beta) -> int:
+        if entries[self.Index(state)].key == None: return 0
         entry = entries[self.Index(state)]
-
         if entry.key == state.ZobristKey and entry.depth >= depth:
-            if (entry.nodeType == self.Exact) | \
-                    (entry.nodeType == self.AlphaBound and entry.value <= alpha) | \
-                    (entry.nodeType == self.BetaBound and entry.value >= beta):
-                        self.value = entry.value
-                        return 1
+            if (entry.nodeType == self.Exact):
+                self.value = entry.value
+                return 1
+            if (entry.nodeType == self.AlphaBound) & (entry.value <= alpha):
+                self.value = alpha
+                return 1
+            if (entry.nodeType == self.BetaBound) & (entry.value >= beta):
+                self.value = beta
+                return 1
         return 0
 
     def storeEval(self, state, entries, depth, eval, evalType):
-        entry = Entry(state.ZobristKey, eval)
-
-        if entry.depth <= depth:
-            entry.key = state.ZobristKey
-            entry.value = eval
-            entry.depth = depth
-            entry.nodeType = evalType
-
-            entries[self.Index(state)] = entry
+        if self.Index(state) > self.entries_size: return
+        entry = entries[self.Index(state)]
+        if (entry.depth > depth) & (entry.key == state.ZobristKey): return
+        entry.key = state.ZobristKey
+        entry.value = eval
+        entry.depth = depth
+        entry.nodeType = evalType
 
     def storeMove(self, state, entries, depth, move):
-        entry = Entry(state.ZobristKey, eval)
-
-        if entry.depth <= depth:
-            entry.key = state.ZobristKey
-            entry.depth = depth
-            entry.nodeType = self.NoneBound
-            entry.move = move
-
-            entries[self.Index(state)] = entry
+        if self.Index(state) > self.entries_size: return
+        entry = entries[self.Index(state)]
+        if (entry.depth > depth) & (entry.key == state.ZobristKey): return
+        entry.key = state.ZobristKey
+        entry.depth = depth
+        entry.nodeType = self.MoveBound
+        entry.move = move
 
 class Entry:
     def __init__(self, key, val):
