@@ -7,8 +7,6 @@ from Transpositions import TranspositionTable
 from Debugging import Debug
 import numpy as np
 
-draw_opening = -10
-draw_endgame = 0
 ASPIRATION = 50
 
 class DepthLite1():
@@ -39,7 +37,7 @@ class DepthLite1():
         self.raise_alpha = 0
         self.tagPVLINE = tagPVLINE()
         self.usePrincipalVariation = True
-        self.maxDuration = 10 # seconds format
+        self.maxDuration = 15 # seconds format
         self.maxDepth = 50
 
         self.useOpeningBook = 0
@@ -252,15 +250,6 @@ class DepthLite1():
                 self.bestMoveFound = self.bestMoveInIteration
                 self.bestEvalFound = self.bestEvalInIteration
                 return 0
-
-            ''' 
-            if (eval >= beta):
-                self.tt.storeEval(state, self.tt_entries, depth, beta, self.tt.BetaBound)
-                self.tt.storeMove(state, self.tt_entries, depth, move)
-                self.numCutoffs += 1
-                evalType = self.tt.BetaBound
-                return beta
-            '''
 
             if (eval > alpha):
                 self.bestMoveInPosition = move
