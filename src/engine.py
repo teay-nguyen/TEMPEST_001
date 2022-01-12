@@ -53,6 +53,8 @@ class State:
         self.stalemate = False
         self.epLog = [self.epPossible]
         self.game_over = False
+        self.kingisCastled = {}
+        self.kingisCastled['w'], self.kingisCastled['b'] = False, False
         self.RepetitionPositionHistory = []
         self.moveFuncs = {
             "p": self.getPawnMoves,
@@ -111,7 +113,7 @@ class State:
         return self.fenToPos(fen)
 
     def loadCustomPosition(self):
-        fen = '8/3k4/8/8/4RK2/5R2/8/8 w - - 0 1' #insert custom position
+        fen = '5k2/8/8/8/8/4RK2/4R3/8 w - - 0 1' #insert custom position
         return self.fenToPos(fen)
 
 
@@ -301,8 +303,10 @@ class State:
                     self.board[move.endRow, move.endCol + 1] = "--"
                     if move.pieceMoved == "wK":
                         self.whiteKingLocation = (move.endRow, move.endCol)
+                        self.kingisCastled['w'] = True
                     elif move.pieceMoved == "bK":
                         self.bkacKingLocation = (move.endRow, move.endCol)
+                        self.kingisCastled['b'] = True
                 else:
                     self.board[move.endRow, move.endCol + 1] = self.board[
                         move.endRow, move.endCol - 2
@@ -310,8 +314,10 @@ class State:
                     self.board[move.endRow, move.endCol - 2] = "--"
                     if move.pieceMoved == "wK":
                         self.whiteKingLocation = (move.endRow, move.endCol)
+                        self.kingisCastled['w'] = True
                     elif move.pieceMoved == "bK":
                         self.blackKingLocation = (move.endRow, move.endCol)
+                        self.kingisCastled['b'] = True
             except Exception as e:
                 print(f"{move} is the cause of the error: {e}")
             finally:
@@ -384,11 +390,19 @@ class State:
                             move.endRow, move.endCol - 1
                         ]
                         self.board[move.endRow, move.endCol - 1] = "--"
+                        if move.pieceMoved == 'wK':
+                            self.kingisCastled['w'] = False
+                        elif move.pieceMoved == 'bK':
+                            self.kingisCastled['b'] = False
                     else:
                         self.board[move.endRow, move.endCol - 2] = self.board[
                             move.endRow, move.endCol + 1
                         ]
                         self.board[move.endRow, move.endCol + 1] = "--"
+                        if move.pieceMoved == 'wK':
+                            self.kingisCastled['w'] = False
+                        elif move.pieceMoved == 'bK':
+                            self.kingisCastled['b'] = False
                 except Exception as e:
                     print(f"{move} is the cause of the error: {e}")
                 finally:

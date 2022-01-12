@@ -1,3 +1,4 @@
+import numpy as np
 
 class TranspositionTable:
     def __init__(self):
@@ -13,21 +14,16 @@ class TranspositionTable:
         return entries
 
     def Index(self, state):
-        return state.ZobristKey % self.entries_size
+        return np.int64(np.mod(state.ZobristKey, self.entries_size))
 
     def ClearEntries(self, entries):
         for entry in range(len(entries)):
             entries[entry] = Entry(None, None)
 
     def getStoredMove(self, state, entries, key):
-        if entries[self.Index(state)].key == None:
-            return 0
-
+        if entries[self.Index(state)].key == None: return 0
         entry = entries[self.Index(state)]
-
-        if entry.key == key:
-            return entry.move
-
+        if entry.key == key: return entry.move
         return None
 
     def getStoredEval(self, state, entries, depth, alpha, beta) -> int:

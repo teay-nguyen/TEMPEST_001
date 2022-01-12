@@ -1,13 +1,5 @@
 from Transpositions import TranspositionTable
-
-piece_vals = {
-    "K": 0,
-    "Q": 2682,
-    "R": 1380,
-    "B": 915,
-    "N": 854,
-    "p": 206,
-}
+from psqt import MVV_LVA, INDEX_MVV_LVA
 
 class MoveOrdering:
     def __init__(self):
@@ -18,60 +10,28 @@ class MoveOrdering:
         self.invalidMove = None
         self.tt = TranspositionTable()
 
-    def score_move(self, state, move) -> int:
+    def score_move(self, move, hash_move) -> int:
         score = 0
         movePieceType = move.pieceMoved
         movePieceCaptured = move.pieceCaptured
 
-        if movePieceCaptured != '--':
-            score = self.capturedPieceMult * piece_vals[movePieceCaptured[1]] - piece_vals[movePieceType[1]]
-
-        if movePieceType[1] == 'p':
-            if move.isPawnPromotion:
-                score += piece_vals['Q']
-        else:
-            endSquare = (move.endRow, move.endCol)
-            if endSquare in state.oppPawnAttackMap:
-                score -= self.squareControlledByOppPenalty
-
-        if move.castlemove:
-            score += 100
-
-        if move.isCapture:
-            score += 50
+        score += MVV_LVA[INDEX_MVV_LVA[movePieceCaptured[1]]][INDEX_MVV_LVA[movePieceType[1]]]
+        if move == hash_move: score += 10000
 
         return score
 
     def OrderMoves(self, state, moves, entries):
         hashMove = self.tt.getStoredMove(state, entries, state.ZobristKey)
-
-        self.moveScores = []
-        for move in moves:
-            score = self.score_move(state, move)
-
-            if (move == hashMove):
-                score += 10000
-
-            self.moveScores.append(score)
-
+        self.moveScores = [self.score_move(move, hashMove) for move in moves]
         ordered_moves = self.SortMoves(moves)
         return ordered_moves
 
     def SortMoves(self, moves):
-        for i in range(1, len(moves)):
-            
-            key = self.moveScores[i]
-            moveKey = moves[i]
-
-            j = i - 1
-            
-            while j >= 0 and key < self.moveScores[j]:
-                moves[j + 1] = moves[j]
-                self.moveScores[j + 1] = self.moveScores[j]
-                j -= 1
-
-            self.moveScores[j + 1] = key
-            moves[j + 1] = moveKey
+        for i in range(len(moves)):
+            for j in range(i+1, len(moves)):
+                if self.moveScores[i] < self.moveScores[j]:
+                    moves[i], moves[j] = moves[j], moves[i]
+                    self.moveScores[i], self.moveScores[j] = self.moveScores[j], self.moveScores[i]
         return moves
 
     @property

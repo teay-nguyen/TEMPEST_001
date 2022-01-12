@@ -3,6 +3,7 @@ import random
 zobTable = [[[random.randint(1, 2**64 - 1) for i in range(12)]
              for j in range(8)]for k in range(8)]
 randomSeed = random.randrange(10000, 99999)
+multiply_seed = [16, 20, 24, 28]
 
 class Zobrist:
     def __init__(self):
@@ -60,7 +61,7 @@ class Zobrist:
         return zobristKey
 
     def checkCastleRights(self, castleRights):
-        castle_key = 10
+        castle_key = 17
 
         wks = castleRights.wks
         wqs = castleRights.wqs
@@ -68,12 +69,12 @@ class Zobrist:
         bqs = castleRights.bqs
 
         if wks == True:
-            castle_key *= 16
+            castle_key *= multiply_seed[0]
         if wqs == True:
-            castle_key *= 17
+            castle_key *= multiply_seed[1]
         if bks == True:
-            castle_key *= 18
+            castle_key *= multiply_seed[2]
         if bqs == True:
-            castle_key *= 19
+            castle_key *= multiply_seed[3]
 
         return castle_key
