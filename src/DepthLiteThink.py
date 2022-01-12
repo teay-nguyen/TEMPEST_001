@@ -7,6 +7,8 @@ from Transpositions import TranspositionTable
 from Debugging import Debug
 
 ASPIRATION = 50
+DRAW_OPENING = -10
+DRAW_ENDGAME = 0
 
 class DepthLite1():
 
@@ -65,6 +67,10 @@ class DepthLite1():
         if hashKey in state.RepetitionPositionHistory:
             return 1
         return 0
+
+    def countNPS(self, nodes, elapsed):
+        if (elapsed == 0): return 0
+        return nodes // elapsed
 
     def startSearch(self, state):
         self.bestMoveFound = self.bestMoveInIteration = self.invalidMove
@@ -151,15 +157,12 @@ class DepthLite1():
 
         if (depth <= 0):
             eval = self.QuiescenceSearch(state, alpha, beta, plyFromRoot + 1)
-            self.tt.storeEval(state, self.tt_entries, depth, eval, self.tt.Exact)
             return eval
 
         if (plyFromRoot > 1):
             if self.isRepetition(state, state.ZobristKey):
                 print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
                 eval = 0
-                if eval < beta:
-                    self.tt.storeEval(state, self.tt_entries, depth, eval, self.tt.Exact)
 
             alpha = max(alpha, -self.mateScoreInPly + plyFromRoot - 1)
             beta = min(beta, self.mateScoreInPly - plyFromRoot)
@@ -209,38 +212,16 @@ class DepthLite1():
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
         self.raise_alpha = 0
         self.legal = 0
-        max_value = self.POSITIVE_INF
-        best_value = self.NEGATIVE_INF
+        eval = self.NEGATIVE_INF
         side_in_check = state.inCheck()
-        us = state.whitesturn
+        self.bestMoveInPosition = self.invalidMove
+        evalType = self.tt.AlphaBound
+        reduction_depth = 0
+        f_prune = 0
+        fmargin = [0, 200, 300, 500]
 
         if (self.abortSearch):
             return 0
-
-        if (depth <= 0):
-            eval = self.QuiescenceSearch(state, alpha, beta, plyFromRoot + 1)
-            return eval
-
-        assert(0 < depth < self.max_ply)
-
-        if (plyFromRoot > 1):
-            if self.isRepetition(state, state.ZobristKey):
-                print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
-                eval = 0
-                if eval < beta:
-                    self.tt.storeEval(state, self.tt_entries, depth, eval, self.tt.Exact)
-
-            alpha = max(alpha, -self.mateScoreInPly + plyFromRoot)
-            beta = min(beta, self.mateScoreInPly - plyFromRoot + 1)
-            if (alpha >= beta):
-                return alpha
-
-        if (self.tt.getStoredEval(state, self.tt_entries, depth, alpha, beta)):
-            eval = self.tt.value
-            return eval
-        else:
-            eval = self.evaluate.evaluate(state)
-            self.tt.storeEval(state, self.tt_entries, depth, eval, self.tt.MoveBound)
 
         if len(moves) == 0:
             if side_in_check:
@@ -250,9 +231,27 @@ class DepthLite1():
                 return mateScore
             return 0
 
-        self.bestMoveInPosition = self.invalidMove
-        evalType = self.tt.AlphaBound
-        
+        if (depth <= 0):
+            eval = self.QuiescenceSearch(state, alpha, beta, plyFromRoot + 1)
+            return eval
+
+        assert 0 < depth < self.max_ply
+
+        if self.isRepetition(state, state.ZobristKey):
+            print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
+            return self.contempt(state)
+
+        alpha = max(alpha, -self.mateScoreInPly + plyFromRoot)
+        beta = min(beta, self.mateScoreInPly - plyFromRoot)
+        if (alpha >= beta):
+            return alpha
+
+        if (self.tt.getStoredEval(state, self.tt_entries, depth, alpha, beta)):
+            if (self.tt.value > alpha) & (self.tt.value < beta): return self.tt.value
+
+        if (depth <= 3 and (not side_in_check) and abs(alpha) < 9000 and (self.evaluate.evaluate(state) + fmargin[depth] <= alpha)):
+            f_prune = 1
+
         for move in ordered_moves:
             state.make_move(move, inSearch = True)
 
@@ -294,8 +293,7 @@ class DepthLite1():
             self.legal += 1
         
         self.tt.storeEval(state, self.tt_entries, depth, alpha, evalType)
-        if self.bestMoveInPosition != None:
-            self.tt.storeMove(state, self.tt_entries, depth, self.bestMoveInPosition)
+        self.tt.storeMove(state, self.tt_entries, depth, self.bestMoveInPosition)
         return alpha
 
     def zwSearch(self, state, beta, depth, plyFromRoot):
@@ -327,9 +325,10 @@ class DepthLite1():
         if (eval > alpha):
             alpha = eval
 
-        if self.isRepetition(state, state.ZobristKey):
-            print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
-            return 0
+        if ply > 1:
+            if self.isRepetition(state, state.ZobristKey):
+                print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
+                return 0
 
         moves = state.FilterValidMoves(onlyCaptures = True)
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
@@ -348,10 +347,16 @@ class DepthLite1():
 
         return alpha
 
+    def contempt(self, state):
+        value = DRAW_OPENING
+        side = 'w' if state.whitesturn else 'b'
+        if (self.evaluate.materialNoPawns(state, side) < 1300): value = DRAW_ENDGAME
+        return value if state.whitesturn else -value
+
     def isMateScore(self, score):
         maxMateDepth = 1000
         if abs(score) > (self.mateScoreInPly - maxMateDepth): print(f'Mate in {(self.mateScoreInPly - score + 1) // 2}')
-        if -abs(score) <= (-self.mateScoreInPly + maxMateDepth): print(f'Mated in {(self.mateScoreInPly + score) // 2}')
+        if -abs(score) <= (-self.mateScoreInPly + maxMateDepth): print(f'Mated in {(self.mateScoreInPly - score) // 2}')
         return abs(score) > (self.mateScoreInPly - maxMateDepth)
 
     def ResetDebugInfo(self):
