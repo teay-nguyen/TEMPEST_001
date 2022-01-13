@@ -1,5 +1,6 @@
 from psqt import setBasicValues
 from verification_util import verify_sq
+from Transpositions import TranspositionTable
 
 class Pawn:
     def __init__(self):
@@ -82,7 +83,9 @@ class Pieces:
 class Evaluate:
     def __init__(self):
         self.basic_values = setBasicValues()
+        self.tt = TranspositionTable()
         self.pawn_eval = Pawn()
+        self.tt_entries = self.tt.init_entries()
 
     def materialTotal(self, state, colorIndex):
         material = 0
@@ -111,7 +114,7 @@ class Evaluate:
         square = state.board[rank][file]
         pieceType = square[1]
         position = (rank * 8 + file) if square[0] == 'w' else ((7 - rank) * 8 + file) 
-        return t[pieceType][position] * 3
+        return t[pieceType][position]
 
     def psqt_(self, state, colorIndex, t):
         v = 0
@@ -123,6 +126,10 @@ class Evaluate:
         return v
     
     def main_eval(self, state):
+        res = self.tt.getStoredScore(state, self.tt_entries)
+        if res != None:
+            return res if state.whitesturn else -res
+
         result, eg_score, mg_score = 0, 0, 0
         stronger, weaker = None, None
 
@@ -130,9 +137,6 @@ class Evaluate:
                     - self.materialTotal(state, 'b') - self.psqt_(state, 'b', self.basic_values.psqt_mg)
         eg_score = self.materialTotal(state, 'w') + self.psqt_(state, 'w', self.basic_values.psqt_eg)\
                     - self.materialTotal(state, 'b') - self.psqt_(state, 'b', self.basic_values.psqt_eg)
-
-        # mg_score += (self.pawn_eval.pawn_total_mg(state, 'w') - self.pawn_eval.pawn_total_mg(state, 'b'))
-        # eg_score += (self.pawn_eval.pawn_total_mg(state, 'w') - self.pawn_eval.pawn_total_mg(state, 'b'))
 
         if state.whitesturn:
             result += self.basic_values.tempo
@@ -146,12 +150,9 @@ class Evaluate:
         if (state.pieceCount['wR'] > 1): result += self.basic_values.rook_pair
         if (state.pieceCount['bR'] > 1): result -= self.basic_values.rook_pair
 
-        if (state.currCastleRights.wks): result += 100
-        if (state.currCastleRights.wqs): result += 100
-        if (state.currCastleRights.bks): result -= 100
-        if (state.currCastleRights.bqs): result -= 100
-
         res = result + mg_score
+        self.tt.storeScore(state, self.tt_entries, res)
+
         return res if state.whitesturn else -res
 
     def evaluate(self, state):

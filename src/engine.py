@@ -473,12 +473,10 @@ class State:
             self.currCastleRights.wqs,
             self.currCastleRights.bqs,
         )
-
         for i in range(len(moves) - 1, -1, -1):
             self.make_move(moves[i], inSearch=True)
             self.whitesturn = not self.whitesturn
-            if self.inCheck() or onlyCaptures:
-                moves.remove(moves[i])
+            if self.inCheck() or (moves[i].pieceCaptured == '--' and onlyCaptures): moves.remove(moves[i])
             self.whitesturn = not self.whitesturn
             self.undo_move(inSearch=True)
 
@@ -489,7 +487,7 @@ class State:
                 self.stalemate = True
             self.game_over = True
 
-        if onlyCaptures == False:
+        if not onlyCaptures:
             if self.whitesturn:
                 if self.whiteKingLocation == (7, 4):
                     if self.currCastleRights.wks or self.currCastleRights.wqs:

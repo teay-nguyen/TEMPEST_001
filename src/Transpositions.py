@@ -5,7 +5,6 @@ class TranspositionTable:
         self.Exact = 0
         self.BetaBound = 1
         self.AlphaBound = 2
-        self.MoveBound = 3
         self.value = 0
         self.entries_size = 640000
 
@@ -67,7 +66,6 @@ class TranspositionTable:
         assert (isinstance(state.ZobristKey, int))
         entry.key = state.ZobristKey
         entry.depth = depth
-        entry.nodeType = self.MoveBound
         entry.move = move
 
     def storeScore(self, state, entries, score):

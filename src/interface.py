@@ -41,6 +41,7 @@ class Interface:
 
         self.WHITE = pyg.Color('white')
         self.GREY = pyg.Color('grey')
+        self.animateMove = False
 
         self.unipieces = uni_pieces()
 
@@ -130,7 +131,7 @@ class Interface:
                                     if move == valid_moves[i]:
                                         state.make_move(valid_moves[i])
                                         moveMade = True
-                                        animate = True
+                                        if self.animateMove: animate = True
 
                                         sq_selected = ()
                                         plr_clicks = []
@@ -157,8 +158,6 @@ class Interface:
             if not human_turn:
                 if not AIThinking:
                     AIThinking = True
-                    print('THINKING...')
-
                     AIMove = DepthLite.startSearch(state)
                     if AIMove is None:
                         AIMove = DepthLite.random_move(state)
@@ -168,16 +167,13 @@ class Interface:
 
                     state.make_move(AIMove)
                     moveMade = True
-                    animate = True
+                    if self.animateMove: animate = True
                     AIThinking = False
-                    print('DONE THINKING')
-
                     print(self.render(state))
 
             if moveMade:
                 if animate:
-                    animatemove(state.moveLog[-1], screen,
-                                state.board, clock, self.SIZE, pieces)
+                    animatemove(state.moveLog[-1], screen, state.board, clock, self.SIZE, pieces)
                 valid_moves = state.FilterValidMoves()
                 moveMade = False
                 animate = False

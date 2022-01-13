@@ -1,5 +1,5 @@
 from Transpositions import TranspositionTable
-from psqt import MVV_LVA, INDEX_MVV_LVA
+from psqt import setBasicValues
 
 class MoveOrdering:
     def __init__(self):
@@ -9,13 +9,14 @@ class MoveOrdering:
         self.moveScores = []
         self.invalidMove = None
         self.tt = TranspositionTable()
+        self.basic_values = setBasicValues()
 
     def score_move(self, move, hash_move) -> int:
         score = 0
         movePieceType = move.pieceMoved
         movePieceCaptured = move.pieceCaptured
 
-        score += MVV_LVA[INDEX_MVV_LVA[movePieceCaptured[1]]][INDEX_MVV_LVA[movePieceType[1]]]
+        if movePieceCaptured != '--': score += (self.basic_values.piece_value[movePieceCaptured[1]] - self.basic_values.piece_value[movePieceType[1]])
         if move == hash_move: score += 10000
 
         return score
@@ -23,16 +24,8 @@ class MoveOrdering:
     def OrderMoves(self, state, moves, entries):
         hashMove = self.tt.getStoredMove(state, entries, state.ZobristKey)
         self.moveScores = [self.score_move(move, hashMove) for move in moves]
-        ordered_moves = self.SortMoves(moves)
+        ordered_moves = [move for _, move in sorted(zip(self.moveScores, moves), key=lambda pair: pair[0], reverse=True)]
         return ordered_moves
-
-    def SortMoves(self, moves):
-        for i in range(len(moves)):
-            for j in range(i+1, len(moves)):
-                if self.moveScores[i] < self.moveScores[j]:
-                    moves[i], moves[j] = moves[j], moves[i]
-                    self.moveScores[i], self.moveScores[j] = self.moveScores[j], self.moveScores[i]
-        return moves
 
     @property
     def getCurrentMoveScores(self):
