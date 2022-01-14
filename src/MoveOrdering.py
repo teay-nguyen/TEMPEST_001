@@ -20,7 +20,7 @@ class MoveOrdering:
     def OrderMoves(self, state, moves, entries):
         hashMove = self.tt.getStoredMove(state, entries, state.ZobristKey)
         self.moveScores = [self.score_move(move, hashMove) for move in moves]
-        ordered_moves = [m for _, m in sorted(zip(self.moveScores, moves), key = lambda pair : pair[0], reverse=True)]
+        ordered_moves = [m for _, m in sorted(zip(self.moveScores, moves), key = lambda pair : pair[0], reverse = True)]
         return ordered_moves
 
     @property

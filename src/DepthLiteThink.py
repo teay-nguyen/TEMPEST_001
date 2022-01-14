@@ -1,3 +1,4 @@
+from __future__ import print_function
 from random import choice
 from time import time
 from evaluation import Evaluate
@@ -10,8 +11,7 @@ ASPIRATION = 50
 DRAW_OPENING = -10
 DRAW_ENDGAME = 0
 
-class DepthLite1():
-
+class DepthLite1:
     def __init__(self):
         self.count = 0
         self.tt = TranspositionTable()
@@ -21,7 +21,7 @@ class DepthLite1():
         self.bestEvalFound = 0
         self.useIterativeDeepening = 1
         self.transpositionTableSize = 6400
-        self.POSITIVE_INF = 999999999
+        self.POSITIVE_INF = 9999999999
         self.NEGATIVE_INF = -self.POSITIVE_INF
         self.mateScoreInPly = 100000
         self.numNodes = 0
@@ -75,19 +75,16 @@ class DepthLite1():
         self.abortSearch = 0
         self.searchDebugInfo = SearchDebugInfo()
         self.count = 0
-
         start = time.time()
         targetDepth = ((self.lowPerformantDepth + 1) if self.LowPerformanceMode else (self.highPerformantDepth + 1)) if self.useIterativeDeepening else (self.lowPerformantDepth if self.LowPerformanceMode else self.highPerformantDepth)
-
         print('[Performing Root Search At Depth 1...]')
+
         eval = self.root_search(state, self.rootDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0, start)
 
         if self.useIterativeDeepening:
             for depth in range(2, targetDepth):
                 print('[Searching Depth]:', depth)
-
                 eval = self.search_widen(state, depth, eval, start)
-
                 if self.Timeout(start, self.maxDuration) or self.abortSearch:
                     self.EndSearch()
                     self.bestMoveFound = self.bestMoveInIteration
@@ -136,28 +133,26 @@ class DepthLite1():
         self.count += 1
         self.bestMoveInPosition = self.invalidMove
         
-        for move in ordered_moves:
+        for i in range(len(ordered_moves)):
             self.numNodes += 1
-            state.make_move(move, inSearch = True)
+            state.make_move(ordered_moves[i], inSearch = True)
             score = -self.ABSearch(state, depth - 1, -beta, -alpha, plyFromRoot + 1, elapsed, self.mateScoreInPly)
             state.undo_move(inSearch = True)
-
             if (self.Timeout(elapsed, self.maxDuration) or self.abortSearch):
                 self.EndSearch()
                 return 0
-
             if (score > alpha):
-                self.bestMoveInPosition = move
+                self.bestMoveInPosition = ordered_moves[i]
                 if (score >= beta):
                     self.tt.storeEval(state, self.tt_entries, depth, score, self.tt.BetaBound)
-                    self.tt.storeMove(state, self.tt_entries, depth, move)
+                    self.tt.storeMove(state, self.tt_entries, depth, ordered_moves[i])
                     return beta
                 alpha = score
                 self.tt.storeEval(state, self.tt_entries, depth, alpha, self.tt.AlphaBound)
                 self.tt.storeMove(state, self.tt_entries, depth, self.bestMoveInPosition)
                 if (plyFromRoot == 0):
-                    print('[New Best Move Found]:', move, ' [Move Evaluation]', score, ' [Nodes Searched]', self.count)
-                    self.bestMoveInIteration = move
+                    print('[New Best Move Found]:', ordered_moves[i], ' [Move Evaluation]', score, ' [Nodes Searched]', self.count)
+                    self.bestMoveInIteration = ordered_moves[i]
                     self.bestEvalInIteration = score
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
@@ -183,7 +178,7 @@ class DepthLite1():
         f_prune = 0
         fmargin = [0, 200, 300, 500]
 
-        if (self.abortSearch): return 0
+        if (self.abortSearch) or self.Timeout(elapsed, self.maxDuration): return 0
         if len(moves) == 0:
             if side_in_check: return -self.mateScoreInPly + plyFromRoot
             return 0
@@ -200,8 +195,8 @@ class DepthLite1():
             if (tt_val > alpha) & (tt_val < beta): return tt_val
         if (depth <= 3 and (not side_in_check) and abs(alpha) < 9000 and (self.evaluate.evaluate(state) + fmargin[depth] <= alpha)): f_prune = 1
 
-        for move in ordered_moves:
-            state.make_move(move, inSearch = True)
+        for i in range(len(ordered_moves)):
+            state.make_move(ordered_moves[i], inSearch = True)
 
             if (self.usePrincipalVariation):
                 if not self.raise_alpha:
@@ -217,12 +212,11 @@ class DepthLite1():
             if (self.abortSearch) or (self.Timeout(elapsed, self.maxDuration)):
                 self.EndSearch()
                 return 0
-
             if (eval > alpha):
-                self.bestMoveInPosition = move
+                self.bestMoveInPosition = ordered_moves[i]
                 if (eval >= beta):
                     self.tt.storeEval(state, self.tt_entries, depth, beta, self.tt.BetaBound)
-                    self.tt.storeMove(state, self.tt_entries, depth, move)
+                    self.tt.storeMove(state, self.tt_entries, depth, ordered_moves[i])
                     evalType = self.tt.BetaBound
                     alpha = beta
                     break
@@ -230,9 +224,9 @@ class DepthLite1():
                 self.raise_alpha = 1
                 alpha = eval
                 if plyFromRoot <= 0:
-                    print('[New Best Move Found]:', move, ' [Move Evaluation]:', eval, ' [Num Nodes Searched]:', self.numNodes)
+                    print('[New Best Move Found]:', ordered_moves[i], ' [Move Evaluation]:', eval, ' [Num Nodes Searched]:', self.numNodes)
                     self.bestEvalInIteration = eval
-                    self.bestMoveInIteration = move
+                    self.bestMoveInIteration = ordered_moves[i]
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
             self.legal += 1
