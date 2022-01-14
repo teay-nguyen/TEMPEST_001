@@ -58,14 +58,11 @@ class DepthLite1():
 
     def random_move(self, state):
         moves = state.FilterValidMoves()
-
-        if len(moves) == 0:
-            quit()
+        if len(moves) == 0: quit()
         return choice(moves)
 
     def isRepetition(self, state, hashKey):
-        if hashKey in state.RepetitionPositionHistory:
-            return 1
+        if hashKey in state.RepetitionPositionHistory: return 1
         return 0
 
     def countNPS(self, nodes, elapsed):
@@ -80,7 +77,6 @@ class DepthLite1():
         self.count = 0
 
         start = time.time()
-        move_count = state.FilterValidMoves()
         targetDepth = ((self.lowPerformantDepth + 1) if self.LowPerformanceMode else (self.highPerformantDepth + 1)) if self.useIterativeDeepening else (self.lowPerformantDepth if self.LowPerformanceMode else self.highPerformantDepth)
 
         print('[Performing Root Search At Depth 1...]')
@@ -88,7 +84,6 @@ class DepthLite1():
 
         if self.useIterativeDeepening:
             for depth in range(2, targetDepth):
-                if len(move_count) == 1 & depth == 4: break
                 print('[Searching Depth]:', depth)
 
                 eval = self.search_widen(state, depth, eval, start)
@@ -123,9 +118,7 @@ class DepthLite1():
         self.SearchDebug.AppendLog(self.searchDebugInfo) 
         return self.bestMoveFound
 
-    def GetSearchResult(self):
-        return (self.bestMoveFound, self.bestEvalFound)
-
+    def GetSearchResult(self): return (self.bestMoveFound, self.bestEvalFound)
     def EndSearch(self): self.abortSearch = 1
 
     def search_widen(self, state, depth, eval, elapsed):
@@ -140,7 +133,7 @@ class DepthLite1():
     def root_search(self, state, depth, alpha, beta, plyFromRoot, elapsed):
         moves = state.FilterValidMoves()
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
-
+        self.count += 1
         self.bestMoveInPosition = self.invalidMove
         
         for move in ordered_moves:
@@ -155,12 +148,10 @@ class DepthLite1():
 
             if (score > alpha):
                 self.bestMoveInPosition = move
-
                 if (score >= beta):
                     self.tt.storeEval(state, self.tt_entries, depth, score, self.tt.BetaBound)
                     self.tt.storeMove(state, self.tt_entries, depth, move)
                     return beta
-
                 alpha = score
                 self.tt.storeEval(state, self.tt_entries, depth, alpha, self.tt.AlphaBound)
                 self.tt.storeMove(state, self.tt_entries, depth, self.bestMoveInPosition)
@@ -177,7 +168,6 @@ class DepthLite1():
 
         self.tt.storeEval(state, self.tt_entries, depth, alpha, self.tt.Exact)
         self.tt.storeMove(state, self.tt_entries, depth, self.bestMoveInPosition)
-
         return alpha
 
     def ABSearch(self, state, depth, alpha, beta, plyFromRoot, elapsed, mate):
@@ -186,9 +176,9 @@ class DepthLite1():
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
         self.raise_alpha = 0
         self.legal = 0
+        self.bestMoveInPosition = None
         eval = self.NEGATIVE_INF
         side_in_check = state.inCheck()
-        self.bestMoveInPosition = self.invalidMove
         evalType = self.tt.AlphaBound
         f_prune = 0
         fmargin = [0, 200, 300, 500]
@@ -206,7 +196,8 @@ class DepthLite1():
         beta = min(beta, self.mateScoreInPly - plyFromRoot)
         if (alpha >= beta): return alpha
         if (self.tt.getStoredEval(state, self.tt_entries, depth, alpha, beta)):
-            if (self.tt.value > alpha) & (self.tt.value < beta): return self.tt.value
+            tt_val = self.tt.value
+            if (tt_val > alpha) & (tt_val < beta): return tt_val
         if (depth <= 3 and (not side_in_check) and abs(alpha) < 9000 and (self.evaluate.evaluate(state) + fmargin[depth] <= alpha)): f_prune = 1
 
         for move in ordered_moves:
@@ -217,10 +208,8 @@ class DepthLite1():
                     eval = -self.ABSearch(state, depth - 1, -beta, -alpha, plyFromRoot + 1, elapsed, mate - 1)
                 else:
                     eval = -self.zwSearch(state, -alpha, depth - 1, plyFromRoot + 1, elapsed)
-                    if (eval > alpha) & (eval < beta):
-                        eval = -self.ABSearch(state, depth - 1, -beta, -alpha, plyFromRoot + 1, elapsed, mate - 1)
-            else:
-                eval = -self.ABSearch(state, depth - 1, -beta, -alpha, plyFromRoot + 1, elapsed, mate - 1)
+                    if (eval > alpha) and (eval < beta): eval = -self.ABSearch(state, depth - 1, -beta, -alpha, plyFromRoot + 1, elapsed, mate - 1)
+            else: eval = -self.ABSearch(state, depth - 1, -beta, -alpha, plyFromRoot + 1, elapsed, mate - 1)
 
             state.undo_move(inSearch = True)
             self.numNodes += 1
@@ -237,7 +226,6 @@ class DepthLite1():
                     evalType = self.tt.BetaBound
                     alpha = beta
                     break
-
                 evalType = self.tt.Exact
                 self.raise_alpha = 1
                 alpha = eval
@@ -270,7 +258,6 @@ class DepthLite1():
                 self.EndSearch()
                 return 0
             if (score >= beta): return beta
-
         if self.abortSearch or (self.Timeout(elapsed, self.maxDuration)):
             self.EndSearch()
             return 0
@@ -280,8 +267,7 @@ class DepthLite1():
         eval = self.evaluate.evaluate(state)
 
         if (eval > alpha):
-            if (eval >= beta):
-                return eval
+            if (eval >= beta): return eval
             alpha = eval
         
         if (ply > 1):
@@ -302,10 +288,8 @@ class DepthLite1():
                 return 0
 
             if (eval > alpha):
-                if (eval >= beta):
-                    return eval
+                if (eval >= beta): return eval
                 alpha = eval
-
         return alpha
 
     def contempt(self, state):
@@ -317,7 +301,7 @@ class DepthLite1():
     def isMateScore(self, score):
         maxMateDepth = 1000
         if abs(score) > (self.mateScoreInPly - maxMateDepth): print(f'Mate in {(self.mateScoreInPly - score + 1) // 2}')
-        if -abs(score) < (-self.mateScoreInPly + maxMateDepth): print(f'Mated in {(self.mateScoreInPly - score) // 2}')
+        if -abs(score) < (-self.mateScoreInPly + maxMateDepth): print(f'Mated in {(self.mateScoreInPly - score + 1) // 2}')
         return abs(score) > (self.mateScoreInPly - maxMateDepth)
 
     def ResetDebugInfo(self):
