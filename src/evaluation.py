@@ -1,6 +1,6 @@
 from psqt import setBasicValues
-from verification_util import verify_sq
-from Transpositions import TranspositionTable
+from verify import verify_sq
+from tt_util import TranspositionTable
 
 class Pawn:
     def __init__(self):
@@ -127,16 +127,12 @@ class Evaluate:
     
     def main_eval(self, state):
         res = self.tt.getStoredScore(state, self.tt_entries)
-        if res != None:
-            return res if state.whitesturn else -res
+        if res != None: return res if state.whitesturn else -res
 
-        result, eg_score, mg_score = 0, 0, 0
-        stronger, weaker = None, None
+        result, mg_score = 0, 0
 
         mg_score = self.materialTotal(state, 'w') + self.psqt_(state, 'w', self.basic_values.psqt_mg)\
                     - self.materialTotal(state, 'b') - self.psqt_(state, 'b', self.basic_values.psqt_mg)
-        eg_score = self.materialTotal(state, 'w') + self.psqt_(state, 'w', self.basic_values.psqt_eg)\
-                    - self.materialTotal(state, 'b') - self.psqt_(state, 'b', self.basic_values.psqt_eg)
 
         if state.whitesturn:
             result += self.basic_values.tempo

@@ -1,4 +1,4 @@
-from Transpositions import TranspositionTable
+from tt_util import TranspositionTable
 from psqt import setBasicValues
 
 class MoveOrdering:

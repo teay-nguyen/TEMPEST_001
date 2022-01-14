@@ -3,15 +3,15 @@ from random import choice
 from time import time
 from evaluation import Evaluate
 import time
-from MoveOrdering import MoveOrdering
-from Transpositions import TranspositionTable
-from Debugging import Debug
+from order import MoveOrdering
+from tt_util import TranspositionTable
+from debug import Debug
 
-ASPIRATION: int = 50
-DRAW_OPENING: int = -10
-DRAW_ENDGAME: int = 0
+ASPIRATION:int = 50
+DRAW_OPENING:int = -10
+DRAW_ENDGAME:int = 0
 
-class DepthLite1:
+class searcher:
     def __init__(self):
         self.count: int
         self.tt: TranspositionTable
@@ -34,8 +34,8 @@ class DepthLite1:
         self.bestMoveFound = None
         self.bestEvalFound:int = 0
         self.useIterativeDeepening:int = 1
-        self.POSITIVE_INF:int = 9999999999
-        self.NEGATIVE_INF:int = -self.POSITIVE_INF
+        self.POSITIVE_INF:int = 99999999999
+        self.NEGATIVE_INF:int = -99999999999
         self.mateScoreInPly:int = 100000
         self.numNodes:int = 0
         self.numCutoffs:int = 0
@@ -61,7 +61,7 @@ class DepthLite1:
         self.lowPerformantDepth:int = 2
         self.MoveOrdering:MoveOrdering = MoveOrdering()
         self.rootDepth:int = 1
-        self.max_ply:int = 8
+        self.max_ply:int = 10
         self.evaluate:Evaluate = Evaluate()
 
         self.R:int = 2
@@ -80,6 +80,9 @@ class DepthLite1:
     def startSearch(self, state):
         targetDepth: int
         eval: int
+        start: float
+        self.count: int
+        self.abortSearch: int
 
         self.bestMoveFound = self.bestMoveInIteration = self.invalidMove
         self.bestEvalFound = self.numCutoffs = self.bestEvalInIteration = self.currentIterativeSearchDepth =  0
@@ -91,7 +94,7 @@ class DepthLite1:
                             if self.useIterativeDeepening else (self.lowPerformantDepth if self.LowPerformanceMode else self.highPerformantDepth);
         print('[Performing Root Search At Depth 1...]')
 
-        eval = self.root_search(state, self.rootDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0, start)
+        eval = self.root_search(state, self.rootDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0, start) # rootDepth = 1
 
         if self.useIterativeDeepening:
             for depth in range(2, targetDepth):
@@ -153,6 +156,8 @@ class DepthLite1:
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
         self.count += 1
         self.bestMoveInPosition = self.invalidMove
+
+        if (plyFromRoot >= self.max_ply - 1): return self.evaluate.evaluate(state)
         
         for i in range(len(ordered_moves)):
             self.numNodes += 1

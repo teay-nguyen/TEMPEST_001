@@ -2,8 +2,8 @@
 import pygame as pyg
 from engine import State, Move
 from draw_board import DrawState, animatemove
-from DepthLiteThink import DepthLite1
-from PieceTheme import get_pieces
+from search import searcher
+from piece import get_pieces
 
 pyg.init()
 
@@ -86,7 +86,7 @@ class Interface:
         return rendered_string
 
     def app_main_exec(self):
-        DepthLite = DepthLite1()
+        _searcher = searcher()
         screen = pyg.display.set_mode((self.WIDTH + self.PANEL_WIDTH, self.HEIGHT))
         clock = pyg.time.Clock()
         state = State()
@@ -158,9 +158,9 @@ class Interface:
             if not human_turn:
                 if not AIThinking:
                     AIThinking = True
-                    AIMove = DepthLite.startSearch(state)
+                    AIMove = _searcher.startSearch(state)
                     if AIMove is None:
-                        AIMove = DepthLite.random_move(state)
+                        AIMove = _searcher.random_move(state)
                     elif AIMove == 1:
                         running = 0
                         quit()

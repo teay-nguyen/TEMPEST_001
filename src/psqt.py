@@ -1,5 +1,5 @@
 import numpy as np
-from verification_util import verify_sq
+from verify import verify_sq
 
 SAFETY_TABLE = [
     0,  0,   1,   2,   3,   5,   7,   9,  12,  15,
