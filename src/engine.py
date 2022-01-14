@@ -16,9 +16,9 @@ class State:
     '''
 
     def __init__(self):
-        self.ZobristClass = Zobrist()
+        self.ZobristClass: Zobrist = Zobrist()
         self.currCastleRights = castlerights(False, False, False, False)
-        self.pieceCount = {
+        self.pieceCount: dict = {
             'wK': 0,
             'wQ': 0,
             'wR': 0,
@@ -45,18 +45,18 @@ class State:
             self.ZobristKey,
         ) = self.loadStartPosition()
 
-        self.moveLog = []
-        self.oppPawnAttackMap = {}
+        self.moveLog: list = []
+        self.oppPawnAttackMap: dict = {}
         self.oppPawnAttackMap['White'], self.oppPawnAttackMap['Black'] = [], []
-        self.boardLog = [self.board]
-        self.checkmate = False
-        self.stalemate = False
-        self.epLog = [self.epPossible]
-        self.game_over = False
-        self.kingisCastled = {}
+        self.boardLog: list = [self.board]
+        self.checkmate: bool = False
+        self.stalemate: bool = False
+        self.epLog: list = [self.epPossible]
+        self.game_over: bool = False
+        self.kingisCastled: dict = {}
         self.kingisCastled['w'], self.kingisCastled['b'] = False, False
-        self.RepetitionPositionHistory = []
-        self.moveFuncs = {
+        self.RepetitionPositionHistory: list = []
+        self.moveFuncs: dict = {
             "p": self.getPawnMoves,
             "R": self.getRookMoves,
             "N": self.getKnightMoves,
@@ -141,7 +141,7 @@ class State:
             "R": "R",
         }
 
-        fen_board = fen.split()[0]
+        fen_board:str = fen.split()[0]
         row, col = 0, 0
 
         for symbol in fen_board:
@@ -174,7 +174,7 @@ class State:
         fen_turn = fen.split()[1]
         self.whitesturn = True if fen_turn == "w" else False
 
-        fen_castle_rights = fen.split()[2]
+        fen_castle_rights:str = fen.split()[2]
 
         for symbol in fen_castle_rights:
             if symbol != "-":
@@ -464,10 +464,10 @@ class State:
                 elif move.endCol == 7:
                     self.currCastleRights.bks = False
 
-    def FilterValidMoves(self, onlyCaptures=False):
-        moves = self.getAllPossibleMoves()
-        tempEpPossible = self.epPossible
-        tempcastleRights = castlerights(
+    def FilterValidMoves(self):
+        moves:list = self.getAllPossibleMoves()
+        tempEpPossible:tuple = self.epPossible
+        tempcastleRights:castlerights = castlerights(
             self.currCastleRights.wks,
             self.currCastleRights.bks,
             self.currCastleRights.wqs,
@@ -476,7 +476,7 @@ class State:
         for i in range(len(moves) - 1, -1, -1):
             self.make_move(moves[i], inSearch=True)
             self.whitesturn = not self.whitesturn
-            if self.inCheck() or (moves[i].pieceCaptured == '--' and onlyCaptures): moves.remove(moves[i])
+            if self.inCheck(): moves.remove(moves[i])
             self.whitesturn = not self.whitesturn
             self.undo_move(inSearch=True)
 
@@ -487,23 +487,28 @@ class State:
                 self.stalemate = True
             self.game_over = True
 
-        if not onlyCaptures:
-            if self.whitesturn:
-                if self.whiteKingLocation == (7, 4):
-                    if self.currCastleRights.wks or self.currCastleRights.wqs:
-                        self.getCastleMoves(
-                            self.whiteKingLocation[0], self.whiteKingLocation[1], moves
-                        )
-            else:
-                if self.blackKingLocation == (0, 4):
-                    if self.currCastleRights.bks or self.currCastleRights.bqs:
-                        self.getCastleMoves(
-                            self.blackKingLocation[0], self.blackKingLocation[1], moves
-                        )
+        if self.whitesturn:
+            if self.whiteKingLocation == (7, 4):
+                if self.currCastleRights.wks or self.currCastleRights.wqs:
+                    self.getCastleMoves(
+                        self.whiteKingLocation[0], self.whiteKingLocation[1], moves
+                    )
+        else:
+            if self.blackKingLocation == (0, 4):
+                if self.currCastleRights.bks or self.currCastleRights.bqs:
+                    self.getCastleMoves(
+                        self.blackKingLocation[0], self.blackKingLocation[1], moves
+                    )
 
         self.epPossible = tempEpPossible
         self.currCastleRights = tempcastleRights
 
+        return moves
+
+    def GenerateCaptures(self):
+        moves = self.FilterValidMoves()
+        for i in range(len(moves) - 1, -1, -1):
+            if moves[i].pieceCaptured == '--': moves.remove(moves[i])
         return moves
 
     def inCheck(self):
