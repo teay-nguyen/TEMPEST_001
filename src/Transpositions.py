@@ -16,8 +16,8 @@ class TranspositionTable:
         return np.int64(np.mod(state.ZobristKey, self.entries_size))
 
     def ClearEntries(self, entries):
-        for entry in range(len(entries)):
-            entries[entry] = Entry(None, None)
+        if isinstance(entries, list):
+            entries = [Entry(None, None) for _ in range(self.entries_size)]
 
     def getStoredMove(self, state, entries, key):
         if entries[self.Index(state)].key == None: return 0
@@ -32,10 +32,10 @@ class TranspositionTable:
             if (entry.nodeType == self.Exact):
                 self.value = entry.value
                 return 1
-            if (entry.nodeType == self.AlphaBound) & (entry.value <= alpha):
+            if (entry.nodeType == self.AlphaBound) and (entry.value <= alpha):
                 self.value = alpha
                 return 1
-            if (entry.nodeType == self.BetaBound) & (entry.value >= beta):
+            if (entry.nodeType == self.BetaBound) and (entry.value >= beta):
                 self.value = beta
                 return 1
         return 0
@@ -49,7 +49,7 @@ class TranspositionTable:
     def storeEval(self, state, entries, depth, eval, evalType):
         if self.Index(state) > self.entries_size: return
         entry = entries[self.Index(state)]
-        if (entry.depth > depth) & (entry.key == state.ZobristKey): return
+        if (entry.depth > depth) and (entry.key == state.ZobristKey): return
         assert (isinstance(eval, int))
         assert (isinstance(depth, int))
         assert (isinstance(state.ZobristKey, int))
@@ -61,7 +61,7 @@ class TranspositionTable:
     def storeMove(self, state, entries, depth, move):
         if self.Index(state) > self.entries_size: return
         entry = entries[self.Index(state)]
-        if (entry.depth > depth) & (entry.key == state.ZobristKey): return
+        if (entry.depth > depth) and (entry.key == state.ZobristKey): return
         assert (isinstance(depth, int))
         assert (isinstance(state.ZobristKey, int))
         entry.key = state.ZobristKey

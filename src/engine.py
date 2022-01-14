@@ -43,7 +43,7 @@ class State:
             self.epPossible,
             self.start_fen,
             self.ZobristKey,
-        ) = self.loadStartPosition()
+        ) = self.loadCustomPosition()
 
         self.moveLog: list = []
         self.oppPawnAttackMap: dict = {}

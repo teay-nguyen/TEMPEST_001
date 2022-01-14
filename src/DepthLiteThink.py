@@ -27,59 +27,53 @@ class DepthLite1:
         self.maxDepth: int
         self.maxDuration: int
 
-        self.count = 0
-        self.tt = TranspositionTable()
+        self.count:int = 0
+        self.tt:TranspositionTable = TranspositionTable()
         self.bestMoveInIteration = None
-        self.bestEvalInIteration = 0
+        self.bestEvalInIteration:int = 0
         self.bestMoveFound = None
-        self.bestEvalFound = 0
-        self.useIterativeDeepening = 1
-        self.transpositionTableSize = 6400
-        self.POSITIVE_INF = 9999999999
-        self.NEGATIVE_INF = -self.POSITIVE_INF
-        self.mateScoreInPly = 100000
-        self.numNodes = 0
-        self.numCutoffs = 0
-        self.abortSearch = 0
-        self.LowPerformanceMode = 1
-        self.searchDebugInfo = SearchDebugInfo()
-        self.currentIterativeSearchDepth = 0
-        self.tt_entries = self.tt.init_entries()
-        self.pv_entries = self.tt.init_entries()
-        self.invalidMove = None
-        self.clearTTEachMove = 0
-        self.SearchDebug: Debug = Debug()
+        self.bestEvalFound:int = 0
+        self.useIterativeDeepening:int = 1
+        self.POSITIVE_INF:int = 9999999999
+        self.NEGATIVE_INF:int = -self.POSITIVE_INF
+        self.mateScoreInPly:int = 100000
+        self.numNodes:int = 0
+        self.numCutoffs:int = 0
+        self.abortSearch:int = 0
+        self.LowPerformanceMode:int = 1
+        self.searchDebugInfo:SearchDebugInfo = SearchDebugInfo()
+        self.currentIterativeSearchDepth:int = 0
+        self.tt_entries:list = self.tt.init_entries()
+        self.pv_entries:list = self.tt.init_entries()
+        self.invalidMove:None = None
+        self.clearTTEachMove:int = 0
+        self.SearchDebug:Debug = Debug()
         self.bestMoveInPosition = self.invalidMove
-        self.raise_alpha = 0
-        self.tagPVLINE = pv_line()
-        self.usePrincipalVariation = 1
-        self.maxDuration = 15 # seconds format
-        self.maxDepth = 50
+        self.raise_alpha:int = 0
+        self.tagPVLINE:pv_line = pv_line()
+        self.usePrincipalVariation:int = 1
+        self.maxDuration:int = 15 # seconds format
+        self.maxDepth:int = 50
 
-        self.useOpeningBook = 0
-        self.maxBookMoves = 40
-        self.highPerformantDepth = 100
-        self.lowPerformantDepth = 2
-        self.MoveOrdering = MoveOrdering()
-        self.rootDepth = 1
-        self.max_ply = 3
-        self.evaluate = Evaluate()
+        self.useOpeningBook:int = 0
+        self.maxBookMoves:int = 40
+        self.highPerformantDepth:int = self.maxDepth
+        self.lowPerformantDepth:int = 2
+        self.MoveOrdering:MoveOrdering = MoveOrdering()
+        self.rootDepth:int = 1
+        self.max_ply:int = 8
+        self.evaluate:Evaluate = Evaluate()
 
-        self.R = 2
-
-    def Timeout(self, startTime: float, deadline: int):
-        return (time.time() - startTime) >= deadline
+        self.R:int = 2
 
     def random_move(self, state):
         moves: list = state.FilterValidMoves()
         if len(moves) == 0: quit()
         return choice(moves)
-
-    def isRepetition(self, state, hashKey:int):
+    def isRepetition(self, state, hashKey:int) -> int:
         if hashKey in state.RepetitionPositionHistory: return 1
         return 0
-
-    def countNPS(self, nodes, elapsed:float):
+    def countNPS(self, nodes, elapsed:float) -> float:
         if (elapsed == 0): return 0
         return nodes // elapsed
 
@@ -92,8 +86,9 @@ class DepthLite1:
         self.abortSearch: int = 0
         self.searchDebugInfo: SearchDebugInfo = SearchDebugInfo()
         self.count: int = 0
-        start = time.time()
-        targetDepth = ((self.lowPerformantDepth + 1) if self.LowPerformanceMode else (self.highPerformantDepth + 1)) if self.useIterativeDeepening else (self.lowPerformantDepth if self.LowPerformanceMode else self.highPerformantDepth)
+        start:float = time.time()
+        targetDepth:int = ((self.lowPerformantDepth + 1) if self.LowPerformanceMode else (self.highPerformantDepth + 1))\
+                            if self.useIterativeDeepening else (self.lowPerformantDepth if self.LowPerformanceMode else self.highPerformantDepth);
         print('[Performing Root Search At Depth 1...]')
 
         eval = self.root_search(state, self.rootDepth, self.NEGATIVE_INF, self.POSITIVE_INF, 0, start)
@@ -132,23 +127,23 @@ class DepthLite1:
         self.SearchDebug.AppendLog(self.searchDebugInfo) 
         return self.bestMoveFound
 
-    def GetSearchResult(self): return (self.bestMoveFound, self.bestEvalFound)
-    def EndSearch(self): self.abortSearch = 1
+    def GetSearchResult(self)->tuple: return (self.bestMoveFound, self.bestEvalFound)
+    def EndSearch(self)->None: self.abortSearch = 1
 
-    def search_widen(self, state, depth:int, eval:int, elapsed:float):
+    def search_widen(self, state, depth:int, eval:int, elapsed:float)->int:
         temp: int
         alpha: int
         beta: int
 
-        temp = eval
-        alpha = eval - ASPIRATION
-        beta = eval + ASPIRATION
+        temp:int = eval
+        alpha:int = eval - ASPIRATION
+        beta:int = eval + ASPIRATION
 
-        temp = self.root_search(state, depth, alpha, beta, 0, elapsed)
+        temp:int = self.root_search(state, depth, alpha, beta, 0, elapsed)
         if (temp <= alpha or temp >= beta): temp = self.root_search(state, depth, self.NEGATIVE_INF, self.POSITIVE_INF, 0, elapsed)
         return temp
 
-    def root_search(self, state, depth:int, alpha:int, beta:int, plyFromRoot:int, elapsed:float):
+    def root_search(self, state, depth:int, alpha:int, beta:int, plyFromRoot:int, elapsed:float)->int:
         ordered_moves: list
         moves: list
         moves: list
@@ -182,43 +177,33 @@ class DepthLite1:
                     self.bestEvalInIteration = score
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
-
         if (self.Timeout(elapsed, self.maxDuration)) or self.abortSearch:
             self.EndSearch()
             return 0
-
         self.tt.storeEval(state, self.tt_entries, depth, alpha, self.tt.Exact)
         self.tt.storeMove(state, self.tt_entries, depth, self.bestMoveInPosition)
         return alpha
 
-    def ABSearch(self, state, depth:int, alpha:int, beta:int, plyFromRoot:int, elapsed:float, mate:int):
+    def ABSearch(self, state, depth:int, alpha:int, beta:int, plyFromRoot:int, elapsed:float, mate:int)->int:
         eval: int
         evalType: int
-        fmargin: list
         side_in_check: bool
         ordered_moves: list
-        f_prune: int
         moves: list
 
         self.count += 1
-        moves = state.FilterValidMoves()
-        ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
-        self.raise_alpha = 0
-        self.legal = 0
+        moves:list = state.FilterValidMoves()
+        ordered_moves:list = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
+        self.raise_alpha:int = 0
+        self.legal:int = 0
         self.bestMoveInPosition = None
-        eval = self.NEGATIVE_INF
-        side_in_check = state.inCheck()
-        evalType = self.tt.AlphaBound
-        f_prune = 0
-        fmargin = [0, 200, 300, 500]
+        eval:int = self.NEGATIVE_INF
+        side_in_check:bool = state.inCheck()
+        evalType:int = self.tt.AlphaBound
 
         if (self.abortSearch) or self.Timeout(elapsed, self.maxDuration): return 0
-        if len(moves) == 0:
-            if side_in_check: return -self.mateScoreInPly + plyFromRoot
-            return 0
         if (depth <= 0): return self.QuiescenceSearch(state, alpha, beta, plyFromRoot + 1, elapsed)
-        assert 0 < depth < self.max_ply
-        if self.isRepetition(state, state.ZobristKey):
+        if self.isRepetition(state, state.ZobristKey) and plyFromRoot:
             print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
             return self.contempt(state)
         alpha = max(alpha, -self.mateScoreInPly + plyFromRoot)
@@ -227,11 +212,10 @@ class DepthLite1:
         if (self.tt.getStoredEval(state, self.tt_entries, depth, alpha, beta)):
             tt_val = self.tt.value
             if (tt_val > alpha) and (tt_val < beta): return tt_val
-        if (depth <= 3 and (not side_in_check) and abs(alpha) < 9000 and (self.evaluate.evaluate(state) + fmargin[depth] <= alpha)): f_prune = 1
+        if (plyFromRoot >= self.max_ply - 1): return self.evaluate.evaluate(state)
 
         for i in range(len(ordered_moves)):
             state.make_move(ordered_moves[i], inSearch = True)
-
             if (self.usePrincipalVariation):
                 if not self.raise_alpha:
                     eval = -self.ABSearch(state, depth - 1, -beta, -alpha, plyFromRoot + 1, elapsed, mate - 1)
@@ -242,7 +226,6 @@ class DepthLite1:
 
             state.undo_move(inSearch = True)
             self.numNodes += 1
-
             if (self.abortSearch) or (self.Timeout(elapsed, self.maxDuration)):
                 self.EndSearch()
                 return 0
@@ -264,17 +247,19 @@ class DepthLite1:
                     self.bestMoveFound = self.bestMoveInIteration
                     self.bestEvalFound = self.bestEvalInIteration
             self.legal += 1
-
+        if len(moves) == 0:
+            if side_in_check: return -self.mateScoreInPly + plyFromRoot
+            return 0
         if self.abortSearch or (self.Timeout(elapsed, self.maxDuration)):
             self.EndSearch()
             return 0
-
         self.tt.storeEval(state, self.tt_entries, depth, alpha, evalType)
         self.tt.storeMove(state, self.tt_entries, depth, self.bestMoveInPosition)
         return alpha
 
-    def zwSearch(self, state, beta:int, depth:int, plyFromRoot:int, elapsed:float):
+    def zwSearch(self, state, beta:int, depth:int, plyFromRoot:int, elapsed:float)->int:
         if depth <= 0: return self.QuiescenceSearch(state, beta - 1, beta, plyFromRoot + 1, elapsed)
+        if (plyFromRoot >= self.max_ply - 1): return self.evaluate.evaluate(state)
         moves = state.FilterValidMoves()
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
 
@@ -291,16 +276,17 @@ class DepthLite1:
             return 0
         return beta - 1
 
-    def QuiescenceSearch(self, state, alpha:int, beta:int, ply:int, elapsed:float):
+    def QuiescenceSearch(self, state, alpha:int, beta:int, ply:int, elapsed:float)->int:
         eval:int = self.evaluate.evaluate(state)
 
+        if (ply >= self.max_ply - 1): return eval
         if (eval > alpha):
             if (eval >= beta): return eval
-            alpha = eval        
-        if (ply > 1):
-            if self.isRepetition(state, state.ZobristKey):
-                print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
-                return self.contempt(state)
+            alpha = eval
+
+        if self.isRepetition(state, state.ZobristKey) and ply:
+            print('--------------------------------- [REPETITION DETECTED] ---------------------------------')
+            return self.contempt(state)
 
         moves = state.GenerateCaptures()
         ordered_moves = self.MoveOrdering.OrderMoves(state, moves, self.tt_entries)
@@ -309,29 +295,27 @@ class DepthLite1:
             state.make_move(move, inSearch = True)
             eval = -self.QuiescenceSearch(state, -beta, -alpha, ply + 1, elapsed)
             state.undo_move(inSearch = True)
-
             if self.abortSearch or (self.Timeout(elapsed, self.maxDuration)):
                 self.EndSearch()
                 return 0
-
             if (eval > alpha):
                 if (eval >= beta): return eval
                 alpha = eval
         return alpha
 
-    def contempt(self, state):
+    def contempt(self, state)->int:
         value = DRAW_OPENING
         side = 'w' if state.whitesturn else 'b'
         if (self.evaluate.materialNoPawns(state, side) < 1300): value = DRAW_ENDGAME
         return (1 * value) if state.whitesturn else (-1 * value)
-
-    def isMateScore(self, score):
+    def Timeout(self, startTime: float, deadline: int) -> bool: return (time.time() - startTime) >= deadline
+    def isMateScore(self, score)->bool:
         maxMateDepth = 1000
         if abs(score) > (self.mateScoreInPly - maxMateDepth): print(f'Mate in {(self.mateScoreInPly - score + 1) // 2}')
         if -abs(score) < (-self.mateScoreInPly + maxMateDepth): print(f'Mated in {(self.mateScoreInPly - score + 1) // 2}')
         return abs(score) > (self.mateScoreInPly - maxMateDepth)
 
-    def ResetDebugInfo(self):
+    def ResetDebugInfo(self)->None:
         if self.searchDebugInfo is not None:
             self.searchDebugInfo.lastCompletedDepth = 0
             self.searchDebugInfo.moveVal = 0
