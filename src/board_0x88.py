@@ -1,45 +1,46 @@
 #!/usr/bin/env python3 -u
 
 '''
-************************************************************************************************************
-
                                         The Pioneer Chess Engine
                                                 (0x88)
-
                                                   by
-
                                             HashHobo (Terry)
 
 
     - 0x88 board representation
     - I, HashHobo was daring enough to try make a world class chess engine using PYTHON (well, thought speed wasn't everything, I guess it is everything in a chess engine)
     - AlphaBeta, no parallel search though, maybe PVS search, idk, I might try other search techniques
+    - GIL is kinda a problem here, gonna be more difficult doing this with multiprocess, because they don't share memory
     - Hot features such as zobrist hashing and transposition tables (well not really, it's kinda basic in a chess engine)
     - I will attempt implementing a few search pruning techniques, but its kinda hard
-    - Board is representated by numbers, masked by characters in a table
-
-************************************************************************************************************
-'''
-
-'''
-************************************************************************************************************
+    - Board is representated by numbers, masked by characters in a table, not sure if I used the right words here
 
                                             PYTHON EDITION v2.0
 
-    - This is also my very first implementation of the Pioneer engine
+    - This is also my very first language the Pioneer is written in
     - Probably gonna work on a C++ or C# implementation of this on a later date
     - The engine is obviously weaker than other popular engines because Python, so don't expect superb performance
     - I actually document or keep my older implementations of this, so you can check it out and probably send a PR if you want
-    - This is a project for fun, also my first major project of my life, since I was 13 since I started working on this
+    - This is a project for fun, also my first major project of my life, I was 13 since I started working on this
     - I put the first version in the old trash implementation folder because it is indeed trash anyways
+    - This version is purely designed to be MUCH faster and more conventional than my old version
+    - My old version was imcompatible with Pypy because Pypy somehow does not like my chess engine, maybe its because of pygame idk
+    - Instead of using pygame which is slow, I will just implement user interface in the terminal
 
-************************************************************************************************************
+                                        Objectives of the Pioneer
+
+    - To be able to compete directly with Sunfish, another very strong chess engine written in Python
+    - Somehow fare well against the famed Stockfish, or even AlphaZero if it can
+    - Maybe (very small chance, maybe 0.005 percent), to compete for the best engine in the world
+    - To teach me some nice tricks and sacrifices
+    - No I will NOT use my engine to cheat, I'm a good person
+    - Just to have fun, coding is a fun thing and writing chess engines will help me dive deep into the world of programming
 '''
 
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
-ascii_pieces:str = '.PNBRQKpnbrqko'
-unicode_pieces:str = '.♙♘♗♖♕♔p♞♝♜♛♚'
+ascii_pieces:str = "'PNBRQKpnbrqko"
+unicode_pieces:str = "'♙♘♗♖♕♔p♞♝♜♛♚"
 
 squares:dict = {
         "a8":0, "b8":1, "c8":2, "d8":3, "e8":4, "f8":5, "g8":6, "h8":7,
@@ -171,8 +172,30 @@ class board:
             self.enpassant = self.conv_rf_idx(rank, file)
         else: self.enpassant = squares['null_sq']
 
+    # tool to convert rank and file into 1 compatible index int
     def conv_rf_idx(self, rank:int, file:int):
         return rank * 16 + file
+
+    def xray_attacks(self, square:int, side:int):
+        # bishop and queen
+        for i in range(4):
+            target_sq = square + bishop_offsets[i]
+            while (not (target_sq & 0x88)):
+                if 0 <= target_sq <= 127:
+                    target_piece = self.board[target_sq]
+                    if ((target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q)):
+                        return 1
+                    target_sq += bishop_offsets[i]
+
+        # rook and queen
+        for i in range(4):
+            target_sq = square + rook_offsets[i]
+            while (not (target_sq & 0x88)):
+                if 0 <= target_sq <= 127:
+                    target_piece = self.board[target_sq]
+                    if ((target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q)):
+                        return 1
+                    target_sq += rook_offsets[i]
 
     def generate_attacks(self, square, side):
         # pawn attacks
@@ -196,6 +219,7 @@ class board:
                     if ((target_piece == N) if side else (target_piece == n)):
                         return 1
 
+        # king attacks
         for i in range(8):
             target_sq = square + king_offsets[i]
             if 0 <= target_sq <= 127:
@@ -204,7 +228,67 @@ class board:
                     if ((target_piece == K) if side else (target_piece == k)):
                         return 1
 
+        # bishop attacks
+        for i in range(4):
+            target_sq = square + bishop_offsets[i]
+            while (not (target_sq & 0x88)):
+                if 0 <= target_sq <= 127:
+                    target_piece = self.board[target_sq]
+                    if ((target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q)):
+                        return 1
+                    if (target_piece): break
+                    target_sq += bishop_offsets[i]
+
+        # rook attacks
+        for i in range(4):
+            target_sq = square + rook_offsets[i]
+            while (not (target_sq & 0x88)):
+                if 0 <= target_sq <= 127:
+                    target_piece = self.board[target_sq]
+                    if ((target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q)):
+                        return 1
+                    if (target_piece): break
+                    target_sq += rook_offsets[i]
+
         return 0
+
+    def gen_moves(self):
+        # pawn moves
+        for sq in range(128):
+            if (not (sq & 0x88)):
+                if (self.side):
+                    if self.board[sq] == P:
+                        to_sq = sq - 16
+                        if (not (to_sq & 0x88)) and not self.board[to_sq]:
+                            if (sq >= squares['a7'] and sq <= squares['h7']):
+                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
+                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
+                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'b')
+                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
+                            else:
+                                print(square_to_coords[sq] + square_to_coords[to_sq])
+                                if ((sq >= squares['a2'] and sq <= squares['h2']) and not self.board[sq - 32]):
+                                    print(square_to_coords[sq] + square_to_coords[sq - 32])
+                else:
+                    if self.board[sq] == p:
+                        to_sq = sq + 16
+                        if (not (to_sq & 0x88) and not self.board[to_sq]):
+                            if (sq >= squares['a2'] and sq <= squares['h2']):
+                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
+                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
+                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'b')
+                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
+                            else:
+                                print(square_to_coords[sq] + square_to_coords[to_sq])
+                                if ((sq >= squares['a7'] and sq <= squares['h2']) and not self.board[sq + 32]):
+                                    print(square_to_coords[sq] + square_to_coords[sq + 32])
+
+    '''
+    
+    This is where debugging comes to play
+    Debugging tools are implemented so I can find bugs
+
+    '''
 
     def print_board(self):
         print()
@@ -285,6 +369,7 @@ class board:
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
 
 bboard = board()
-bboard.parse_fen('8/8/8/3K4/8/8/8/8 w KQkq g5 0 1')
+bboard.parse_fen('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBpPpP/R3K2R b KQkq - 0 1')
+bboard.gen_moves()
 bboard.print_board()
 bboard.print_attack_map(sides['white'])
