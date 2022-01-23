@@ -30,12 +30,15 @@
                                         Objectives of the Pioneer
 
     - To be able to compete directly with Sunfish, another very strong chess engine written in Python
-    - Somehow fare well against the famed Stockfish, or even AlphaZero if it can
+    - Somehow fare well against the famed Stockfish 14
     - Maybe (very small chance, maybe 0.005 percent), to compete for the best engine in the world
     - To teach me some nice tricks and sacrifices
     - No I will NOT use my engine to cheat, I'm a good person
     - Just to have fun, coding is a fun thing and writing chess engines will help me dive deep into the world of programming
 '''
+
+# imports
+from time import time
 
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
@@ -97,6 +100,7 @@ king_offsets:tuple = (16, 1, -16, -1, 15, 17, -15, -17)
 # main driver
 class board:
     def __init__(self) -> None:
+        self.parsed_fen = None
         self.side = None
         self.castle = 0
         self.enpassant = squares['null_sq']
@@ -127,6 +131,7 @@ class board:
         self.clear_board()
 
         # load pieces onto board
+        self.parsed_fen = fen
         fen_segments = fen.split()
         fen_pieces = fen_segments[0]
         rank, file = 0, 0
@@ -253,13 +258,12 @@ class board:
         return 0
 
     def gen_moves(self):
-        # pawn moves
         for sq in range(128):
             if (not (sq & 0x88)):
                 if (self.side):
                     if self.board[sq] == P:
                         to_sq = sq - 16
-                        if (not (to_sq & 0x88)) and not self.board[to_sq]:
+                        if (not (to_sq & 0x88)) and (not self.board[to_sq]):
                             if (sq >= squares['a7'] and sq <= squares['h7']):
                                 print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
                                 print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
@@ -269,10 +273,36 @@ class board:
                                 print(square_to_coords[sq] + square_to_coords[to_sq])
                                 if ((sq >= squares['a2'] and sq <= squares['h2']) and not self.board[sq - 32]):
                                     print(square_to_coords[sq] + square_to_coords[sq - 32])
+                        for i in range(4):
+                            pawn_offset = bishop_offsets[i]
+                            if pawn_offset < 0:
+                                to_sq = sq + pawn_offset
+                                if (not (to_sq & 0x88)):
+                                    if (sq >= squares['a7'] and sq <= squares['h7']) and\
+                                        (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
+                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
+                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
+                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'b')
+                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
+                                    else:
+                                        if (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
+                                            print(square_to_coords[sq] + square_to_coords[to_sq])
+                                        if (to_sq == self.enpassant):
+                                            print(square_to_coords[sq] + square_to_coords[to_sq])
+                    if self.board[sq] == K:
+                        if (self.castle & castling['K']):
+                            if (not self.board[squares['f1']]) and (not self.board[squares['g1']]):
+                                print(f'KC {self.generate_attacks(squares["f1"], sides["black"])}')
+                                if (not self.generate_attacks(squares['e1'], sides['black'])) and (not self.generate_attacks(squares['f1'], sides['black'])):
+                                    print(square_to_coords[squares['e1']] + square_to_coords[squares['g1']])
+                        if (self.castle & castling['Q']):
+                            if (not self.board[squares['g1']]) and (not self.board[squares['b1']]) and (not self.board[squares['c1']]):
+                                if (not self.generate_attacks(squares['e1'], sides['black'])) and (not self.generate_attacks(squares['d1'], sides['black'])):
+                                    print(square_to_coords[squares['e1']] + square_to_coords[squares['c1']])
                 else:
                     if self.board[sq] == p:
                         to_sq = sq + 16
-                        if (not (to_sq & 0x88) and not self.board[to_sq]):
+                        if (not (to_sq & 0x88) and (not self.board[to_sq])):
                             if (sq >= squares['a2'] and sq <= squares['h2']):
                                 print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
                                 print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
@@ -280,13 +310,65 @@ class board:
                                 print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
                             else:
                                 print(square_to_coords[sq] + square_to_coords[to_sq])
-                                if ((sq >= squares['a7'] and sq <= squares['h2']) and not self.board[sq + 32]):
+                                if ((sq >= squares['a7'] and sq <= squares['h7']) and (not self.board[sq + 32])):
                                     print(square_to_coords[sq] + square_to_coords[sq + 32])
+                        for i in range(4):
+                            pawn_offset = bishop_offsets[i]
+                            if pawn_offset > 0:
+                                to_sq = sq + pawn_offset
+                                if (not (to_sq & 0x88)):
+                                    if (sq >= squares['a2'] and sq <= squares['h2']) and\
+                                        (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
+                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
+                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
+                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'b')
+                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
+                                    else:
+                                        if (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
+                                            print(square_to_coords[sq] + square_to_coords[to_sq])
+                                        if (to_sq == self.enpassant):
+                                            print(square_to_coords[sq] + square_to_coords[to_sq])
+                    if self.board[sq] == k:
+                        if (self.castle & castling['k']):
+                            if (not self.board[squares['f8']]) and (not self.board[squares['g8']]):
+                                if (not self.generate_attacks(squares['e8'], sides['white'])) and (not self.generate_attacks(squares['f8'], sides['white'])):
+                                    print(square_to_coords[squares['e8']] + square_to_coords[squares['g8']])
+                        if (self.castle & castling['q']):
+                            if (not self.board[squares['d8']]) and (not self.board[squares['b8']]) and (not self.board[squares['c8']]):
+                                if (not self.generate_attacks(squares['e8'], sides['white'])) and (not self.generate_attacks(squares['d8'], sides['white'])):
+                                    print(square_to_coords[squares['e8']] + square_to_coords[squares['c8']])
+
+                if ((self.board[sq] == N) if self.side else (self.board[sq] == n)):
+                    for i in range(8):
+                        to_sq = sq + knight_offsets[i]
+                        if 0 <= to_sq <= 127:
+                            piece = self.board[to_sq]
+                            if (not (to_sq & 0x88)):
+                                if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
+                                    (not piece or (piece >= 1 and piece <= 6)):
+                                    if (piece):
+                                        print(square_to_coords[sq] + square_to_coords[to_sq])
+                                    else:
+                                        print(square_to_coords[sq] + square_to_coords[to_sq])
+
+                if ((self.board[sq] == K) if self.side else (self.board[sq] == k)):
+                    for i in range(8):
+                        to_sq = sq + king_offsets[i]
+                        if 0 <= to_sq <= 127:
+                            piece = self.board[to_sq]
+                            if (not (to_sq & 0x88)):
+                                if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
+                                    (not piece or (piece >= 1 and piece <= 6)):
+                                    if (piece):
+                                        print(square_to_coords[sq] + square_to_coords[to_sq])
+                                    else:
+                                        print(square_to_coords[sq] + square_to_coords[to_sq])
 
     '''
     
     This is where debugging comes to play
     Debugging tools are implemented so I can find bugs
+    Some are just needed to display the board and nothing else
 
     '''
 
@@ -309,9 +391,10 @@ class board:
                 'k' if (self.castle & castling['k']) else '-',
                 'q' if (self.castle & castling['q']) else '-',
             ))
-        if square_to_coords[self.enpassant] != 'i1':
+        if self.enpassant != squares['null_sq']:
             print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}\n')
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
+        print(f'[PARSED FEN]: {self.parsed_fen}')
 
     def print_attack_map(self, side:int):
         print()
@@ -333,7 +416,7 @@ class board:
                 'k' if (self.castle & castling['k']) else '-',
                 'q' if (self.castle & castling['q']) else '-',
             ))
-        if square_to_coords[self.enpassant] != 'i1':
+        if self.enpassant != squares['null_sq']:
             print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}\n')
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
 
@@ -364,12 +447,14 @@ class board:
                 'k' if (self.castle & castling['k']) else '-',
                 'q' if (self.castle & castling['q']) else '-',
             ))
-        if square_to_coords[self.enpassant] != 'i1':
+        if self.enpassant != squares['null_sq']:
             print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}\n')
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
+        print(f'[PARSED FEN]: {self.parsed_fen}')
 
+start = time()
 bboard = board()
-bboard.parse_fen('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBpPpP/R3K2R b KQkq - 0 1')
+bboard.parse_fen('r2NkN1r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1')
 bboard.gen_moves()
 bboard.print_board()
-bboard.print_attack_map(sides['white'])
+print(f'[FINISHED IN {time() - start} SECONDS]')
