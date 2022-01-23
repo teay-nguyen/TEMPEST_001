@@ -1,4 +1,12 @@
 
+'''
+
+    - This is where the values are stored for later use
+    - For example, piece_val is the value of pieces
+    - psqt is the piece square table of piece movement
+
+'''
+
 piece_val = { 'p': 100, 'N': 280, 'B': 320, 'R': 479, 'Q': 929, 'K': 60000 }
 psqt = {
     'p': (   0,   0,   0,   0,   0,   0,   0,   0,

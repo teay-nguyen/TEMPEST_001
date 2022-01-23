@@ -13,7 +13,6 @@
     - GIL is kinda a problem here, gonna be more difficult doing this with multiprocess, because they don't share memory
     - Hot features such as zobrist hashing and transposition tables (well not really, it's kinda basic in a chess engine)
     - I will attempt implementing a few search pruning techniques, but its kinda hard
-    - Board is representated by numbers, masked by characters in a table, not sure if I used the right words here
 
                                             PYTHON EDITION v2.0
 
@@ -38,7 +37,7 @@
 '''
 
 # imports
-from time import time
+from timing import timer
 
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
@@ -100,6 +99,7 @@ king_offsets:tuple = (16, 1, -16, -1, 15, 17, -15, -17)
 # main driver
 class board:
     def __init__(self) -> None:
+        self.timer = timer()
         self.parsed_fen = None
         self.side = None
         self.castle = 0
@@ -452,9 +452,11 @@ class board:
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
-start = time()
-bboard = board()
-bboard.parse_fen('r2NkN1r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1')
-bboard.gen_moves()
-bboard.print_board()
-print(f'[FINISHED IN {time() - start} SECONDS]')
+if __name__ == '__main__':
+    bboard = board()
+    bboard.timer.init_time()
+    bboard.parse_fen('r2NkN1r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1')
+    bboard.gen_moves()
+    bboard.print_board()
+    bboard.timer.mark_time()
+    print(f'[FINISHED IN {bboard.timer.time_log[-1]} SECONDS]')
