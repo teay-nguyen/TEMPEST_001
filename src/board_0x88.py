@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -u
+#!/usr/bin/env pypy3 -u
 
 '''
                                         The Pioneer Chess Engine
@@ -8,7 +8,6 @@
 
 
     - 0x88 board representation
-    - I, HashHobo was daring enough to try make a world class chess engine using PYTHON (well, thought speed wasn't everything, I guess it is everything in a chess engine)
     - AlphaBeta, no parallel search though, maybe PVS search, idk, I might try other search techniques
     - GIL is kinda a problem here, gonna be more difficult doing this with multiprocess, because they don't share memory
     - Hot features such as zobrist hashing and transposition tables (well not really, it's kinda basic in a chess engine)
