@@ -4,6 +4,11 @@
     It is also used for performance tests
 '''
 
+'''
+    Logic behind this code is extremely silly, but I just need a way to store the times I need
+    because timing the performance of the code is important for speed and calculating power of PyPioneer
+'''
+
 # imports
 from time import time
 
@@ -11,10 +16,12 @@ from time import time
 class timer:
     def __init__(self):
         self.current_time = None
+        self.timers_started = []
         self.time_log = []
 
     def init_time(self):
         self.current_time = time()
+        self.timers_started.append(self.current_time)
 
     def mark_time(self):
         assert self.current_time != None

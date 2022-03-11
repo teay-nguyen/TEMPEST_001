@@ -11,7 +11,7 @@
     - AlphaBeta, no parallel search though, maybe PVS search, idk, I might try other search techniques
     - GIL is kinda a problem here, gonna be more difficult doing this with multiprocess, because they don't share memory
     - Hot features such as zobrist hashing and transposition tables (well not really, it's kinda basic in a chess engine)
-    - I will attempt implementing a few search pruning techniques, but its kinda hard
+    - I will attempt to implement a few search pruning techniques, but its kinda hard
 
                                             PYTHON EDITION v2.0
 
