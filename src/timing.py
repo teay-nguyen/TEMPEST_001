@@ -27,3 +27,7 @@ class timer:
         assert self.current_time != None
         mark = time() - self.current_time
         self.time_log.append(mark)
+
+    @property
+    def get_latest_time_mark(self):
+        return self.time_log[-1]

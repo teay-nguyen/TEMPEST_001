@@ -458,4 +458,4 @@ if __name__ == '__main__':
     bboard.gen_moves()
     bboard.print_board()
     bboard.timer.mark_time()
-    print(f'[FINISHED IN {bboard.timer.time_log[-1]} SECONDS]')
+    print(f'[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
