@@ -69,15 +69,39 @@ char_pieces:dict = {
     'P':P, 'N':N, 'B':B, 'R':R, 'Q':Q, 'K':K, 'p':p, 'n':n, 'b':b, 'r':r, 'q':q, 'k':k,
 }
 
-'''
-    Decided to comment stuff because short term memory really kills me in these situations
+promoted_pieces = {
+    Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'
+}
 
+'''
     bin   dec
     0001  1    white king to king side
     0010  2    white king to queen side
     0100  4    black king to king side
     1000  8    black king to queen side
 '''
+
+'''
+    Move formatting
+    
+    0000 0000 0000 0000 0111 1111       source square
+    0000 0000 0011 1111 1000 0000       target square
+    0000 0011 1100 0000 0000 0000       promoted piece
+    0000 0100 0000 0000 0000 0000       capture flag
+    0000 1000 0000 0000 0000 0000       double pawn flag
+    0001 0000 0000 0000 0000 0000       enpassant flag
+    0010 0000 0000 0000 0000 0000       castling
+'''
+
+# required utilities
+encode_move = lambda source, target, piece, capture, pawn, enpassant, castling: (source) | (target << 7) | (piece << 14) | (capture << 18) | (pawn << 19) | (enpassant << 20) | (castling << 21)
+get_move_source = lambda move: (move & 0x7f)
+get_move_target = lambda move: ((move >> 7) & 0x7f)
+get_move_piece = lambda move: ((move >> 14) & 0xf)
+get_move_capture = lambda move: ((move >> 18) & 0x1)
+get_move_pawn = lambda move: ((move >> 19) & 0x1)
+get_move_enpassant = lambda move: ((move >> 20) & 0x1)
+get_move_castling = lambda move: ((move >> 21) & 0x1)
 
 # initial values
 sides:dict = {'white':1, 'black':0}
@@ -89,6 +113,8 @@ custom_endgame_position:str = '8/5R2/8/k7/1r6/4K3/6R1/8 w - - 0 1'
 custom_middlegame_position:str = 'r1bq1rk1/ppp1bppp/2n2n2/3pp3/2BPP3/2N1BN2/PP3PPP/R2Q1RK1 w - - 0 1'
 empty_board:str = '8/8/8/8/8/8/8/8 w - - 0 1'
 
+tricky_position:str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'
+
 # piece movement offsets
 knight_offsets:tuple = (33, 31, 18, 14, -33, -31, -18, -14)
 bishop_offsets:tuple = (15, 17, -15, -17)
@@ -98,23 +124,24 @@ king_offsets:tuple = (16, 1, -16, -1, 15, 17, -15, -17)
 # main driver
 class board:
     def __init__(self) -> None:
-        self.timer = timer()
+        self.timer:timer = timer()
         self.parsed_fen = None
         self.side = None
         self.castle = 0
         self.enpassant = squares['null_sq']
         self.board = [ # initialized with the start position so things can be easier
-            r, n, b, q, k, b, n, r,  o, o, o, o, o, o, o, o,
-            p, p, p, p, p, p, p, p,  o, o, o, o, o, o, o, o,
-            e, e, e, e, e, e, e, e,  o, o, o, o, o, o, o, o,
-            e, e, e, e, e, e, e, e,  o, o, o, o, o, o, o, o,
-            e, e, e, e, e, e, e, e,  o, o, o, o, o, o, o, o,
-            e, e, e, e, e, e, e, e,  o, o, o, o, o, o, o, o,
-            P, P, P, P, P, P, P, P,  o, o, o, o, o, o, o, o,
-            R, N, B, Q, K, B, N, R,  o, o, o, o, o, o, o, o,
+            r, n, b, q, k, b, n, r,     o, o, o, o, o, o, o, o,
+            p, p, p, p, p, p, p, p,     o, o, o, o, o, o, o, o,
+            e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
+            e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
+            e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
+            e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
+            P, P, P, P, P, P, P, P,     o, o, o, o, o, o, o, o,
+            R, N, B, Q, K, B, N, R,     o, o, o, o, o, o, o, o,
         ]
 
     def clear_board(self):
+        # sweep the surface clean
         for rank in range(8):
             for file in range(16):
                 square = self.conv_rf_idx(rank, file)
@@ -144,7 +171,7 @@ class board:
                     assert int(sym) >= 0 and int(sym) <= 9
                     file += int(sym)
                 else:
-                    assert (ord('a') <= ord(sym) <= ord('z')) or (ord('A') <= ord(sym) <= ord('Z'))
+                    assert (ord('a') <= ord(sym) <= ord('z')) or (ord('A') <= ord(sym) <= ord('Z')) # unorthodoxed method to check FEN string but it works
                     square = self.conv_rf_idx(rank, file)
                     if (not (square & 0x88)):
                         self.board[square] = char_pieces[sym]
@@ -256,6 +283,10 @@ class board:
 
         return 0
 
+    '''
+    Me when I look at unoptimized code like this:
+    '''
+
     def gen_moves(self):
         for sq in range(128):
             if (not (sq & 0x88)):
@@ -291,7 +322,6 @@ class board:
                     if self.board[sq] == K:
                         if (self.castle & castling['K']):
                             if (not self.board[squares['f1']]) and (not self.board[squares['g1']]):
-                                print(f'KC {self.generate_attacks(squares["f1"], sides["black"])}')
                                 if (not self.generate_attacks(squares['e1'], sides['black'])) and (not self.generate_attacks(squares['f1'], sides['black'])):
                                     print(square_to_coords[squares['e1']] + square_to_coords[squares['g1']])
                         if (self.castle & castling['Q']):
@@ -362,6 +392,34 @@ class board:
                                         print(square_to_coords[sq] + square_to_coords[to_sq])
                                     else:
                                         print(square_to_coords[sq] + square_to_coords[to_sq])
+
+                if (((self.board[sq]) == B or (self.board[sq] == Q)) if self.side else ((self.board[sq] == b) or (self.board[sq] == q))):
+                    for i in range(4):
+                        to_sq = sq + bishop_offsets[i]
+                        while (not (to_sq & 0x88)):
+                            if 0 <= to_sq <= 127:
+                                piece = self.board[to_sq]
+                                if ((piece >= 1 and piece <= 6) if self.side else (piece >= 7 and piece <= 12)):
+                                    break
+                                if ((piece >= 7 and piece <= 12) if self.side else (piece >= 1 and piece <= 6)):
+                                    print(square_to_coords[sq] + square_to_coords[to_sq])
+                                    break
+                                if (not piece): print(square_to_coords[sq] + square_to_coords[to_sq])
+                                to_sq += bishop_offsets[i]
+
+                if (((self.board[sq] == R) or (self.board[sq] == Q)) if self.side else ((self.board[sq] == r) or (self.board[sq] == q))):
+                    for i in range(4):
+                        to_sq = sq + rook_offsets[i]
+                        while (not (to_sq & 0x88)):
+                            if 0 <= to_sq <= 127:
+                                piece = self.board[to_sq]
+                                if ((piece >= 1 and piece <= 6) if self.side else (piece >= 7 and piece <= 12)):
+                                    break
+                                if ((piece >= 7 and piece <= 12) if self.side else (piece >= 1 and piece <= 6)):
+                                    print(square_to_coords[sq] + square_to_coords[to_sq])
+                                    break
+                                if (not piece): print(square_to_coords[sq] + square_to_coords[to_sq])
+                                to_sq += rook_offsets[i]
 
     '''
     
@@ -454,8 +512,17 @@ class board:
 if __name__ == '__main__':
     bboard = board()
     bboard.timer.init_time()
-    bboard.parse_fen('r2NkN1r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1')
-    bboard.gen_moves()
+    bboard.parse_fen(tricky_position)
+    # bboard.gen_moves()
     bboard.print_board()
+
+    move = encode_move(squares['e2'], squares['e4'], R, 1, 0, 0, 1)
+    print('\nmove:', square_to_coords[get_move_source(move)] + square_to_coords[get_move_target(move)])
+    print('promoted piece:', promoted_pieces[get_move_piece(move)])
+    print('capture flag:', get_move_capture(move))
+    print('down pawn push flag:', get_move_pawn(move))
+    print('enpassant flag:', get_move_enpassant(move))
+    print('castling flag:', get_move_castling(move))
+
     bboard.timer.mark_time()
-    print(f'[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
+    print(f'\n[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
