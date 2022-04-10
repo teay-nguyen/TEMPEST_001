@@ -121,6 +121,11 @@ bishop_offsets:tuple = (15, 17, -15, -17)
 rook_offsets:tuple = (16, 1, -16, -1)
 king_offsets:tuple = (16, 1, -16, -1, 15, 17, -15, -17)
 
+class moves_struct:
+    def __init__(self):
+        self.moves = []
+        self.count = 0
+
 # main driver
 class board:
     def __init__(self) -> None:
@@ -509,6 +514,10 @@ class board:
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
+def add_move(move_list:moves_struct, move:int):
+    move_list.moves.append(move)
+    move_list.count += 1
+
 if __name__ == '__main__':
     bboard = board()
     bboard.timer.init_time()
@@ -516,13 +525,16 @@ if __name__ == '__main__':
     # bboard.gen_moves()
     bboard.print_board()
 
-    move = encode_move(squares['e2'], squares['e4'], R, 1, 0, 0, 1)
-    print('\nmove:', square_to_coords[get_move_source(move)] + square_to_coords[get_move_target(move)])
-    print('promoted piece:', promoted_pieces[get_move_piece(move)])
-    print('capture flag:', get_move_capture(move))
-    print('down pawn push flag:', get_move_pawn(move))
-    print('enpassant flag:', get_move_enpassant(move))
-    print('castling flag:', get_move_castling(move))
+    move_list = moves_struct()
+    move_list.count = 0
+
+    add_move(move_list, encode_move(squares['e2'], squares['e4'], 0, 0, 0, 0, 0))
+    add_move(move_list, encode_move(squares['e7'], squares['e5'], 0, 0, 0, 0, 0))
+
+    print()
+    for i in range(move_list.count):
+        move = move_list.moves[i]
+        print(square_to_coords[get_move_source(move)] + square_to_coords[get_move_target(move)])
 
     bboard.timer.mark_time()
     print(f'\n[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
