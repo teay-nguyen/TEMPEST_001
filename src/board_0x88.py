@@ -9,30 +9,34 @@
 
     - 0x88 board representation
     - AlphaBeta, no parallel search though, maybe PVS search, idk, I might try other search techniques
-    - GIL is kinda a problem here, gonna be more difficult doing this with multiprocess, because they don't share memory
     - Hot features such as zobrist hashing and transposition tables (well not really, it's kinda basic in a chess engine)
-    - I will attempt to implement a few search pruning techniques, but its kinda hard
+    - I will attempt to implement a few search pruning techniques
 
                                             PYTHON EDITION v2.0
 
-    - This is also my very first language the Pioneer is written in
-    - Probably gonna work on a C++ or C# implementation of this on a later date
-    - The engine is obviously weaker than other popular engines because Python, so don't expect superb performance
+    - This is also the very first language the Pioneer is written in
+    - The engine is obviously weaker than other popular engines because I'm a rookie in writing powerful chess engines, so don't expect superb performance
     - I actually document or keep my older implementations of this, so you can check it out and probably send a PR if you want
     - This is a project for fun, also my first major project of my life, I was 13 since I started working on this
-    - I put the first version in the old trash implementation folder because it is indeed trash anyways
+    - I put the first version in the old trash implementation folder because it is indeed trash and doesn't work anyway
     - This version is purely designed to be MUCH faster and more conventional than my old version
-    - My old version was imcompatible with Pypy because Pypy somehow does not like my chess engine, maybe its because of pygame idk
-    - Instead of using pygame which is slow, I will just implement user interface in the terminal
+    - My old version was imcompatible (mostly) with Pypy because Pypy somehow does not like my old version, maybe its because of pygame idk
 
                                         Objectives of the Pioneer
 
     - To be able to compete directly with Sunfish, another very strong chess engine written in Python
-    - Somehow fare well against the famed Stockfish 14
-    - Maybe (very small chance, maybe 0.005 percent), to compete for the best engine in the world
-    - To teach me some nice tricks and sacrifices
-    - No I will NOT use my engine to cheat, I'm a good person
+    - Somehow fare well against the famed Stockfish
+    - Maybe (very small chance), to compete for the best engine in the world
+    - To teach me some nice tricks and tactics
+    - No I will NOT use my engine to cheat, I'm a very virtuous person :)
     - Just to have fun, coding is a fun thing and writing chess engines will help me dive deep into the world of programming
+
+                                            Learning Resources
+
+                                https://www.chessprogramming.org/Main_Page
+                                https://www.chessprogramming.org/0x88
+
+                                        No, they're not scam links
 '''
 
 # imports
@@ -288,7 +292,8 @@ class board:
         move_list.moves.append(move)
         move_list.count += 1
 
-    def gen_moves(self):
+    def gen_moves(self, move_list:moves_struct):
+        move_list.count = 0
         for sq in range(128):
             if (not (sq & 0x88)):
                 if (self.side):
@@ -296,14 +301,14 @@ class board:
                         to_sq = sq - 16
                         if (not (to_sq & 0x88)) and (not self.board[to_sq]):
                             if (sq >= squares['a7'] and sq <= squares['h7']):
-                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
-                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
-                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'b')
-                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
+                                self.add_move(move_list, encode_move(sq, to_sq, Q, 0, 0, 0, 0))
+                                self.add_move(move_list, encode_move(sq, to_sq, R, 0, 0, 0, 0))
+                                self.add_move(move_list, encode_move(sq, to_sq, B, 0, 0, 0, 0))
+                                self.add_move(move_list, encode_move(sq, to_sq, N, 0, 0, 0, 0))
                             else:
-                                print(square_to_coords[sq] + square_to_coords[to_sq])
+                                self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 if ((sq >= squares['a2'] and sq <= squares['h2']) and not self.board[sq - 32]):
-                                    print(square_to_coords[sq] + square_to_coords[sq - 32])
+                                    self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 1, 0, 0))
                         for i in range(4):
                             pawn_offset = bishop_offsets[i]
                             if pawn_offset < 0:
@@ -311,37 +316,37 @@ class board:
                                 if (not (to_sq & 0x88)):
                                     if (sq >= squares['a7'] and sq <= squares['h7']) and\
                                         (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
-                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
-                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
-                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'b')
-                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
+                                        self.add_move(move_list, encode_move(sq, to_sq, Q, 1, 0, 0, 0))
+                                        self.add_move(move_list, encode_move(sq, to_sq, R, 1, 0, 0, 0))
+                                        self.add_move(move_list, encode_move(sq, to_sq, B, 1, 0, 0, 0))
+                                        self.add_move(move_list, encode_move(sq, to_sq, N, 1, 0, 0, 0))
                                     else:
                                         if (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
-                                            print(square_to_coords[sq] + square_to_coords[to_sq])
+                                            self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                         if (to_sq == self.enpassant):
-                                            print(square_to_coords[sq] + square_to_coords[to_sq])
+                                            self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == K:
                         if (self.castle & castling['K']):
                             if (not self.board[squares['f1']]) and (not self.board[squares['g1']]):
                                 if (not self.generate_attacks(squares['e1'], sides['black'])) and (not self.generate_attacks(squares['f1'], sides['black'])):
-                                    print(square_to_coords[squares['e1']] + square_to_coords[squares['g1']])
+                                    self.add_move(move_list, encode_move(squares['e1'], squares['g1'], 0, 0, 0, 0, 1))
                         if (self.castle & castling['Q']):
                             if (not self.board[squares['g1']]) and (not self.board[squares['b1']]) and (not self.board[squares['c1']]):
                                 if (not self.generate_attacks(squares['e1'], sides['black'])) and (not self.generate_attacks(squares['d1'], sides['black'])):
-                                    print(square_to_coords[squares['e1']] + square_to_coords[squares['c1']])
+                                    self.add_move(move_list, encode_move(squares['e1'], squares['c1'], 0, 0, 0, 0, 1))
                 else:
                     if self.board[sq] == p:
                         to_sq = sq + 16
                         if (not (to_sq & 0x88) and (not self.board[to_sq])):
                             if (sq >= squares['a2'] and sq <= squares['h2']):
-                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
-                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
-                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'b')
-                                print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
+                                self.add_move(move_list, encode_move(sq, to_sq, q, 0, 0, 0, 0))
+                                self.add_move(move_list, encode_move(sq, to_sq, r, 0, 0, 0, 0))
+                                self.add_move(move_list, encode_move(sq, to_sq, b, 0, 0, 0, 0))
+                                self.add_move(move_list, encode_move(sq, to_sq, n, 0, 0, 0, 0))
                             else:
-                                print(square_to_coords[sq] + square_to_coords[to_sq])
+                                self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 if ((sq >= squares['a7'] and sq <= squares['h7']) and (not self.board[sq + 32])):
-                                    print(square_to_coords[sq] + square_to_coords[sq + 32])
+                                    self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 1, 0, 0))
                         for i in range(4):
                             pawn_offset = bishop_offsets[i]
                             if pawn_offset > 0:
@@ -349,24 +354,24 @@ class board:
                                 if (not (to_sq & 0x88)):
                                     if (sq >= squares['a2'] and sq <= squares['h2']) and\
                                         (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
-                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'q')
-                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'r')
-                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'b')
-                                        print(square_to_coords[sq] + square_to_coords[to_sq] + 'n')
+                                        self.add_move(move_list, encode_move(sq, to_sq, q, 1, 0, 0, 0))
+                                        self.add_move(move_list, encode_move(sq, to_sq, r, 1, 0, 0, 0))
+                                        self.add_move(move_list, encode_move(sq, to_sq, b, 1, 0, 0, 0))
+                                        self.add_move(move_list, encode_move(sq, to_sq, n, 1, 0, 0, 0))
                                     else:
                                         if (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
-                                            print(square_to_coords[sq] + square_to_coords[to_sq])
+                                            self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                         if (to_sq == self.enpassant):
-                                            print(square_to_coords[sq] + square_to_coords[to_sq])
+                                            self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == k:
                         if (self.castle & castling['k']):
                             if (not self.board[squares['f8']]) and (not self.board[squares['g8']]):
                                 if (not self.generate_attacks(squares['e8'], sides['white'])) and (not self.generate_attacks(squares['f8'], sides['white'])):
-                                    print(square_to_coords[squares['e8']] + square_to_coords[squares['g8']])
+                                    self.add_move(move_list, encode_move(squares['e8'], squares['g8'], 0, 0, 0, 0, 1))
                         if (self.castle & castling['q']):
                             if (not self.board[squares['d8']]) and (not self.board[squares['b8']]) and (not self.board[squares['c8']]):
                                 if (not self.generate_attacks(squares['e8'], sides['white'])) and (not self.generate_attacks(squares['d8'], sides['white'])):
-                                    print(square_to_coords[squares['e8']] + square_to_coords[squares['c8']])
+                                    self.add_move(move_list, encode_move(squares['e8'], squares['c8'], 0, 0, 0, 0, 1))
 
                 if ((self.board[sq] == N) if self.side else (self.board[sq] == n)):
                     for i in range(8):
@@ -377,9 +382,9 @@ class board:
                                 if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
                                     (not piece or (piece >= 1 and piece <= 6)):
                                     if (piece):
-                                        print(square_to_coords[sq] + square_to_coords[to_sq])
+                                        self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     else:
-                                        print(square_to_coords[sq] + square_to_coords[to_sq])
+                                        self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
                 if ((self.board[sq] == K) if self.side else (self.board[sq] == k)):
                     for i in range(8):
@@ -390,9 +395,9 @@ class board:
                                 if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
                                     (not piece or (piece >= 1 and piece <= 6)):
                                     if (piece):
-                                        print(square_to_coords[sq] + square_to_coords[to_sq])
+                                        self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     else:
-                                        print(square_to_coords[sq] + square_to_coords[to_sq])
+                                        self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
                 if (((self.board[sq]) == B or (self.board[sq] == Q)) if self.side else ((self.board[sq] == b) or (self.board[sq] == q))):
                     for i in range(4):
@@ -403,9 +408,9 @@ class board:
                                 if ((piece >= 1 and piece <= 6) if self.side else (piece >= 7 and piece <= 12)):
                                     break
                                 if ((piece >= 7 and piece <= 12) if self.side else (piece >= 1 and piece <= 6)):
-                                    print(square_to_coords[sq] + square_to_coords[to_sq])
+                                    self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     break
-                                if (not piece): print(square_to_coords[sq] + square_to_coords[to_sq])
+                                if (not piece): self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 to_sq += bishop_offsets[i]
 
                 if (((self.board[sq] == R) or (self.board[sq] == Q)) if self.side else ((self.board[sq] == r) or (self.board[sq] == q))):
@@ -417,9 +422,9 @@ class board:
                                 if ((piece >= 1 and piece <= 6) if self.side else (piece >= 7 and piece <= 12)):
                                     break
                                 if ((piece >= 7 and piece <= 12) if self.side else (piece >= 1 and piece <= 6)):
-                                    print(square_to_coords[sq] + square_to_coords[to_sq])
+                                    self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     break
-                                if (not piece): print(square_to_coords[sq] + square_to_coords[to_sq])
+                                if (not piece): self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 to_sq += rook_offsets[i]
 
     '''
@@ -515,14 +520,14 @@ if __name__ == '__main__':
     bboard.timer.init_time()
     bboard.parse_fen(tricky_position)
     move_list = moves_struct()
-    # bboard.gen_moves()
+    bboard.gen_moves(move_list)
     bboard.print_board()
 
     print()
     for i in range(move_list.count):
         move = move_list.moves[i]
-        print(square_to_coords[get_move_source(move)] + square_to_coords[get_move_target(move)])
-    print(f'[TOTAL MOVES: {move_list.count}]')
+        print('{}{}'.format(square_to_coords[get_move_source(move)], square_to_coords[get_move_target(move)]))
+    print(f'\n[TOTAL MOVES: {move_list.count}]')
 
     bboard.timer.mark_time()
     print(f'\n[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
