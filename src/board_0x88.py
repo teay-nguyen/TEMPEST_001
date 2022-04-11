@@ -48,14 +48,14 @@ ascii_pieces:str = "'PNBRQKpnbrqko"
 unicode_pieces:str = "'♙♘♗♖♕♔p♞♝♜♛♚" # only used with CPython
 
 squares:dict = {
-        "a8":0, "b8":1, "c8":2, "d8":3, "e8":4, "f8":5, "g8":6, "h8":7,
-        "a7":16, "b7":17, "c7":18, "d7":19, "e7":20, "f7":21, "g7":22, "h7":23,
-        "a6":32, "b6":33, "c6":34, "d6":35, "e6":36, "f6":37, "g6":38, "h6":39,
-        "a5":48, "b5":49, "c5":50, "d5":51, "e5":52, "f5":53, "g5":54, "h5":55,
-        "a4":64, "b4":65, "c4":66, "d4":67, "e4":68, "f4":69, "g4":70, "h4":71,
-        "a3":80, "b3":81, "c3":82, "d3":83, "e3":84, "f3":85, "g3":86, "h3":87,
-        "a2":96, "b2":97, "c2":98, "d2":99, "e2":100, "f2":101, "g2":102, "h2":103,
-        "a1":112, "b1":113, "c1":114, "d1":115, "e1":116, "f1":117, "g1":118, "h1":119, "null_sq":120,
+    "a8":0, "b8":1, "c8":2, "d8":3, "e8":4, "f8":5, "g8":6, "h8":7,
+    "a7":16, "b7":17, "c7":18, "d7":19, "e7":20, "f7":21, "g7":22, "h7":23,
+    "a6":32, "b6":33, "c6":34, "d6":35, "e6":36, "f6":37, "g6":38, "h6":39,
+    "a5":48, "b5":49, "c5":50, "d5":51, "e5":52, "f5":53, "g5":54, "h5":55,
+    "a4":64, "b4":65, "c4":66, "d4":67, "e4":68, "f4":69, "g4":70, "h4":71,
+    "a3":80, "b3":81, "c3":82, "d3":83, "e3":84, "f3":85, "g3":86, "h3":87,
+    "a2":96, "b2":97, "c2":98, "d2":99, "e2":100, "f2":101, "g2":102, "h2":103,
+    "a1":112, "b1":113, "c1":114, "d1":115, "e1":116, "f1":117, "g1":118, "h1":119, "null_sq":120,
 }
 
 square_to_coords:list = [
@@ -78,11 +78,8 @@ promoted_pieces = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
     0010  2    white king to queen side
     0100  4    black king to king side
     1000  8    black king to queen side
-'''
 
-'''
     Move formatting
-    
     0000 0000 0000 0000 0111 1111       source square
     0000 0000 0011 1111 1000 0000       target square
     0000 0011 1100 0000 0000 0000       promoted piece
@@ -93,7 +90,15 @@ promoted_pieces = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
 '''
 
 # required utilities
-encode_move = lambda source, target, piece, capture, pawn, enpassant, castling: (source) | (target << 7) | (piece << 14) | (capture << 18) | (pawn << 19) | (enpassant << 20) | (castling << 21)
+encode_move = lambda source, target, piece, capture, pawn, enpassant, castling: \
+    (source) |                                                                  \
+    (target << 7) |                                                             \
+    (piece << 14) |                                                             \
+    (capture << 18) |                                                           \
+    (pawn << 19) |                                                              \
+    (enpassant << 20) |                                                         \
+    (castling << 21)                                                            \
+
 get_move_source = lambda move: (move & 0x7f)
 get_move_target = lambda move: ((move >> 7) & 0x7f)
 get_move_piece = lambda move: ((move >> 14) & 0xf)
@@ -130,7 +135,7 @@ class board:
     def __init__(self) -> None:
         self.timer:timer = timer()
         self.parsed_fen = None
-        self.side = None
+        self.side = -1
         self.castle = 15
         self.enpassant = squares['null_sq']
         self.board = [ # initialized with the start position so things can be easier
@@ -152,7 +157,7 @@ class board:
                 if (not (square & 0x88)):
                     self.board[square] = e
 
-        self.side = None
+        self.side = -1
         self.castle = 0
         self.enpassant = squares['null_sq']
 
@@ -191,7 +196,7 @@ class board:
             self.side = sides['white']
         elif fen_side == 'b':
             self.side = sides['black']
-        else: self.side = None
+        else: self.side = -1
 
         # castle rights parsing
         fen_castle = fen_segments[2]
@@ -388,8 +393,7 @@ class board:
                                     (not piece or (piece >= 1 and piece <= 6)):
                                     if (piece):
                                         self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                    else:
-                                        self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
+                                    else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
                 if ((self.board[sq] == K) if self.side else (self.board[sq] == k)):
                     for i in range(8):
@@ -401,8 +405,7 @@ class board:
                                     (not piece or (piece >= 1 and piece <= 6)):
                                     if (piece):
                                         self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                    else:
-                                        self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
+                                    else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
                 if (((self.board[sq]) == B or (self.board[sq] == Q)) if self.side else ((self.board[sq] == b) or (self.board[sq] == q))):
                     for i in range(4):
@@ -410,8 +413,7 @@ class board:
                         while (not (to_sq & 0x88)):
                             if 0 <= to_sq <= 127:
                                 piece = self.board[to_sq]
-                                if ((piece >= 1 and piece <= 6) if self.side else (piece >= 7 and piece <= 12)):
-                                    break
+                                if ((piece >= 1 and piece <= 6) if self.side else (piece >= 7 and piece <= 12)): break
                                 if ((piece >= 7 and piece <= 12) if self.side else (piece >= 1 and piece <= 6)):
                                     self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     break
@@ -424,8 +426,7 @@ class board:
                         while (not (to_sq & 0x88)):
                             if 0 <= to_sq <= 127:
                                 piece = self.board[to_sq]
-                                if ((piece >= 1 and piece <= 6) if self.side else (piece >= 7 and piece <= 12)):
-                                    break
+                                if ((piece >= 1 and piece <= 6) if self.side else (piece >= 7 and piece <= 12)): break
                                 if ((piece >= 7 and piece <= 12) if self.side else (piece >= 1 and piece <= 6)):
                                     self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     break
@@ -433,11 +434,9 @@ class board:
                                 to_sq += rook_offsets[i]
 
     '''
-    
     This is where debugging comes to play
     Debugging tools are implemented so I can find bugs
     Some are just needed to display the board and nothing else
-
     '''
 
     def print_board(self):
@@ -452,17 +451,18 @@ class board:
             print()
         print('\n   a b c d e f g h\n')
         print('________________________________\n')
-        print(f'[SIDE TO MOVE]: {"white" if self.side else "black"}')
-        print('[CURRENT CASTLING RIGHTS]: {}{}{}{}'.format(
+        print(f'[SIDE TO MOVE]: {"white" if self.side else "black"} | {self.side}')
+        print('[CURRENT CASTLING RIGHTS]: {}{}{}{} | {}'.format(
                 'K' if (self.castle & castling['K']) else '-',
                 'Q' if (self.castle & castling['Q']) else '-',
                 'k' if (self.castle & castling['k']) else '-',
                 'q' if (self.castle & castling['q']) else '-',
+                self.castle
             ))
         if self.enpassant != squares['null_sq']:
-            print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}\n')
-        else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
-        print(f'[KING SQUARE]: {square_to_coords[king_square[self.side]]}')
+            print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]} | {self.enpassant}')
+        else: print(f'[ENPASSANT TARGET SQUARE]: NONE | {self.enpassant}')
+        print(f'[KING SQUARE]: {square_to_coords[king_square[self.side]]} | {king_square[self.side]}')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
     def print_attack_map(self, side:int):
@@ -486,7 +486,7 @@ class board:
                 'q' if (self.castle & castling['q']) else '-',
             ))
         if self.enpassant != squares['null_sq']:
-            print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}\n')
+            print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}')
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
 
     def print_board_idx(self): #purely for debugging purposes
