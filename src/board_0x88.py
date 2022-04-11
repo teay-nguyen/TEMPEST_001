@@ -105,6 +105,7 @@ get_move_castling = lambda move: ((move >> 21) & 0x1)
 # initial values
 sides:dict = {'white':1, 'black':0}
 castling:dict = {'K':1, 'Q':2, 'k':4, 'q':8}
+king_square:list = [squares['e8'], squares['e1']]
 
 # fen debug positions
 start_position:str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -177,6 +178,10 @@ class board:
                     assert (ord('a') <= ord(sym) <= ord('z')) or (ord('A') <= ord(sym) <= ord('Z')) # unorthodoxed method to check FEN string but it works
                     square = self.conv_rf_idx(rank, file)
                     if (not (square & 0x88)):
+                        if (sym == 'K'):
+                            king_square[sides['white']] = square
+                        elif (sym == 'k'):
+                            king_square[sides['black']] = square
                         self.board[square] = char_pieces[sym]
                         file += 1
 
@@ -457,6 +462,7 @@ class board:
         if self.enpassant != squares['null_sq']:
             print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}\n')
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
+        print(f'[KING SQUARE]: {square_to_coords[king_square[self.side]]}')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
     def print_attack_map(self, side:int):
@@ -535,6 +541,7 @@ def print_move_list(move_list:moves_struct):
 if __name__ == '__main__':
     bboard = board()
     bboard.timer.init_time()
+    #bboard.parse_fen("r2k3r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R2K3R w KQkq - 0 1")
     bboard.parse_fen(tricky_position)
     move_list = moves_struct()
     bboard.gen_moves(move_list)
