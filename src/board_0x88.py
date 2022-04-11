@@ -515,6 +515,23 @@ class board:
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
+def print_move_list(move_list:moves_struct):
+    print()
+    print('Move   Capture   Double   Enpass   Castling\n')
+    for idx in range(move_list.count):
+        move = move_list.moves[idx]
+        formated_move = '{}{}'.format(square_to_coords[get_move_source(move)], square_to_coords[get_move_target(move)])
+        promotion_move = promoted_pieces[get_move_piece(move)] if (get_move_piece(move)) else ' '
+        joined_str = f'{formated_move}{promotion_move}'
+        print('{}  {}         {}        {}        {}'.format(
+                joined_str,
+                get_move_capture(move),
+                get_move_pawn(move),
+                get_move_enpassant(move),
+                get_move_castling(move)
+        ))
+    print(f'\n[TOTAL MOVES: {move_list.count}]')
+
 if __name__ == '__main__':
     bboard = board()
     bboard.timer.init_time()
@@ -523,11 +540,7 @@ if __name__ == '__main__':
     bboard.gen_moves(move_list)
     bboard.print_board()
 
-    print()
-    for i in range(move_list.count):
-        move = move_list.moves[i]
-        print('{}{}'.format(square_to_coords[get_move_source(move)], square_to_coords[get_move_target(move)]))
-    print(f'\n[TOTAL MOVES: {move_list.count}]')
+    print_move_list(move_list)
 
     bboard.timer.mark_time()
     print(f'\n[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
