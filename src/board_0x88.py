@@ -41,7 +41,7 @@ from timing import timer
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 ascii_pieces:str = "'PNBRQKpnbrqko"
-unicode_pieces:str = "'♙♘♗♖♕♔p♞♝♜♛♚"
+unicode_pieces:str = "'♙♘♗♖♕♔p♞♝♜♛♚" # only used with CPython
 
 squares:dict = {
         "a8":0, "b8":1, "c8":2, "d8":3, "e8":4, "f8":5, "g8":6, "h8":7,
@@ -65,13 +65,8 @@ square_to_coords:list = [
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1", "l1", "m1", "n1", "o1", "p1",
 ]
 
-char_pieces:dict = {
-    'P':P, 'N':N, 'B':B, 'R':R, 'Q':Q, 'K':K, 'p':p, 'n':n, 'b':b, 'r':r, 'q':q, 'k':k,
-}
-
-promoted_pieces = {
-    Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'
-}
+char_pieces:dict = {'P':P, 'N':N, 'B':B, 'R':R, 'Q':Q, 'K':K, 'p':p, 'n':n, 'b':b, 'r':r, 'q':q, 'k':k}
+promoted_pieces = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
 
 '''
     bin   dec
@@ -112,7 +107,6 @@ start_position:str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 custom_endgame_position:str = '8/5R2/8/k7/1r6/4K3/6R1/8 w - - 0 1'
 custom_middlegame_position:str = 'r1bq1rk1/ppp1bppp/2n2n2/3pp3/2BPP3/2N1BN2/PP3PPP/R2Q1RK1 w - - 0 1'
 empty_board:str = '8/8/8/8/8/8/8/8 w - - 0 1'
-
 tricky_position:str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'
 
 # piece movement offsets
@@ -132,7 +126,7 @@ class board:
         self.timer:timer = timer()
         self.parsed_fen = None
         self.side = None
-        self.castle = 0
+        self.castle = 15
         self.enpassant = squares['null_sq']
         self.board = [ # initialized with the start position so things can be easier
             r, n, b, q, k, b, n, r,     o, o, o, o, o, o, o, o,
@@ -188,8 +182,7 @@ class board:
             self.side = sides['white']
         elif fen_side == 'b':
             self.side = sides['black']
-        else:
-            self.side = None
+        else: self.side = None
 
         # castle rights parsing
         fen_castle = fen_segments[2]
@@ -291,6 +284,9 @@ class board:
     '''
     Me when I look at unoptimized code like this:
     '''
+    def add_move(self, move_list:moves_struct, move:int):
+        move_list.moves.append(move)
+        move_list.count += 1
 
     def gen_moves(self):
         for sq in range(128):
@@ -514,27 +510,19 @@ class board:
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
-def add_move(move_list:moves_struct, move:int):
-    move_list.moves.append(move)
-    move_list.count += 1
-
 if __name__ == '__main__':
     bboard = board()
     bboard.timer.init_time()
     bboard.parse_fen(tricky_position)
+    move_list = moves_struct()
     # bboard.gen_moves()
     bboard.print_board()
-
-    move_list = moves_struct()
-    move_list.count = 0
-
-    add_move(move_list, encode_move(squares['e2'], squares['e4'], 0, 0, 0, 0, 0))
-    add_move(move_list, encode_move(squares['e7'], squares['e5'], 0, 0, 0, 0, 0))
 
     print()
     for i in range(move_list.count):
         move = move_list.moves[i]
         print(square_to_coords[get_move_source(move)] + square_to_coords[get_move_target(move)])
+    print(f'[TOTAL MOVES: {move_list.count}]')
 
     bboard.timer.mark_time()
     print(f'\n[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
