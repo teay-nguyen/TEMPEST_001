@@ -70,7 +70,7 @@ square_to_coords:list = [
 ]
 
 char_pieces:dict = {'P':P, 'N':N, 'B':B, 'R':R, 'Q':Q, 'K':K, 'p':p, 'n':n, 'b':b, 'r':r, 'q':q, 'k':k}
-promoted_pieces = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
+promoted_pieces:dict = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
 
 '''
     bin   dec
@@ -90,27 +90,26 @@ promoted_pieces = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
 '''
 
 # required utilities
-encode_move = lambda source, target, piece, capture, pawn, enpassant, castling: \
-    (source) |                                                                  \
-    (target << 7) |                                                             \
-    (piece << 14) |                                                             \
-    (capture << 18) |                                                           \
-    (pawn << 19) |                                                              \
-    (enpassant << 20) |                                                         \
-    (castling << 21)                                                            \
+encode_move = lambda source, target, piece, capture, pawn, enpassant, castling:     \
+    (source)|                                                                       \
+    (target << 7)|                                                                  \
+    (piece << 14)|                                                                  \
+    (capture << 18)|                                                                \
+    (pawn << 19)|                                                                   \
+    (enpassant << 20)|                                                              \
+    (castling << 21)                                                                \
 
-get_move_source = lambda move: (move & 0x7f)
-get_move_target = lambda move: ((move >> 7) & 0x7f)
-get_move_piece = lambda move: ((move >> 14) & 0xf)
-get_move_capture = lambda move: ((move >> 18) & 0x1)
-get_move_pawn = lambda move: ((move >> 19) & 0x1)
-get_move_enpassant = lambda move: ((move >> 20) & 0x1)
-get_move_castling = lambda move: ((move >> 21) & 0x1)
+get_move_source = lambda move:(move & 0x7f)
+get_move_target = lambda move:((move >> 7) & 0x7f)
+get_move_piece = lambda move:((move >> 14) & 0xf)
+get_move_capture = lambda move:((move >> 18) & 0x1)
+get_move_pawn = lambda move:((move >> 19) & 0x1)
+get_move_enpassant = lambda move:((move >> 20) & 0x1)
+get_move_castling = lambda move:((move >> 21) & 0x1)
 
 # initial values
 sides:dict = {'white':1, 'black':0}
 castling:dict = {'K':1, 'Q':2, 'k':4, 'q':8}
-king_square:list = [squares['e8'], squares['e1']]
 
 # fen debug positions
 start_position:str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -126,7 +125,7 @@ rook_offsets:tuple = (16, 1, -16, -1)
 king_offsets:tuple = (16, 1, -16, -1, 15, 17, -15, -17)
 
 class moves_struct:
-    def __init__(self):
+    def __init__(self) -> None:
         self.moves = []
         self.count = 0
 
@@ -134,11 +133,12 @@ class moves_struct:
 class board:
     def __init__(self) -> None:
         self.timer:timer = timer()
-        self.parsed_fen = None
-        self.side = -1
-        self.castle = 15
-        self.enpassant = squares['null_sq']
-        self.board = [ # initialized with the start position so things can be easier
+        self.parsed_fen:str = ''
+        self.king_square:list = [squares['e8'], squares['e1']]
+        self.side:int = -1
+        self.castle:int = 15
+        self.enpassant:int = squares['null_sq']
+        self.board:list = [ # initialized with the start position so things can be easier
             r, n, b, q, k, b, n, r,     o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,     o, o, o, o, o, o, o, o,
             e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
@@ -156,7 +156,6 @@ class board:
                 square = self.conv_rf_idx(rank, file)
                 if (not (square & 0x88)):
                     self.board[square] = e
-
         self.side = -1
         self.castle = 0
         self.enpassant = squares['null_sq']
@@ -184,9 +183,8 @@ class board:
                     square = self.conv_rf_idx(rank, file)
                     if (not (square & 0x88)):
                         if (sym == 'K'):
-                            king_square[sides['white']] = square
-                        elif (sym == 'k'):
-                            king_square[sides['black']] = square
+                            self.king_square[sides['white']] = square
+                        elif (sym == 'k'): self.king_square[sides['black']] = square
                         self.board[square] = char_pieces[sym]
                         file += 1
 
@@ -216,9 +214,7 @@ class board:
         else: self.enpassant = squares['null_sq']
 
     # tool to convert rank and file into 1 compatible index int
-    def conv_rf_idx(self, rank:int, file:int):
-        return rank * 16 + file
-
+    def conv_rf_idx(self, rank:int, file:int): return rank * 16 + file
     def xray_attacks(self, square:int, side:int):
         # bishop and queen
         for i in range(4):
@@ -226,8 +222,7 @@ class board:
             while (not (target_sq & 0x88)):
                 if 0 <= target_sq <= 127:
                     target_piece = self.board[target_sq]
-                    if ((target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q)):
-                        return 1
+                    if ((target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q)): return 1
                     target_sq += bishop_offsets[i]
 
         # rook and queen
@@ -236,22 +231,17 @@ class board:
             while (not (target_sq & 0x88)):
                 if 0 <= target_sq <= 127:
                     target_piece = self.board[target_sq]
-                    if ((target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q)):
-                        return 1
+                    if ((target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q)): return 1
                     target_sq += rook_offsets[i]
 
-    def generate_attacks(self, square, side):
+    def generate_attacks(self, square:int, side:int):
         # pawn attacks
         if (side):
-            if (not ((square + 17) & 0x88) and (self.board[square + 17] == P)):
-                return 1
-            if (not ((square + 15) & 0x88) and (self.board[square + 15] == P)):
-                return 1
+            if (not ((square + 17) & 0x88) and (self.board[square + 17] == P)): return 1
+            if (not ((square + 15) & 0x88) and (self.board[square + 15] == P)): return 1
         else:
-            if (not ((square - 17) & 0x88) and (self.board[square - 17] == p)):
-                return 1
-            if (not ((square - 15) & 0x88) and (self.board[square - 15] == p)):
-                return 1
+            if (not ((square - 17) & 0x88) and (self.board[square - 17] == p)): return 1
+            if (not ((square - 15) & 0x88) and (self.board[square - 15] == p)): return 1
         
         # knight attacks
         for i in range(8):
@@ -259,8 +249,7 @@ class board:
             if 0 <= target_sq <= 127:
                 target_piece = self.board[target_sq]
                 if (not (target_sq & 0x88)):
-                    if ((target_piece == N) if side else (target_piece == n)):
-                        return 1
+                    if ((target_piece == N) if side else (target_piece == n)): return 1
 
         # king attacks
         for i in range(8):
@@ -268,8 +257,7 @@ class board:
             if 0 <= target_sq <= 127:
                 target_piece = self.board[target_sq]
                 if (not (target_sq & 0x88)):
-                    if ((target_piece == K) if side else (target_piece == k)):
-                        return 1
+                    if ((target_piece == K) if side else (target_piece == k)): return 1
 
         # bishop attacks
         for i in range(4):
@@ -277,8 +265,7 @@ class board:
             while (not (target_sq & 0x88)):
                 if 0 <= target_sq <= 127:
                     target_piece = self.board[target_sq]
-                    if ((target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q)):
-                        return 1
+                    if ((target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q)): return 1
                     if (target_piece): break
                     target_sq += bishop_offsets[i]
 
@@ -288,16 +275,21 @@ class board:
             while (not (target_sq & 0x88)):
                 if 0 <= target_sq <= 127:
                     target_piece = self.board[target_sq]
-                    if ((target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q)):
-                        return 1
+                    if ((target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q)): return 1
                     if (target_piece): break
                     target_sq += rook_offsets[i]
-
         return 0
 
     '''
     Me when I look at unoptimized code like this:
     '''
+
+    def make_move(self, move:int):
+        board_cpy, king_square_cpy = self.board, self.king_square
+        side_cpy, enpassant_cpy, castle_cpy = self.side, self.enpassant, self.castle
+        from_square = get_move_source(move)
+        to_square = get_move_target(move)
+
     def add_move(self, move_list:moves_struct, move:int):
         move_list.moves.append(move)
         move_list.count += 1
@@ -462,7 +454,7 @@ class board:
         if self.enpassant != squares['null_sq']:
             print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]} | {self.enpassant}')
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE | {self.enpassant}')
-        print(f'[KING SQUARE]: {square_to_coords[king_square[self.side]]} | {king_square[self.side]}')
+        print(f'[KING SQUARE]: {square_to_coords[self.king_square[self.side]]} | {self.king_square[self.side]}')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
     def print_attack_map(self, side:int):
@@ -517,7 +509,7 @@ class board:
                 'q' if (self.castle & castling['q']) else '-',
             ))
         if self.enpassant != squares['null_sq']:
-            print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}\n')
+            print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}')
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
@@ -530,24 +522,24 @@ def print_move_list(move_list:moves_struct):
         promotion_move = promoted_pieces[get_move_piece(move)] if (get_move_piece(move)) else ' '
         joined_str = f'{formated_move}{promotion_move}'
         print('{}  {}         {}        {}        {}'.format(
-                joined_str,
-                get_move_capture(move),
-                get_move_pawn(move),
-                get_move_enpassant(move),
-                get_move_castling(move)
+            joined_str,
+            get_move_capture(move),
+            get_move_pawn(move),
+            get_move_enpassant(move),
+            get_move_castling(move)
         ))
     print(f'\n[TOTAL MOVES: {move_list.count}]')
 
 if __name__ == '__main__':
     bboard = board()
     bboard.timer.init_time()
-    #bboard.parse_fen("r2k3r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R2K3R w KQkq - 0 1")
     bboard.parse_fen(tricky_position)
     move_list = moves_struct()
     bboard.gen_moves(move_list)
     bboard.print_board()
 
-    print_move_list(move_list)
+    move = encode_move(squares['d5'], squares['d6'], 0, 0, 0, 0, 0)
+    bboard.make_move(move)
 
     bboard.timer.mark_time()
     print(f'\n[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
