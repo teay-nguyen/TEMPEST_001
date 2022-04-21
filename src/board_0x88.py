@@ -8,11 +8,11 @@
 
 
     - 0x88 board representation
-    - AlphaBeta, no parallel search though, maybe PVS search, idk, I might try other search techniques
-    - Hot features such as zobrist hashing and transposition tables (well not really, it's kinda basic in a chess engine)
+    - AlphaBeta, no parallel search though, maybe PVS search
+    - Hot features such as zobrist hashing and transposition tables (well not really, it's rudimentary in a chess engine)
     - I will attempt to implement a few search pruning techniques
 
-                                            PYTHON EDITION v2.0
+                                            [PYTHON EDITION v2.0]
 
     - This is also the very first language the Pioneer is written in
     - The engine is obviously weaker than other popular engines because I'm a rookie in writing powerful chess engines, so don't expect superb performance
@@ -20,9 +20,9 @@
     - This is a project for fun, also my first major project of my life, I was 13 since I started working on this
     - I put the first version in the old trash implementation folder because it is indeed trash and doesn't work anyway
     - This version is purely designed to be MUCH faster and more conventional than my old version
-    - My old version was imcompatible (mostly) with Pypy because Pypy somehow does not like my old version, maybe its because of pygame idk
+    - My old version was imcompatible (largely) with Pypy because Pypy somehow does not like my old version, maybe its because of pygame
 
-                                        Objectives of the Pioneer
+                                        [Objectives of the Pioneer]
 
     - To be able to compete directly with Sunfish, another very strong chess engine written in Python
     - Somehow fare well against the famed Stockfish
@@ -31,7 +31,7 @@
     - No I will NOT use my engine to cheat, I'm a very virtuous person :)
     - Just to have fun, coding is a fun thing and writing chess engines will help me dive deep into the world of programming
 
-                                            Learning Resources
+                                            [Learning Resources]
 
                                 https://www.chessprogramming.org/Main_Page
                                 https://www.chessprogramming.org/0x88
@@ -73,14 +73,14 @@ char_pieces:dict = {'P':P, 'N':N, 'B':B, 'R':R, 'Q':Q, 'K':K, 'p':p, 'n':n, 'b':
 promoted_pieces:dict = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
 
 # required utilities
-encode_move = lambda source, target, piece, capture, pawn, enpassant, castling:               \
-              (source)|                                                                       \
-              (target << 7)|                                                                  \
-              (piece << 14)|                                                                  \
-              (capture << 18)|                                                                \
-              (pawn << 19)|                                                                   \
-              (enpassant << 20)|                                                              \
-              (castling << 21)                                                                \
+encode_move = lambda source, target, piece, capture, pawn, enpassant, castling:                             \
+              (source) |                                                                                    \
+              (target << 7) |                                                                               \
+              (piece << 14) |                                                                               \
+              (capture << 18) |                                                                             \
+              (pawn << 19) |                                                                                \
+              (enpassant << 20) |                                                                           \
+              (castling << 21)                                                                              \
 
 get_move_source = lambda move : (move & 0x7f)
 get_move_target = lambda move : ((move >> 7) & 0x7f)
@@ -503,14 +503,14 @@ def print_move_list(move_list:moves_struct):
         move = move_list.moves[idx]
         formated_move = '{}{}'.format(square_to_coords[get_move_source(move)], square_to_coords[get_move_target(move)])
         promotion_move = promoted_pieces[get_move_piece(move)] if (get_move_piece(move)) else ' '
-        joined_str = f'{formated_move}{promotion_move}'
+        joined_str = '{}{}'.format(formated_move, promotion_move)
         print('{}  {}         {}        {}        {}'.format(
-            joined_str,
-            get_move_capture(move),
-            get_move_pawn(move),
-            get_move_enpassant(move),
-            get_move_castling(move)
-        ))
+                    joined_str,
+                    get_move_capture(move),
+                    get_move_pawn(move),
+                    get_move_enpassant(move),
+                    get_move_castling(move)))
+
     print(f'\n[TOTAL MOVES: {move_list.count}, PYPIONEER_001]')
 
 '''
@@ -518,9 +518,9 @@ def print_move_list(move_list:moves_struct):
     Not using the python module, but the .exe file I downloaded ages ago
 '''
 
-def test_suite_moves(fen:str) -> int:
-    current_position_pc = chess.Board(fen)
-    board_count = len(list(current_position_pc.legal_moves))
+def test_suite_pychess(fen:str) -> int:
+    current_position_pychess = chess.Board(fen)
+    board_count = len(list(current_position_pychess.legal_moves))
     print(f'[TOTAL MOVES: {board_count}, PYTHON-CHESS]')
     return board_count
 
@@ -533,7 +533,7 @@ if (__name__ == '__main__'):
     bboard.print_board()
 
     print_move_list(move_list)
-    if (test_suite_moves(bboard.parsed_fen) == move_list.count):
+    if (test_suite_pychess(bboard.parsed_fen) == move_list.count):
         print('\n[CODE HAS SUCCESSFULLY PASSED TEST!]')
     else: print('\n[CODE FAILED TEST PROCEDURE, PLEASE TRY AGAIN!]')
 
