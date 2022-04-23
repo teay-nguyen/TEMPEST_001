@@ -29,5 +29,5 @@ class timer:
         self.time_log.append(mark)
 
     @property
-    def get_latest_time_mark(self):
+    def latest_time_mark(self):
         return self.time_log[-1]

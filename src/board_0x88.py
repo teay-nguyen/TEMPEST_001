@@ -1,37 +1,26 @@
-#!/usr/bin/env pypy3 -u
+#!/usr/bin/env python3 -u
 
 '''
                                         The Pioneer Chess Engine
-                                                (0x88)
+                                       (0x88 Board Representation)
                                                   by
-                                            HashHobo (Terry)
+                                               HashHobo
 
 
     - 0x88 board representation
-    - AlphaBeta, no parallel search though, maybe PVS search
-    - Hot features such as zobrist hashing and transposition tables (well not really, it's rudimentary in a chess engine)
+    - I have not decided what kind of search algorithm to use yet, but I'm more inclined into choosing AlphaBeta or Monte-Carlo
+    - Zobrist Hashing and Transposition Tables (I'm not sure if this is necessary in Monte-Carlo search)
     - I will attempt to implement a few search pruning techniques
 
-                                            [PYTHON EDITION v2.0]
+                                     [LANGUAGE: PYTHON, VERSION: v2.1]
 
     - This is also the very first language the Pioneer is written in
     - The engine is obviously weaker than other popular engines because I'm a rookie in writing powerful chess engines, so don't expect superb performance
     - I actually document or keep my older implementations of this, so you can check it out and probably send a PR if you want
-    - This is a project for fun, also my first major project of my life, I was 13 since I started working on this
     - I put the first version in the old trash implementation folder because it is indeed trash and doesn't work anyway
-    - This version is purely designed to be MUCH faster and more conventional than my old version
-    - My old version was imcompatible (largely) with Pypy because Pypy somehow does not like my old version, maybe its because of pygame
+    - My old version was largely imcompatible with Pypy because Pypy somehow runs incredibly slow with my old version, maybe its because of pygame or just my trash coding skills
 
-                                        [Objectives of the Pioneer]
-
-    - To be able to compete directly with Sunfish, another very strong chess engine written in Python
-    - Somehow fare well against the famed Stockfish
-    - Maybe (very small chance), to compete for the best engine in the world
-    - To teach me some nice tricks and tactics
-    - No I will NOT use my engine to cheat, I'm a very virtuous person :)
-    - Just to have fun, coding is a fun thing and writing chess engines will help me dive deep into the world of programming
-
-                                            [Learning Resources]
+                                           [LEARNING RESOURCES]
 
                                 https://www.chessprogramming.org/Main_Page
                                 https://www.chessprogramming.org/0x88
@@ -42,6 +31,7 @@
 # imports
 from timing import timer
 import chess
+import copy
 
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
@@ -58,6 +48,8 @@ squares:dict = {
     "a3":80, "b3":81, "c3":82, "d3":83, "e3":84, "f3":85, "g3":86, "h3":87,
     "a2":96, "b2":97, "c2":98, "d2":99, "e2":100, "f2":101, "g2":102, "h2":103,
     "a1":112, "b1":113, "c1":114, "d1":115, "e1":116, "f1":117, "g1":118, "h1":119, "null_sq":120}
+
+# tuple for converting board coordinates into string
 square_to_coords:tuple = (
     "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8", "i8", "j8", "k8", "l8", "m8", "n8", "o8", "p8",
     "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "i7", "j7", "k7", "l7", "m7", "n7", "o7", "p7",
@@ -72,15 +64,18 @@ square_to_coords:tuple = (
 char_pieces:dict = {'P':P, 'N':N, 'B':B, 'R':R, 'Q':Q, 'K':K, 'p':p, 'n':n, 'b':b, 'r':r, 'q':q, 'k':k}
 promoted_pieces:dict = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
 
+#    source, target params must be a valid value from the "squares" dict
+#    for example: squares['d6']
+
 # required utilities
-encode_move = lambda source, target, piece, capture, pawn, enpassant, castling:                             \
-              (source) |                                                                                    \
-              (target << 7) |                                                                               \
-              (piece << 14) |                                                                               \
-              (capture << 18) |                                                                             \
-              (pawn << 19) |                                                                                \
-              (enpassant << 20) |                                                                           \
-              (castling << 21)                                                                              \
+encode_move = lambda source, target, piece, capture, pawn, enpassant, castling:                                             \
+              (source)                  |                                                                                   \
+              (target << 7)             |                                                                                   \
+              (piece << 14)             |                                                                                   \
+              (capture << 18)           |                                                                                   \
+              (pawn << 19)              |                                                                                   \
+              (enpassant << 20)         |                                                                                   \
+              (castling << 21)                                                                                              \
 
 get_move_source = lambda move : (move & 0x7f)
 get_move_target = lambda move : ((move >> 7) & 0x7f)
@@ -104,18 +99,24 @@ tricky_position:str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w
 # piece movement offsets
 knight_offsets:tuple = (33, 31, 18, 14, -33, -31, -18, -14)
 bishop_offsets:tuple = (15, 17, -15, -17)
-rook_offsets:tuple = (16, 1, -16, -1)
-king_offsets:tuple = (16, 1, -16, -1, 15, 17, -15, -17)
+rook_offsets:tuple = (16, -16, 1, -1)
+king_offsets:tuple = (16, -16, 1, -1, 15, 17, -15, -17)
+
+# deep copy of arbitrary objects
+def full_cpy(obj):
+    obj_cpy = copy.deepcopy(obj)
+    return obj_cpy
 
 # used for storing moves and debugging
 class moves_struct:
     def __init__(self) -> None:
-        self.moves = []
-        self.count = 0
+        self.moves:list = []
+        self.count:int = 0
 
 # main driver
 class board:
     def __init__(self) -> None:
+        self.conv_rf_idx = lambda rank, file: (rank * 16) + file
         self.timer:timer = timer()
         self.parsed_fen:str = ''
         self.king_square:list = [squares['e8'], squares['e1']]
@@ -130,8 +131,13 @@ class board:
             e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
             e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
             P, P, P, P, P, P, P, P,     o, o, o, o, o, o, o, o,
-            R, N, B, Q, K, B, N, R,     o, o, o, o, o, o, o, o,
-        ]
+            R, N, B, Q, K, B, N, R,     o, o, o, o, o, o, o, o]
+
+        self.board_cpy:list = []
+        self.king_square_cpy:list = []
+        self.side_cpy:int = -9999
+        self.enpassant_cpy:int = -9999
+        self.castle_cpy:int = -9999
 
     def clear_board(self) -> None:
         # sweep the surface clean
@@ -197,8 +203,6 @@ class board:
             self.enpassant = self.conv_rf_idx(rank, file)
         else: self.enpassant = squares['null_sq']
 
-    # tool to convert rank and file into 1 compatible index int
-    def conv_rf_idx(self, rank:int, file:int): return rank * 16 + file
     def xray_attacks(self, square:int, side:int):
         # bishop and queen
         for i in range(4):
@@ -264,13 +268,19 @@ class board:
                     target_sq += rook_offsets[i]
         return 0
 
-    '''
-    Me when I look at unoptimized code like this:
-    '''
-
     def make_move(self, move:int) -> None:
+        # copy stuff
+        self.board_cpy = full_cpy(self.board)
+        self.side_cpy = self.side
+        self.enpassant_cpy = self.enpassant
+        self.castle_cpy = self.castle
+        self.king_square_cpy = full_cpy(self.king_square)
+
+        # get move source and the square it moves to
         from_square = get_move_source(move)
         to_square = get_move_target(move)
+
+        # perform the move
         self.board[to_square] = self.board[from_square]
         self.board[from_square] = e
 
@@ -409,26 +419,21 @@ class board:
                                 if (not piece): self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 to_sq += rook_offsets[i]
 
-    '''
-    This is where debugging comes to play
-    Debugging tools are implemented so I can find bugs
-    Some are just needed to display the board and nothing else
-    '''
-
-    def print_board(self):
+    def print_board(self) -> None:
         print()
+        print('________________________________\n\n')
         for rank in range(8):
             for file in range(16):
                 square = self.conv_rf_idx(rank, file)
                 if (file == 0):
-                    print(8 - rank, end='  ')
+                    print('     ', 8 - rank, end='  ')
                 if (not (square & 0x88)):
                     print(ascii_pieces[self.board[square]], end=' ')
             print()
-        print('\n   a b c d e f g h\n')
+        print('\n         a b c d e f g h\n')
         print('________________________________\n')
-        print(f'[SIDE TO MOVE]: {"white" if self.side else "black"} | {self.side}')
-        print('[CURRENT CASTLING RIGHTS]: {}{}{}{} | {}'.format(
+        print(f'  [SIDE TO MOVE]: {"white" if self.side else "black"} | {self.side}')
+        print('  [CURRENT CASTLING RIGHTS]: {}{}{}{} | {}'.format(
                 'K' if (self.castle & castling['K']) else '-',
                 'Q' if (self.castle & castling['Q']) else '-',
                 'k' if (self.castle & castling['k']) else '-',
@@ -436,10 +441,10 @@ class board:
                 self.castle,
             ))
         if self.enpassant != squares['null_sq']:
-            print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]} | {self.enpassant}')
-        else: print(f'[ENPASSANT TARGET SQUARE]: NONE | {self.enpassant}')
-        print(f'[KING SQUARE]: {square_to_coords[self.king_square[self.side]]} | {self.king_square[self.side]}')
-        print(f'[PARSED FEN]: {self.parsed_fen}')
+            print(f'  [ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]} | {self.enpassant}')
+        else: print(f'  [ENPASSANT TARGET SQUARE]: NONE | {self.enpassant}')
+        print(f'  [KING SQUARE]: {square_to_coords[self.king_square[self.side]]} | {self.king_square[self.side]}')
+        print(f'  [PARSED FEN]: {self.parsed_fen}')
 
     def print_attack_map(self, side:int):
         print()
@@ -497,8 +502,8 @@ class board:
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
-def print_move_list(move_list:moves_struct):
-    print('\nMove   Capture   Double   Enpass   Castling\n')
+def print_move_list(move_list:moves_struct) -> None:
+    print('\nMOVE   CAPTURE   DOUBLE   ENPASS   CASTLING\n')
     for idx in range(move_list.count):
         move = move_list.moves[idx]
         formated_move = '{}{}'.format(square_to_coords[get_move_source(move)], square_to_coords[get_move_target(move)])
@@ -509,22 +514,49 @@ def print_move_list(move_list:moves_struct):
                     get_move_capture(move),
                     get_move_pawn(move),
                     get_move_enpassant(move),
-                    get_move_castling(move)))
+                    get_move_castling(move))),
 
-    print(f'\n[TOTAL MOVES: {move_list.count}, PYPIONEER_001]')
+    print(f'\n  [TOTAL MOVES: {move_list.count}, PYPIONEER_001]')
 
 '''
-    Testing for Stockfish is done manually
-    Not using the python module, but the .exe file I downloaded ages ago
+def print_board_(engine:board, board_:list) -> None:
+    print('\n    [PRINT BOARD FUNCTION OUTSIDE OF BOARD CLASS]')
+    print('________________________________\n\n')
+    for rank in range(8):
+        for file in range(16):
+            square = engine.conv_rf_idx(rank, file)
+            if (file == 0):
+                print('     ', 8 - rank, end='  ')
+            if (not (square & 0x88)):
+                print(ascii_pieces[board_[square]], end=' ')
+        print()
+    print('\n         a b c d e f g h\n')
+    print('________________________________\n')
 '''
 
-def test_suite_pychess(fen:str) -> int:
+#    Testing for Stockfish is done manually
+#    Not using the python module, but the .exe file I downloaded ages ago
+
+def move_gen_test(fen:str, move_list:moves_struct) -> int:
     current_position_pychess = chess.Board(fen)
     board_count = len(list(current_position_pychess.legal_moves))
-    print(f'[TOTAL MOVES: {board_count}, PYTHON-CHESS]')
-    return board_count
+    if (move_list.count != board_count):
+        print(f'  [NUMBER OF MOVES FROM MOVE GENERATION DOES NOT MATCH PYTHON-CHESS MOVE GENERATION RESULTS: [PYTHON-CHESS: {board_count}] [PYPIONEER: {move_list.count}]] ❌')
+    else: print(f'  [NUMBER OF MOVES FROM MOVE GENERATION MATCHES PYTHON-CHESS MOVE GENERATION RESULTS: [PYTHON-CHESS: {board_count}] [PYPIONEER: {move_list.count}]] ✔️')
+    # print(f'\n  [TOTAL MOVES: {move_list.count}, PYPIONEER_001]')
+    # print(f'  [TOTAL MOVES: {board_count}, PYTHON-CHESS]')
+    return (move_list.count == board_count)
 
-if (__name__ == '__main__'):
+def passed_test(fen:str, move_list:moves_struct) -> tuple:
+    print()
+    num_passed = 0
+    passed_mg_test = move_gen_test(fen, move_list)
+    num_passed += passed_mg_test
+    return ((passed_mg_test), num_passed)
+
+# Where everything is executed
+
+def main() -> None:
     bboard = board()
     bboard.timer.init_time()
     bboard.parse_fen(tricky_position)
@@ -532,10 +564,14 @@ if (__name__ == '__main__'):
     bboard.gen_moves(move_list)
     bboard.print_board()
 
-    print_move_list(move_list)
-    if (test_suite_pychess(bboard.parsed_fen) == move_list.count):
-        print('\n[CODE HAS SUCCESSFULLY PASSED TEST!]')
-    else: print('\n[CODE FAILED TEST PROCEDURE, PLEASE TRY AGAIN!]')
+    test_results = passed_test(bboard.parsed_fen, move_list)
+    if test_results[0]:
+        print(f'\n  [CODE HAS SUCCESSFULLY PASSED TEST!] {test_results[1]}/1 ✔️')
+    else: print(f'\n  [CODE FAILED TEST PROCEDURE, PLEASE TRY AGAIN!] {test_results[1]}/1 ❌')
 
     bboard.timer.mark_time()
-    print(f'\n[FINISHED IN {bboard.timer.get_latest_time_mark} SECONDS]')
+
+    print(f'\n  [PROGRAM FINISHED IN {bboard.timer.latest_time_mark} SECONDS]')
+
+if (__name__ == '__main__'):
+    main()
