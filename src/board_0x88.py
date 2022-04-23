@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 -u
 
 '''
-                                        The Pioneer Chess Engine
+                                        The TEMPEST Chess Engine
                                        (0x88 Board Representation)
                                                   by
                                                HashHobo
@@ -14,7 +14,6 @@
 
                                      [LANGUAGE: PYTHON, VERSION: v2.1]
 
-    - This is also the very first language the Pioneer is written in
     - The engine is obviously weaker than other popular engines because I'm a rookie in writing powerful chess engines, so don't expect superb performance
     - I actually document or keep my older implementations of this, so you can check it out and probably send a PR if you want
     - I put the first version in the old trash implementation folder because it is indeed trash and doesn't work anyway
@@ -33,10 +32,14 @@ from timing import timer
 import chess
 import copy
 
+# colored text, for aesthetics, I put it here because I may use it later on
+def prBlack(skk): return f"\033[98m {skk}\033[00m"
+def prLightGray(skk): return f"\033[97m {skk}\033[00m"
+
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 ascii_pieces:str = "'PNBRQKpnbrqko"
-unicode_pieces:str = "'♙♘♗♖♕♔p♞♝♜♛♚" # only used with CPython
+unicode_pieces:tuple = ("'", "♙", "♘", "♗", "♖", "♕", "♔", "♙", "♞", "♝", "♜", "♛", "♚") # only used with CPython
 
 # mapping values to match coordinates or into strings
 squares:dict = {
@@ -230,7 +233,7 @@ class board:
         else:
             if (not ((square - 17) & 0x88) and (self.board[square - 17] == p)): return 1
             if (not ((square - 15) & 0x88) and (self.board[square - 15] == p)): return 1
-        
+
         # knight attacks
         for i in range(8):
             target_sq = square + knight_offsets[i]
@@ -428,7 +431,7 @@ class board:
                 if (file == 0):
                     print('     ', 8 - rank, end='  ')
                 if (not (square & 0x88)):
-                    print(ascii_pieces[self.board[square]], end=' ')
+                    print(unicode_pieces[self.board[square]], end=' ')
             print()
         print('\n         a b c d e f g h\n')
         print('________________________________\n')
@@ -516,7 +519,7 @@ def print_move_list(move_list:moves_struct) -> None:
                     get_move_enpassant(move),
                     get_move_castling(move))),
 
-    print(f'\n  [TOTAL MOVES: {move_list.count}, PYPIONEER_001]')
+    print(f'\n  [TOTAL MOVES: {move_list.count}, TEMPEST_001]')
 
 '''
 def print_board_(engine:board, board_:list) -> None:
@@ -541,9 +544,9 @@ def move_gen_test(fen:str, move_list:moves_struct) -> int:
     current_position_pychess = chess.Board(fen)
     board_count = len(list(current_position_pychess.legal_moves))
     if (move_list.count != board_count):
-        print(f'  [NUMBER OF MOVES FROM MOVE GENERATION DOES NOT MATCH PYTHON-CHESS MOVE GENERATION RESULTS: [PYTHON-CHESS: {board_count}] [PYPIONEER: {move_list.count}]] ❌')
-    else: print(f'  [NUMBER OF MOVES FROM MOVE GENERATION MATCHES PYTHON-CHESS MOVE GENERATION RESULTS: [PYTHON-CHESS: {board_count}] [PYPIONEER: {move_list.count}]] ✔️')
-    # print(f'\n  [TOTAL MOVES: {move_list.count}, PYPIONEER_001]')
+        print(f'  [NUMBER OF MOVES FROM MOVE GENERATION DOES NOT MATCH PYTHON-CHESS MOVE GENERATION RESULTS: [PYTHON-CHESS: {board_count}] [TEMPEST: {move_list.count}]] ❌')
+    else: print(f'  [NUMBER OF MOVES FROM MOVE GENERATION MATCHES PYTHON-CHESS MOVE GENERATION RESULTS: [PYTHON-CHESS: {board_count}] [TEMPEST: {move_list.count}]] ✔️')
+    # print(f'\n  [TOTAL MOVES: {move_list.count}, TEMPEST_001]')
     # print(f'  [TOTAL MOVES: {board_count}, PYTHON-CHESS]')
     return (move_list.count == board_count)
 
