@@ -138,9 +138,9 @@ class board:
 
         self.board_cpy:list = []
         self.king_square_cpy:list = []
-        self.side_cpy:int = -9999
-        self.enpassant_cpy:int = -9999
-        self.castle_cpy:int = -9999
+        self.side_cpy:int = -999999999999
+        self.enpassant_cpy:int = -999999999999
+        self.castle_cpy:int = -999999999999
 
     def clear_board(self) -> None:
         # sweep the surface clean
@@ -274,18 +274,27 @@ class board:
     def make_move(self, move:int) -> None:
         # copy stuff
         self.board_cpy = full_cpy(self.board)
-        self.side_cpy = self.side
-        self.enpassant_cpy = self.enpassant
-        self.castle_cpy = self.castle
+        self.side_cpy = full_cpy(self.side)
+        self.enpassant_cpy = full_cpy(self.enpassant)
+        self.castle_cpy = full_cpy(self.castle)
         self.king_square_cpy = full_cpy(self.king_square)
 
         # get move source and the square it moves to
         from_square = get_move_source(move)
         to_square = get_move_target(move)
+        promoted_piece = get_move_piece(move)
+        enpass = get_move_enpassant(move)
+        double_push = get_move_pawn(move)
 
         # perform the move
         self.board[to_square] = self.board[from_square]
         self.board[from_square] = e
+
+        # adjusting board state
+        if (promoted_piece): self.board[to_square] = promoted_piece
+        if (enpass): self.board[(to_square + 16) if self.side else (to_square - 16)] = e
+        self.enpassant = squares['null_sq']
+        if (double_push): self.enpassant = (to_square + 16) if self.side else (to_square - 16)
 
     def add_move(self, move_list:moves_struct, move:int) -> None:
         move_list.moves.append(move)
@@ -431,7 +440,7 @@ class board:
                 if (file == 0):
                     print('     ', 8 - rank, end='  ')
                 if (not (square & 0x88)):
-                    print(unicode_pieces[self.board[square]], end=' ')
+                    print(ascii_pieces[self.board[square]], end=' ')
             print()
         print('\n         a b c d e f g h\n')
         print('________________________________\n')
@@ -562,9 +571,27 @@ def passed_test(fen:str, move_list:moves_struct) -> tuple:
 def main() -> None:
     bboard = board()
     bboard.timer.init_time()
-    bboard.parse_fen(tricky_position)
+    bboard.parse_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1")
     move_list = moves_struct()
     bboard.gen_moves(move_list)
+    bboard.print_board()
+
+    move = encode_move(squares['c7'], squares['c5'], 0, 0, 1, 0, 0)
+
+    bboard.board_cpy = full_cpy(bboard.board)
+    bboard.side_cpy = full_cpy(bboard.side)
+    bboard.enpassant_cpy = full_cpy(bboard.enpassant)
+    bboard.castle_cpy = full_cpy(bboard.castle)
+    bboard.king_square_cpy = full_cpy(bboard.king_square)
+
+    bboard.make_move(move)
+    bboard.print_board()
+
+    bboard.board = full_cpy(bboard.board_cpy)
+    bboard.side = full_cpy(bboard.side_cpy)
+    bboard.enpassant = full_cpy(bboard.enpassant_cpy)
+    bboard.castle = full_cpy(bboard.castle_cpy)
+    bboard.king_square = full_cpy(bboard.king_square_cpy)
     bboard.print_board()
 
     test_results = passed_test(bboard.parsed_fen, move_list)
