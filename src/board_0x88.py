@@ -39,7 +39,19 @@ def prLightGray(skk): return f"\033[97m {skk}\033[00m"
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 ascii_pieces:str = ".PNBRQKpnbrqko"
-unicode_pieces:tuple = (".", "♙", "♘", "♗", "♖", "♕", "♔", "♙", "♞", "♝", "♜", "♛", "♚") # only used with CPython
+unicode_pieces:str = ".♙♘♗♖♕♔♙♞♝♜♛♚" # only used with CPython
+
+# castling rights
+castling_rights:list = [
+     7, 15, 15, 15,  3, 15, 15, 11,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    13, 15, 15, 15, 12, 15, 15, 14,  o, o, o, o, o, o, o, o
+]
 
 # mapping values to match coordinates or into strings
 squares:dict = {
@@ -91,6 +103,7 @@ get_move_castling = lambda move : ((move >> 21) & 0x1)
 # initial values
 sides:dict = {'white':1, 'black':0}
 castling:dict = {'K':1, 'Q':2, 'k':4, 'q':8}
+capture_flags:dict = {"all_moves":0, "only_captures":1}
 
 # fen debug positions
 start_position:str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -271,30 +284,71 @@ class board:
                     target_sq += rook_offsets[i]
         return 0
 
-    def make_move(self, move:int) -> None:
-        # copy stuff
-        self.board_cpy = full_cpy(self.board)
-        self.side_cpy = full_cpy(self.side)
-        self.enpassant_cpy = full_cpy(self.enpassant)
-        self.castle_cpy = full_cpy(self.castle)
-        self.king_square_cpy = full_cpy(self.king_square)
+    def make_move(self, move:int, capture_flag:int):
+        # quite moves
+        if (capture_flag == capture_flags['all_moves']):
+            # copy stuff
+            self.board_cpy = full_cpy(self.board)
+            self.side_cpy = full_cpy(self.side)
+            self.enpassant_cpy = full_cpy(self.enpassant)
+            self.castle_cpy = full_cpy(self.castle)
+            self.king_square_cpy = full_cpy(self.king_square)
 
-        # get move source and the square it moves to
-        from_square = get_move_source(move)
-        to_square = get_move_target(move)
-        promoted_piece = get_move_piece(move)
-        enpass = get_move_enpassant(move)
-        double_push = get_move_pawn(move)
+            # get move source and the square it moves to
+            from_square = get_move_source(move)
+            to_square = get_move_target(move)
+            promoted_piece = get_move_piece(move)
+            enpass = get_move_enpassant(move)
+            double_push = get_move_pawn(move)
+            castling = get_move_castling(move)
 
-        # perform the move
-        self.board[to_square] = self.board[from_square]
-        self.board[from_square] = e
+            # perform the move
+            self.board[to_square] = self.board[from_square]
+            self.board[from_square] = e
 
-        # adjusting board state
-        if (promoted_piece): self.board[to_square] = promoted_piece
-        if (enpass): self.board[(to_square + 16) if self.side else (to_square - 16)] = e
-        self.enpassant = squares['null_sq']
-        if (double_push): self.enpassant = (to_square + 16) if self.side else (to_square - 16)
+            # adjusting board state
+            if (promoted_piece): self.board[to_square] = promoted_piece
+            if (enpass): self.board[(to_square + 16) if self.side else (to_square - 16)] = e
+            self.enpassant = squares['null_sq']
+            if (double_push): self.enpassant = (to_square + 16) if self.side else (to_square - 16)
+            if (castling):
+                if (to_square == squares['g1']):
+                    self.board[squares['f1']] = self.board[squares['h1']]
+                    self.board[squares['h1']] = e
+                elif (to_square == squares['c1']):
+                    self.board[squares['d1']] = self.board[squares['a1']]
+                    self.board[squares['a1']] = e
+                elif (to_square == squares['g8']):
+                    self.board[squares['f8']] = self.board[squares['h8']]
+                    self.board[squares['h8']] = e
+                elif (to_square == squares['c8']):
+                    self.board[squares['d8']] = self.board[squares['a8']]
+                    self.board[squares['a8']] = e
+
+            # update king square
+            if (self.board[to_square] == K or self.board[to_square] == k): self.king_square[self.side] = to_square
+
+            # update castling rights
+            self.castle &= castling_rights[from_square]
+            self.castle &= castling_rights[to_square]
+
+            # change sides
+            self.side ^= 1
+
+            # take back move if king is under attack
+            if (self.generate_attacks(self.king_square[self.side ^ 1] if self.side else self.king_square[self.side ^ 1], self.side)):
+                self.board = full_cpy(self.board_cpy)
+                self.side = full_cpy(self.side_cpy)
+                self.enpassant = full_cpy(self.enpassant_cpy)
+                self.castle = full_cpy(self.castle_cpy)
+                self.king_square = full_cpy(self.king_square_cpy)
+
+                return 0 # illegal
+            else: return 1 # legal
+        else:
+            if (get_move_capture(move)):
+                self.make_move(move, capture_flags['all_moves'])
+            else: return 0 # move is not a capture
 
     def add_move(self, move_list:moves_struct, move:int) -> None:
         move_list.moves.append(move)
@@ -316,7 +370,7 @@ class board:
                             else:
                                 self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 if ((sq >= squares['a2'] and sq <= squares['h2']) and not self.board[sq - 32]):
-                                    self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 1, 0, 0))
+                                    self.add_move(move_list, encode_move(sq, sq - 32, 0, 0, 1, 0, 0))
                         for i in range(4):
                             pawn_offset = bishop_offsets[i]
                             if pawn_offset < 0:
@@ -339,7 +393,7 @@ class board:
                                 if (not self.generate_attacks(squares['e1'], sides['black'])) and (not self.generate_attacks(squares['f1'], sides['black'])):
                                     self.add_move(move_list, encode_move(squares['e1'], squares['g1'], 0, 0, 0, 0, 1))
                         if (self.castle & castling['Q']):
-                            if (not self.board[squares['g1']]) and (not self.board[squares['b1']]) and (not self.board[squares['c1']]):
+                            if (not self.board[squares['d1']]) and (not self.board[squares['b1']]) and (not self.board[squares['c1']]):
                                 if (not self.generate_attacks(squares['e1'], sides['black'])) and (not self.generate_attacks(squares['d1'], sides['black'])):
                                     self.add_move(move_list, encode_move(squares['e1'], squares['c1'], 0, 0, 0, 0, 1))
                 else:
@@ -354,7 +408,7 @@ class board:
                             else:
                                 self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 if ((sq >= squares['a7'] and sq <= squares['h7']) and (not self.board[sq + 32])):
-                                    self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 1, 0, 0))
+                                    self.add_move(move_list, encode_move(sq, sq + 32, 0, 0, 1, 0, 0))
                         for i in range(4):
                             pawn_offset = bishop_offsets[i]
                             if pawn_offset > 0:
@@ -430,6 +484,35 @@ class board:
                                     break
                                 if (not piece): self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 to_sq += rook_offsets[i]
+
+    def perft_driver(self, depth:int):
+        # break out of recursion
+        if (not depth):
+            return
+
+        # create move list
+        move_list = moves_struct()
+
+        # gen moves
+        self.gen_moves(move_list)
+
+        for move_count in range(move_list.count):
+            self.board_cpy = full_cpy(self.board)
+            self.side_cpy = full_cpy(self.side)
+            self.enpassant_cpy = full_cpy(self.enpassant)
+            self.castle_cpy = full_cpy(self.castle)
+            self.king_square_cpy = full_cpy(self.king_square)
+
+            if (not self.make_move(move_list.moves[move_count], capture_flags['all_moves'])):
+                continue
+
+            self.perft_driver(depth - 1)
+
+            self.board = full_cpy(self.board_cpy)
+            self.side = full_cpy(self.side_cpy)
+            self.enpassant = full_cpy(self.enpassant_cpy)
+            self.castle = full_cpy(self.castle_cpy)
+            self.king_square = full_cpy(self.king_square_cpy)
 
     def print_board(self) -> None:
         print()
@@ -514,19 +597,24 @@ class board:
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
-def print_move_list(move_list:moves_struct) -> None:
-    print('\nMOVE   CAPTURE   DOUBLE   ENPASS   CASTLING\n')
+def print_move_list(move_list:moves_struct, mode:str) -> None:
+    if mode == 'full':
+        print('\nMOVE   CAPTURE   DOUBLE   ENPASS   CASTLING\n')
+    else: print()
     for idx in range(move_list.count):
         move = move_list.moves[idx]
         formated_move = '{}{}'.format(square_to_coords[get_move_source(move)], square_to_coords[get_move_target(move)])
         promotion_move = promoted_pieces[get_move_piece(move)] if (get_move_piece(move)) else ' '
         joined_str = '{}{}'.format(formated_move, promotion_move)
-        print('{}  {}         {}        {}        {}'.format(
-                    joined_str,
-                    get_move_capture(move),
-                    get_move_pawn(move),
-                    get_move_enpassant(move),
-                    get_move_castling(move))),
+        if mode == 'full':
+            print('{}  {}         {}        {}        {}'.format(
+                        joined_str,
+                        get_move_capture(move),
+                        get_move_pawn(move),
+                        get_move_enpassant(move),
+                        get_move_castling(move))),
+        elif mode == 'raw':
+            print(joined_str)
 
     print(f'\n  [TOTAL MOVES: {move_list.count}, TEMPEST_001]')
 
@@ -555,8 +643,6 @@ def move_gen_test(fen:str, move_list:moves_struct) -> int:
     if (move_list.count != board_count):
         print(f'  [NUMBER OF MOVES FROM MOVE GENERATION DOES NOT MATCH PYTHON-CHESS MOVE GENERATION RESULTS: [PYTHON-CHESS: {board_count}] [TEMPEST: {move_list.count}]] ❌')
     else: print(f'  [NUMBER OF MOVES FROM MOVE GENERATION MATCHES PYTHON-CHESS MOVE GENERATION RESULTS: [PYTHON-CHESS: {board_count}] [TEMPEST: {move_list.count}]] ✔️')
-    # print(f'\n  [TOTAL MOVES: {move_list.count}, TEMPEST_001]')
-    # print(f'  [TOTAL MOVES: {board_count}, PYTHON-CHESS]')
     return (move_list.count == board_count)
 
 def passed_test(fen:str, move_list:moves_struct) -> tuple:
@@ -567,37 +653,21 @@ def passed_test(fen:str, move_list:moves_struct) -> tuple:
     return ((passed_mg_test), num_passed)
 
 # Where everything is executed
-
 def main() -> None:
+    # init board and parse FEN
     bboard = board()
     bboard.timer.init_time()
-    bboard.parse_fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1")
-    move_list = moves_struct()
-    bboard.gen_moves(move_list)
+    bboard.parse_fen(start_position)
     bboard.print_board()
 
-    move = encode_move(squares['c7'], squares['c5'], 0, 0, 1, 0, 0)
+    bboard.perft_driver(1)
 
-    bboard.board_cpy = full_cpy(bboard.board)
-    bboard.side_cpy = full_cpy(bboard.side)
-    bboard.enpassant_cpy = full_cpy(bboard.enpassant)
-    bboard.castle_cpy = full_cpy(bboard.castle)
-    bboard.king_square_cpy = full_cpy(bboard.king_square)
-
-    bboard.make_move(move)
-    bboard.print_board()
-
-    bboard.board = full_cpy(bboard.board_cpy)
-    bboard.side = full_cpy(bboard.side_cpy)
-    bboard.enpassant = full_cpy(bboard.enpassant_cpy)
-    bboard.castle = full_cpy(bboard.castle_cpy)
-    bboard.king_square = full_cpy(bboard.king_square_cpy)
-    bboard.print_board()
-
+    '''
     test_results = passed_test(bboard.parsed_fen, move_list)
     if test_results[0]:
         print(f'\n  [CODE HAS SUCCESSFULLY PASSED TEST!] {test_results[1]}/1 ✔️')
     else: print(f'\n  [CODE FAILED TEST PROCEDURE, PLEASE TRY AGAIN!] {test_results[1]}/1 ❌')
+    '''
 
     bboard.timer.mark_time()
 
