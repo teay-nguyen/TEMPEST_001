@@ -128,6 +128,7 @@ class moves_struct:
 class board:
     def __init__(self) -> None:
         self.conv_rf_idx = lambda rank, file: (rank * 16) + file
+
         self.nodes:int = 0
         self.timer:timer = timer()
         self.parsed_fen:str = ''
@@ -135,6 +136,16 @@ class board:
         self.side:int = -1
         self.castle:int = 15
         self.enpassant:int = squares['null_sq']
+
+        self.fiftyMove:int
+        self.ply:int
+        self.hisPly:int
+
+        self.pceNum:list
+        self.bigPce:int
+        self.majPce:int
+        self.minPce:int
+
         self.board:list = [ # initialized with the start position so things can be easier
             r, n, b, q, k, b, n, r,     o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,     o, o, o, o, o, o, o, o,
@@ -390,10 +401,8 @@ class board:
                                         self.add_move(move_list, encode_move(sq, to_sq, B, 1, 0, 0, 0))
                                         self.add_move(move_list, encode_move(sq, to_sq, N, 1, 0, 0, 0))
                                     else:
-                                        if (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
-                                            self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                        if (to_sq == self.enpassant):
-                                            self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
+                                        if (self.board[to_sq] >= 7 and self.board[to_sq] <= 12): self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                        if (to_sq == self.enpassant): self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == K:
                         if (self.castle & castling['K']):
                             if (not self.board[squares['f1']]) and (not self.board[squares['g1']]):
@@ -428,10 +437,8 @@ class board:
                                         self.add_move(move_list, encode_move(sq, to_sq, b, 1, 0, 0, 0))
                                         self.add_move(move_list, encode_move(sq, to_sq, n, 1, 0, 0, 0))
                                     else:
-                                        if (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
-                                            self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                        if (to_sq == self.enpassant):
-                                            self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
+                                        if (self.board[to_sq] >= 1 and self.board[to_sq] <= 6): self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                        if (to_sq == self.enpassant): self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == k:
                         if (self.castle & castling['k']):
                             if (not self.board[squares['f8']]) and (not self.board[squares['g8']]):
@@ -471,7 +478,7 @@ class board:
                     for i in range(4):
                         to_sq = sq + bishop_offsets[i]
                         while (not (to_sq & 0x88)):
-                            if 0 <= to_sq <= 127:
+                            if (0 <= to_sq <= 127):
                                 piece = self.board[to_sq]
                                 if ((1 <= piece <= 6) if self.side else (7 <= piece <= 12)): break
                                 if ((7 <= piece <= 12) if self.side else (1 <= piece <= 6)):
@@ -486,7 +493,7 @@ class board:
                     for i in range(4):
                         to_sq = sq + rook_offsets[i]
                         while (not (to_sq & 0x88)):
-                            if 0 <= to_sq <= 127:
+                            if (0 <= to_sq <= 127):
                                 piece = self.board[to_sq]
                                 if ((1 <= piece <= 6) if self.side else (7 <= piece <= 12)): break
                                 if ((7 <= piece <= 12) if self.side else (1 <= piece <= 6)):
@@ -574,14 +581,14 @@ class board:
             self.king_square = full_cpy(king_square_cpy)
 
             if get_move_piece(move_list.moves[move_count]):
-                print('{}{}{}: {}'.format(
+                print('  {}{}{}: {}'.format(
                     square_to_coords[get_move_source(move_list.moves[move_count])],
                     square_to_coords[get_move_target(move_list.moves[move_count])],
                     promoted_pieces[get_move_piece(move_list.moves[move_count])],
                     old_nodes
                 ))
             else:
-                print('{}{}: {}'.format(
+                print('  {}{}: {}'.format(
                     square_to_coords[get_move_source(move_list.moves[move_count])],
                     square_to_coords[get_move_target(move_list.moves[move_count])],
                     old_nodes
@@ -709,8 +716,8 @@ if (__name__ == '__main__'):
     bboard.parse_fen(start_position)
     bboard.print_board()
 
-    bboard.perft_test(5)
+    bboard.perft_test(2)
 
     bboard.timer.mark_time()
 
-    print(f'\n  [PROGRAM FINISHED IN {round(bboard.timer.program_runtime * 1000)} MS, {bboard.timer.program_runtime} SEC]')
+    print(f'\n  [PROGRAM FINISHED IN {convert_to_ms(bboard.timer.program_runtime)} MS, {bboard.timer.program_runtime} SEC]')
