@@ -1,4 +1,4 @@
-#!/usr/bin/env pypy3 -u
+#!/usr/bin/env python3 -u
 
 '''
                                         The TEMPEST Chess Engine
@@ -24,6 +24,7 @@
 from timing import timer
 from time import perf_counter
 import copy
+import numpy
 import __future__
 
 # stopwatch
@@ -125,7 +126,7 @@ class moves_struct:
         self.count:int = 0
 
 # main driver
-class board:
+class board_state:
     def __init__(self) -> None:
         self.conv_rf_idx = lambda rank, file: (rank * 16) + file
 
@@ -137,14 +138,14 @@ class board:
         self.castle:int = 15
         self.enpassant:int = squares['null_sq']
 
+
         self.fiftyMove:int
         self.ply:int
         self.hisPly:int
+        self.material = [0, 0]
+        self.num_pieces = numpy.zeros(13)
 
-        self.pceNum:list
-        self.bigPce:int
-        self.majPce:int
-        self.minPce:int
+
 
         self.board:list = [ # initialized with the start position so things can be easier
             r, n, b, q, k, b, n, r,     o, o, o, o, o, o, o, o,
@@ -189,6 +190,8 @@ class board:
                     assert (ord('a') <= ord(sym) <= ord('z')) or (ord('A') <= ord(sym) <= ord('Z')) # unorthodoxed method to check FEN string but it works
                     square = self.conv_rf_idx(rank, file)
                     if (not (square & 0x88)):
+                        if 1 <= char_pieces[sym] <= 12:
+                            self.num_pieces[char_pieces[sym]] += 1
                         if (sym == 'K'):
                             self.king_square[sides['white']] = square
                         elif (sym == 'k'): self.king_square[sides['black']] = square
@@ -711,9 +714,9 @@ if (__name__ == '__main__'):
     print(f'[RUNNING ON]: {sys.version}')
 
     # init board and parse FEN
-    bboard = board()
+    bboard = board_state()
     bboard.timer.init_time()
-    bboard.parse_fen(start_position)
+    bboard.parse_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ")
     bboard.print_board()
 
     bboard.perft_test(2)
