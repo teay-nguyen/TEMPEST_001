@@ -1,16 +1,16 @@
 
 '''
-    This python python is purely for debugging and timing purposes
+    This python code is purely for debugging and timing purposes
     It is also used for performance tests
 '''
 
 '''
     Logic behind this code is extremely silly, but I just need a way to store the times I need
-    because timing the performance of the code is important for speed and calculating power of PyPioneer
+    because timing the performance of the code is important for speed and calculating power of TEMPEST
 '''
 
 # imports
-from time import time
+from time import time, perf_counter
 
 # main driver
 class timer:
@@ -29,5 +29,5 @@ class timer:
         self.time_log.append(mark)
 
     @property
-    def latest_time_mark(self):
+    def program_runtime(self):
         return self.time_log[-1]
