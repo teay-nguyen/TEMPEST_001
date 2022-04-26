@@ -2,6 +2,7 @@
 
 '''
                                         The TEMPEST Chess Engine
+                                        (A Minimal Chess Engine)
                                        (0x88 Board Representation)
                                                   by
                                                HashHobo
@@ -10,11 +11,10 @@
     - 0x88 board representation
     - I have not decided what kind of search algorithm to use yet, but I'm more inclined into choosing AlphaBeta or Monte-Carlo
     - Zobrist Hashing and Transposition Tables (I'm not sure if this is necessary in Monte-Carlo search)
-    - I will attempt to implement a few search pruning techniques
+    - Some other search pruning techniques
 
                                  [LANGUAGE: PYTHON 3.8.9, VERSION: v2.1]
 
-    - The engine is obviously weaker than other popular engines because I'm a rookie in writing powerful chess engines, so don't expect superb performance
     - I actually document or keep my older implementations of this, so you can check it out and probably send a PR if you want
     - I put the first version in the old trash implementation folder because it is indeed trash and doesn't work anyway
     - My old version was largely imcompatible with Pypy because Pypy somehow runs incredibly slow with my old version, maybe its because of pygame or just my trash coding skills
@@ -23,101 +23,9 @@
 # imports
 from timing import timer
 from time import perf_counter
-import copy
-import numpy
+from defs import *
+import numpy as np
 import __future__
-
-# stopwatch
-convert_to_ms = lambda x : round(x * 1000)
-
-# piece encoding
-e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
-ascii_pieces:str = ".PNBRQKpnbrqko"
-unicode_pieces:str = ".♙♘♗♖♕♔♙♞♝♜♛♚" # only used with CPython
-
-# castling rights
-castling_rights:list = [
-      7, 15, 15, 15,  3, 15, 15, 11,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     13, 15, 15, 15, 12, 15, 15, 14,  o, o, o, o, o, o, o, o
-]
-
-# mapping values to match coordinates or into strings
-squares:dict = {
-    "a8":0, "b8":1, "c8":2, "d8":3, "e8":4, "f8":5, "g8":6, "h8":7,
-    "a7":16, "b7":17, "c7":18, "d7":19, "e7":20, "f7":21, "g7":22, "h7":23,
-    "a6":32, "b6":33, "c6":34, "d6":35, "e6":36, "f6":37, "g6":38, "h6":39,
-    "a5":48, "b5":49, "c5":50, "d5":51, "e5":52, "f5":53, "g5":54, "h5":55,
-    "a4":64, "b4":65, "c4":66, "d4":67, "e4":68, "f4":69, "g4":70, "h4":71,
-    "a3":80, "b3":81, "c3":82, "d3":83, "e3":84, "f3":85, "g3":86, "h3":87,
-    "a2":96, "b2":97, "c2":98, "d2":99, "e2":100, "f2":101, "g2":102, "h2":103,
-    "a1":112, "b1":113, "c1":114, "d1":115, "e1":116, "f1":117, "g1":118, "h1":119, "null_sq":120}
-
-# tuple for converting board coordinates into string
-square_to_coords:tuple = (
-    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8", "i8", "j8", "k8", "l8", "m8", "n8", "o8", "p8",
-    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", "i7", "j7", "k7", "l7", "m7", "n7", "o7", "p7",
-    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", "i6", "j6", "k6", "l6", "m6", "n6", "o6", "p6",
-    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", "i5", "j5", "k5", "l5", "m5", "n5", "o5", "p5",
-    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", "i4", "j4", "k4", "l4", "m4", "n4", "o4", "p4",
-    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "i3", "j3", "k3", "l3", "m3", "n3", "o3", "p3",
-    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "i2", "j2", "k2", "l2", "m2", "n2", "o2", "p2",
-    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1", "l1", "m1", "n1", "o1", "p1")
-
-# conversion into string or int, primarily for print
-char_pieces:dict = {'P':P, 'N':N, 'B':B, 'R':R, 'Q':Q, 'K':K, 'p':p, 'n':n, 'b':b, 'r':r, 'q':q, 'k':k}
-promoted_pieces:dict = {Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n'}
-
-#    source, target params must be a valid value from the "squares" dict
-#    for example: squares['d6']
-
-# required utilities
-encode_move = lambda source, target, piece, capture, pawn, enpassant, castling:                                             \
-              (source)                  |                                                                                   \
-              (target << 7)             |                                                                                   \
-              (piece << 14)             |                                                                                   \
-              (capture << 18)           |                                                                                   \
-              (pawn << 19)              |                                                                                   \
-              (enpassant << 20)         |                                                                                   \
-              (castling << 21)                                                                                              \
-
-get_move_source = lambda move : (move & 0x7f)
-get_move_target = lambda move : ((move >> 7) & 0x7f)
-get_move_piece = lambda move : ((move >> 14) & 0xf)
-get_move_capture = lambda move : ((move >> 18) & 0x1)
-get_move_pawn = lambda move : ((move >> 19) & 0x1)
-get_move_enpassant = lambda move : ((move >> 20) & 0x1)
-get_move_castling = lambda move : ((move >> 21) & 0x1)
-
-# initial values
-sides:dict = {'white':1, 'black':0}
-castling:dict = {'K':1, 'Q':2, 'k':4, 'q':8}
-capture_flags:dict = {"all_moves":32313132, "only_captures":12353231} # very specific keys
-
-# fen debug positions
-start_position:str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-custom_endgame_position:str = '8/5R2/8/k7/1r6/4K3/6R1/8 w - - 0 1'
-custom_middlegame_position:str = 'r1bq1rk1/ppp1bppp/2n2n2/3pp3/2BPP3/2N1BN2/PP3PPP/R2Q1RK1 w - - 0 1'
-empty_board:str = '8/8/8/8/8/8/8/8 w - - 0 1'
-tricky_position:str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'
-
-# piece movement offsets
-knight_offsets:tuple = (33, 31, 18, 14, -33, -31, -18, -14)
-bishop_offsets:tuple = (15, 17, -15, -17)
-rook_offsets:tuple = (16, -16, 1, -1)
-king_offsets:tuple = (16, -16, 1, -1, 15, 17, -15, -17)
-
-# deep copy of arbitrary objects
-full_cpy = lambda obj: copy.deepcopy(obj)
-
-
-
-
 
 # used for storing moves and debugging
 class moves_struct:
@@ -142,9 +50,11 @@ class board_state:
         self.fiftyMove:int
         self.ply:int
         self.hisPly:int
-        self.material = [0, 0]
-        self.num_pieces = numpy.zeros(13)
-
+        self.material = [0, 0] # storing materal count for both sides
+        self.history = [None for _ in range(MAX_MOVES_INGAME)] # game state history
+        self.pceNum = np.zeros(13) # for recording the number of pieces
+        self.pceList = np.zeros((13, 10)) # recording positions
+        self.zobristKey:int = 0 # unique position key
 
 
         self.board:list = [ # initialized with the start position so things can be easier
@@ -155,7 +65,8 @@ class board_state:
             e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
             e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
             P, P, P, P, P, P, P, P,     o, o, o, o, o, o, o, o,
-            R, N, B, Q, K, B, N, R,     o, o, o, o, o, o, o, o]
+            R, N, B, Q, K, B, N, R,     o, o, o, o, o, o, o, o,
+        ]
 
     def clear_board(self) -> None:
         # sweep the surface clean
@@ -190,29 +101,25 @@ class board_state:
                     assert (ord('a') <= ord(sym) <= ord('z')) or (ord('A') <= ord(sym) <= ord('Z')) # unorthodoxed method to check FEN string but it works
                     square = self.conv_rf_idx(rank, file)
                     if (not (square & 0x88)):
-                        if 1 <= char_pieces[sym] <= 12:
-                            self.num_pieces[char_pieces[sym]] += 1
-                        if (sym == 'K'):
-                            self.king_square[sides['white']] = square
+                        if (1 <= char_pieces[sym] <= 12): self.pceNum[char_pieces[sym]] += 1
+                        if (sym == 'K'): self.king_square[sides['white']] = square
                         elif (sym == 'k'): self.king_square[sides['black']] = square
                         self.board[square] = char_pieces[sym]
                         file += 1
 
         # choose which side goes first
         fen_side = fen_segments[1]
-        if fen_side == 'w':
-            self.side = sides['white']
-        elif fen_side == 'b':
-            self.side = sides['black']
+        if fen_side == 'w': self.side = sides['white']
+        elif fen_side == 'b': self.side = sides['black']
         else: self.side = -1
 
         # castle rights parsing
         fen_castle = fen_segments[2]
         for sym in fen_castle:
-            if sym == 'K': self.castle |= castling['K']
-            if sym == 'Q': self.castle |= castling['Q']
-            if sym == 'k': self.castle |= castling['k']
-            if sym == 'q': self.castle |= castling['q']
+            if sym == 'K': self.castle |= castling_vals['K']
+            if sym == 'Q': self.castle |= castling_vals['Q']
+            if sym == 'k': self.castle |= castling_vals['k']
+            if sym == 'q': self.castle |= castling_vals['q']
             if sym == '-': break
 
         # load enpassant square
@@ -304,7 +211,7 @@ class board_state:
     def make_move(self, move:int, capture_flag:int):
 
         # filter out the None moves
-        if move == None: return 0
+        if (move == None): return 0
 
         # quiet moves
         if (capture_flag == capture_flags['all_moves']):
@@ -407,11 +314,11 @@ class board_state:
                                         if (self.board[to_sq] >= 7 and self.board[to_sq] <= 12): self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                         if (to_sq == self.enpassant): self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == K:
-                        if (self.castle & castling['K']):
+                        if (self.castle & castling_vals['K']):
                             if (not self.board[squares['f1']]) and (not self.board[squares['g1']]):
                                 if (not self.is_square_attacked(squares['e1'], sides['black'])) and (not self.is_square_attacked(squares['f1'], sides['black'])):
                                     self.add_move(move_list, encode_move(squares['e1'], squares['g1'], 0, 0, 0, 0, 1))
-                        if (self.castle & castling['Q']):
+                        if (self.castle & castling_vals['Q']):
                             if (not self.board[squares['d1']]) and (not self.board[squares['b1']]) and (not self.board[squares['c1']]):
                                 if (not self.is_square_attacked(squares['e1'], sides['black'])) and (not self.is_square_attacked(squares['d1'], sides['black'])):
                                     self.add_move(move_list, encode_move(squares['e1'], squares['c1'], 0, 0, 0, 0, 1))
@@ -443,11 +350,11 @@ class board_state:
                                         if (self.board[to_sq] >= 1 and self.board[to_sq] <= 6): self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                         if (to_sq == self.enpassant): self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == k:
-                        if (self.castle & castling['k']):
+                        if (self.castle & castling_vals['k']):
                             if (not self.board[squares['f8']]) and (not self.board[squares['g8']]):
                                 if (not self.is_square_attacked(squares['e8'], sides['white'])) and (not self.is_square_attacked(squares['f8'], sides['white'])):
                                     self.add_move(move_list, encode_move(squares['e8'], squares['g8'], 0, 0, 0, 0, 1))
-                        if (self.castle & castling['q']):
+                        if (self.castle & castling_vals['q']):
                             if (not self.board[squares['d8']]) and (not self.board[squares['b8']]) and (not self.board[squares['c8']]):
                                 if (not self.is_square_attacked(squares['e8'], sides['white'])) and (not self.is_square_attacked(squares['d8'], sides['white'])):
                                     self.add_move(move_list, encode_move(squares['e8'], squares['c8'], 0, 0, 0, 0, 1))
@@ -510,7 +417,7 @@ class board_state:
 
     def perft_driver(self, depth:int):
         # break out of recursive state
-        if (not depth):
+        if (not depth) or (depth <= 0):
             self.nodes += 1
             return
 
@@ -568,13 +475,13 @@ class board_state:
                 continue
 
             # cummulative NODES
-            cum_nodes = self.nodes
+            cummulative_nodes = self.nodes
 
             # recursive call
             self.perft_driver(depth - 1)
 
             # old nodes
-            old_nodes = self.nodes - cum_nodes
+            old_nodes = (self.nodes - cummulative_nodes)
 
             # restore board state
             self.board = full_cpy(board_cpy)
@@ -588,13 +495,13 @@ class board_state:
                     square_to_coords[get_move_source(move_list.moves[move_count])],
                     square_to_coords[get_move_target(move_list.moves[move_count])],
                     promoted_pieces[get_move_piece(move_list.moves[move_count])],
-                    old_nodes
+                    old_nodes,
                 ))
             else:
                 print('  {}{}: {}'.format(
                     square_to_coords[get_move_source(move_list.moves[move_count])],
                     square_to_coords[get_move_target(move_list.moves[move_count])],
-                    old_nodes
+                    old_nodes,
                 ))
         print(f'\n  [DEPTH]: {depth}')
         print(f'  [NODES]: {self.nodes}')
@@ -615,10 +522,10 @@ class board_state:
         print('________________________________\n')
         print(f'  [SIDE TO MOVE]: {"white" if self.side else "black"} | {self.side}')
         print('  [CURRENT CASTLING RIGHTS]: {}{}{}{} | {}'.format(
-                'K' if (self.castle & castling['K']) else '-',
-                'Q' if (self.castle & castling['Q']) else '-',
-                'k' if (self.castle & castling['k']) else '-',
-                'q' if (self.castle & castling['q']) else '-',
+                'K' if (self.castle & castling_vals['K']) else '-',
+                'Q' if (self.castle & castling_vals['Q']) else '-',
+                'k' if (self.castle & castling_vals['k']) else '-',
+                'q' if (self.castle & castling_vals['q']) else '-',
                 self.castle,
             ))
         if self.enpassant != squares['null_sq']:
@@ -642,10 +549,10 @@ class board_state:
         print(f'[SIDE TO MOVE]: {"white" if self.side else "black"}')
         print(f"[SIDE ATTACKING]: {'white' if side else 'black'}")
         print('[CURRENT CASTLING RIGHTS]: {}{}{}{}'.format(
-                'K' if (self.castle & castling['K']) else '-',
-                'Q' if (self.castle & castling['Q']) else '-',
-                'k' if (self.castle & castling['k']) else '-',
-                'q' if (self.castle & castling['q']) else '-',
+                'K' if (self.castle & castling_vals['K']) else '-',
+                'Q' if (self.castle & castling_vals['Q']) else '-',
+                'k' if (self.castle & castling_vals['k']) else '-',
+                'q' if (self.castle & castling_vals['q']) else '-',
             ))
         if self.enpassant != squares['null_sq']:
             print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}')
@@ -673,10 +580,10 @@ class board_state:
         print('________________________________\n')
         print(f'[SIDE TO MOVE]: {"white" if self.side else "black"}')
         print('[CURRENT CASTLING RIGHTS]: {}{}{}{}'.format(
-                'K' if (self.castle & castling['K']) else '-',
-                'Q' if (self.castle & castling['Q']) else '-',
-                'k' if (self.castle & castling['k']) else '-',
-                'q' if (self.castle & castling['q']) else '-',
+                'K' if (self.castle & castling_vals['K']) else '-',
+                'Q' if (self.castle & castling_vals['Q']) else '-',
+                'k' if (self.castle & castling_vals['k']) else '-',
+                'q' if (self.castle & castling_vals['q']) else '-',
             ))
         if self.enpassant != squares['null_sq']:
             print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}')
@@ -716,10 +623,10 @@ if (__name__ == '__main__'):
     # init board and parse FEN
     bboard = board_state()
     bboard.timer.init_time()
-    bboard.parse_fen("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ")
+    bboard.parse_fen(start_position)
     bboard.print_board()
 
-    bboard.perft_test(2)
+    bboard.perft_test(3)
 
     bboard.timer.mark_time()
 
