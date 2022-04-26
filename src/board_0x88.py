@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -u
+#!/usr/bin/env pypy3 -u
 
 '''
                                         The TEMPEST Chess Engine
@@ -13,7 +13,7 @@
     - Zobrist Hashing and Transposition Tables (I'm not sure if this is necessary in Monte-Carlo search)
     - Some other search pruning techniques
 
-                                 [LANGUAGE: PYTHON 3.8.9, VERSION: v2.1]
+                                 [LANGUAGE: PYTHON 3.8.9, VERSION: v1.0]
 
     - I actually document or keep my older implementations of this, so you can check it out and probably send a PR if you want
     - I put the first version in the old trash implementation folder because it is indeed trash and doesn't work anyway
@@ -21,7 +21,6 @@
 '''
 
 # imports
-from timing import timer
 from time import perf_counter
 from defs import *
 import numpy as np
@@ -39,7 +38,6 @@ class board_state:
         self.conv_rf_idx = lambda rank, file: (rank * 16) + file
 
         self.nodes:int = 0
-        self.timer:timer = timer()
         self.parsed_fen:str = ''
         self.king_square:list = [squares['e8'], squares['e1']]
         self.side:int = -1
@@ -50,11 +48,12 @@ class board_state:
         self.fiftyMove:int
         self.ply:int
         self.hisPly:int
-        self.material = [0, 0] # storing materal count for both sides
-        self.history = [None for _ in range(MAX_MOVES_INGAME)] # game state history
+        self.material:list = [0, 0] # storing materal count for both sides
+        self.history:list = [None for _ in range(MAX_MOVES_INGAME)] # game state history
         self.pceNum = np.zeros(13) # for recording the number of pieces
         self.pceList = np.zeros((13, 10)) # recording positions
         self.zobristKey:int = 0 # unique position key
+        self.rep_history:list = []
 
 
         self.board:list = [ # initialized with the start position so things can be easier
@@ -211,7 +210,7 @@ class board_state:
     def make_move(self, move:int, capture_flag:int):
 
         # filter out the None moves
-        if (move == None): return 0
+        if (move is None): return 0
 
         # quiet moves
         if (capture_flag == capture_flags['all_moves']):
@@ -235,7 +234,7 @@ class board_state:
             self.board[from_square] = e
 
             # adjusting board state
-            if (promoted_piece): self.board[to_square] = promoted_piece
+            if (promoted_piece > 0): self.board[to_square] = promoted_piece
             if (enpass): self.board[(to_square + 16) if self.side else (to_square - 16)] = e
             self.enpassant = squares['null_sq']
             if (double_push): self.enpassant = (to_square + 16) if self.side else (to_square - 16)
@@ -270,12 +269,10 @@ class board_state:
                 self.enpassant = full_cpy(enpassant_cpy)
                 self.castle = full_cpy(castle_cpy)
                 self.king_square = full_cpy(king_square_cpy)
-
                 return 0 # illegal
             else: return 1 # legal
         elif capture_flag == capture_flags['only_captures']:
-            if (get_move_capture(move)):
-                self.make_move(move, capture_flags['all_moves'])
+            if (get_move_capture(move)): self.make_move(move, capture_flags['all_moves'])
             else: return 0 # move is not a capture
 
     def add_move(self, move_list:moves_struct, move:int) -> None:
@@ -452,7 +449,7 @@ class board_state:
             self.king_square = full_cpy(king_square_cpy)
 
     def perft_test(self, depth:int):
-        print('\n  [   PERFT TEST   ]\n')
+        print('\n  [   PERFT TEST GENERATING MOVES   ]\n')
 
         # init start time
         start_time = perf_counter()
@@ -503,9 +500,9 @@ class board_state:
                     square_to_coords[get_move_target(move_list.moves[move_count])],
                     old_nodes,
                 ))
-        print(f'\n  [DEPTH]: {depth}')
+        print(f'\n  [SEARCH TIME]: {convert_to_ms(perf_counter() - start_time)} MS, {perf_counter() - start_time} SEC')
+        print(f'  [DEPTH]: {depth}')
         print(f'  [NODES]: {self.nodes}')
-        print(f'  [SEARCH TIME]: {convert_to_ms(perf_counter() - start_time)} MS')
 
     def print_board(self) -> None:
         print()
@@ -622,12 +619,13 @@ if (__name__ == '__main__'):
 
     # init board and parse FEN
     bboard = board_state()
-    bboard.timer.init_time()
+    start_time = perf_counter()
     bboard.parse_fen(start_position)
     bboard.print_board()
 
-    bboard.perft_test(3)
+    bboard.perft_test(4)
 
-    bboard.timer.mark_time()
+    end_time = perf_counter()
+    program_runtime = end_time - start_time
 
-    print(f'\n  [PROGRAM FINISHED IN {convert_to_ms(bboard.timer.program_runtime)} MS, {bboard.timer.program_runtime} SEC]')
+    print(f'\n  [PROGRAM FINISHED IN {convert_to_ms(program_runtime)} MS, {program_runtime} SEC]')

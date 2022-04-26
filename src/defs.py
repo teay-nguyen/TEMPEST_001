@@ -4,6 +4,7 @@
 
 # imports
 import copy
+import __future__
 
 # constants
 MAX_MOVES_INGAME = 2048
