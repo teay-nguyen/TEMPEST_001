@@ -129,7 +129,7 @@ class board_state:
         # bishop and queen
         for i in range(4):
             target_sq = square + bishop_offsets[i]
-            while (on_board(target_sq)):
+            while on_board(target_sq):
                 if 0 <= target_sq <= 127:
                     target_piece = self.board[target_sq]
                     if (target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q): return 1
@@ -138,7 +138,7 @@ class board_state:
         # rook and queen
         for i in range(4):
             target_sq = square + rook_offsets[i]
-            while (on_board(target_sq)):
+            while on_board(target_sq):
                 if 0 <= target_sq <= 127:
                     target_piece = self.board[target_sq]
                     if (target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q): return 1
@@ -147,11 +147,11 @@ class board_state:
     def is_square_attacked(self, square:int, side:int) -> int:
         # pawn attacks
         if side:
-            if not ((square + 17) & 0x88) and (self.board[square + 17] == P): return 1
-            if not ((square + 15) & 0x88) and (self.board[square + 15] == P): return 1
+            if not ((square + 17) & 0x88) and self.board[square + 17] == P: return 1
+            if not ((square + 15) & 0x88) and self.board[square + 15] == P: return 1
         else:
-            if not ((square - 17) & 0x88) and (self.board[square - 17] == p): return 1
-            if not ((square - 15) & 0x88) and (self.board[square - 15] == p): return 1
+            if not ((square - 17) & 0x88) and self.board[square - 17] == p: return 1
+            if not ((square - 15) & 0x88) and self.board[square - 15] == p: return 1
 
         # knight attacks
         for i in range(8):
@@ -243,7 +243,7 @@ class board_state:
                     self.board[squares['a8']] = e
 
             # update king square
-            if (self.board[to_square] == K or self.board[to_square] == k): self.king_square[self.side] = to_square
+            if self.board[to_square] == K or self.board[to_square] == k: self.king_square[self.side] = to_square
 
             # update castling rights
             self.castle &= castling_rights[from_square]
@@ -276,7 +276,7 @@ class board_state:
                 if self.side:
                     if self.board[sq] == P:
                         to_sq = sq - 16
-                        if (not (to_sq & 0x88)) and (not self.board[to_sq]):
+                        if not (to_sq & 0x88) and (not self.board[to_sq]):
                             if sq >= squares['a7'] and sq <= squares['h7']:
                                 self.add_move(move_list, encode_move(sq, to_sq, Q, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, R, 0, 0, 0, 0))
@@ -302,17 +302,17 @@ class board_state:
                                         if to_sq == self.enpassant: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == K:
                         if self.castle & castling_vals['K']:
-                            if (not self.board[squares['f1']]) and (not self.board[squares['g1']]):
-                                if (not self.is_square_attacked(squares['e1'], sides['black'])) and (not self.is_square_attacked(squares['f1'], sides['black'])):
+                            if not self.board[squares['f1']] and not self.board[squares['g1']]:
+                                if not self.is_square_attacked(squares['e1'], sides['black']) and not self.is_square_attacked(squares['f1'], sides['black']):
                                     self.add_move(move_list, encode_move(squares['e1'], squares['g1'], 0, 0, 0, 0, 1))
                         if self.castle & castling_vals['Q']:
-                            if (not self.board[squares['d1']]) and (not self.board[squares['b1']]) and (not self.board[squares['c1']]):
-                                if (not self.is_square_attacked(squares['e1'], sides['black'])) and (not self.is_square_attacked(squares['d1'], sides['black'])):
+                            if not self.board[squares['d1']] and not self.board[squares['b1']] and not self.board[squares['c1']]:
+                                if not self.is_square_attacked(squares['e1'], sides['black']) and not self.is_square_attacked(squares['d1'], sides['black']):
                                     self.add_move(move_list, encode_move(squares['e1'], squares['c1'], 0, 0, 0, 0, 1))
                 else:
                     if self.board[sq] == p:
                         to_sq = sq + 16
-                        if (not (to_sq & 0x88)) and (not self.board[to_sq]):
+                        if not (to_sq & 0x88) and not self.board[to_sq]:
                             if sq >= squares['a2'] and sq <= squares['h2']:
                                 self.add_move(move_list, encode_move(sq, to_sq, q, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, r, 0, 0, 0, 0))
@@ -338,12 +338,12 @@ class board_state:
                                         if to_sq == self.enpassant: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == k:
                         if self.castle & castling_vals['k']:
-                            if (not self.board[squares['f8']]) and (not self.board[squares['g8']]):
-                                if (not self.is_square_attacked(squares['e8'], sides['white'])) and (not self.is_square_attacked(squares['f8'], sides['white'])):
+                            if not self.board[squares['f8']] and not self.board[squares['g8']]:
+                                if not self.is_square_attacked(squares['e8'], sides['white']) and not self.is_square_attacked(squares['f8'], sides['white']):
                                     self.add_move(move_list, encode_move(squares['e8'], squares['g8'], 0, 0, 0, 0, 1))
                         if self.castle & castling_vals['q']:
-                            if (not self.board[squares['d8']]) and (not self.board[squares['b8']]) and (not self.board[squares['c8']]):
-                                if (not self.is_square_attacked(squares['e8'], sides['white'])) and (not self.is_square_attacked(squares['d8'], sides['white'])):
+                            if not self.board[squares['d8']] and not self.board[squares['b8']] and not self.board[squares['c8']]:
+                                if not self.is_square_attacked(squares['e8'], sides['white']) and not self.is_square_attacked(squares['d8'], sides['white']):
                                     self.add_move(move_list, encode_move(squares['e8'], squares['c8'], 0, 0, 0, 0, 1))
 
                 if (self.board[sq] == N) if self.side else (self.board[sq] == n):
@@ -607,7 +607,7 @@ if __name__ == '__main__':
     bboard.parse_fen(start_position)
     bboard.print_board()
 
-    bboard.perft_test(4)
+    bboard.perft_test(3)
 
     end_time = perf_counter()
     program_runtime = end_time - start_time
