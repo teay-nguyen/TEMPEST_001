@@ -1,25 +1,5 @@
 #!/usr/bin/env pypy3 -u
 
-'''
-                                        The TEMPEST Chess Engine
-                                        (A Minimal Chess Engine)
-                                       (0x88 Board Representation)
-                                                  by
-                                               HashHobo
-
-
-    - 0x88 board representation
-    - I have not decided what kind of search algorithm to use yet, but I'm more inclined into choosing AlphaBeta or Monte-Carlo
-    - Zobrist Hashing and Transposition Tables (I'm not sure if this is necessary in Monte-Carlo search)
-    - Some other search pruning techniques
-
-                                 [LANGUAGE: PYTHON 3.8.9, VERSION: v1.0]
-
-    - I actually document or keep my older implementations of this, so you can check it out and probably send a PR if you want
-    - I put the first version in the old trash implementation folder because it is indeed trash and doesn't work anyway
-    - My old version was largely imcompatible with Pypy because Pypy somehow runs incredibly slow with my old version, maybe its because of pygame or just my trash coding skills
-'''
-
 # imports
 from time import perf_counter
 from defs import *
@@ -56,7 +36,7 @@ class board_state:
         self.rep_history:list = []
 
 
-        self.board:list = [ # initialized with the start position so things can be easier
+        self.board:list = [
             r, n, b, q, k, b, n, r,     o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,     o, o, o, o, o, o, o, o,
             e, e, e, e, e, e, e, e,     o, o, o, o, o, o, o, o,
