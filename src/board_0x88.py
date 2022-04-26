@@ -12,36 +12,52 @@ on_board = on_board_
 is_piece = is_piece_
 
 # used for storing moves and debugging
-class moves_struct:
-    def __init__(self):
+class moves_struct():
+    def __init__(self) -> None:
         self.moves:list = [None for _ in range(MAX_POSITION_MOVES)]
         self.count:int = 0
 
 # main driver
-class board_state:
-    def __init__(self):
-        self.conv_rf_idx = lambda rank, file: rank * 16 + file
+class board_state():
+    def __init__(self) -> None:
 
-        self.nodes:int = 0
-        self.parsed_fen:str = ""
-        self.king_square:list = [squares['e8'], squares['e1']]
-        self.side:int = -1
-        self.castle:int = 15
-        self.enpassant:int = squares['OFFBOARD']
+        # static type checking, don't know if this works but it definitely helps me debug
+        self.board:list
 
-
+        self.material:list
+        self.history:list
+        self.pceNum:list
+        self.pceList:list
+        self.zobristKey:int
+        self.rep_history:list
         self.fiftyMove:int
         self.ply:int
         self.hisPly:int
-        self.material:list = [0, 0] # storing materal count for both sides
-        self.history:list = [0 for _ in range(MAX_MOVES_INGAME)] # game state history
-        self.pceNum:list = [0 for _ in range(MAX_PIECE_TYPE)] # for recording the number of pieces
-        self.pceList:list = [[0 for _ in range(MAX_AMOUNT_EACH_PIECE)] for _ in range(MAX_PIECE_TYPE)] # recording positions
-        self.zobristKey:int = 0 # unique position key
-        self.rep_history:list = []
+
+        self.nodes:int
+        self.parsed_fen:str
+        self.king_square:list
+        self.side:int
+        self.castle:int
+        self.enpassant:int
+
+        # the actual defining
+        self.conv_rf_idx = lambda rank, file: rank * 16 + file
+        self.nodes = 0
+        self.parsed_fen = ''
+        self.king_square = [squares['e8'], squares['e1']]
+        self.side = -1
+        self.castle = 15
+        self.enpassant = squares['OFFBOARD']
+
+        self.material = [0, 0] # storing materal count for both sides
+        self.history = [0 for _ in range(MAX_MOVES_INGAME)] # game state history
+        self.pceNum = [0 for _ in range(MAX_PIECE_TYPE)] # for recording the number of pieces
+        self.pceList = [[0 for _ in range(MAX_AMOUNT_EACH_PIECE)] for _ in range(MAX_PIECE_TYPE)] # recording positions
+        self.rep_history = [0 for _ in range(MAX_MOVES_INGAME)]
 
 
-        self.board:list = [
+        self.board = [
             r, n, b, q, k, b, n, r,  o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,  o, o, o, o, o, o, o, o,
             e, e, e, e, e, e, e, e,  o, o, o, o, o, o, o, o,
@@ -56,7 +72,7 @@ class board_state:
         # sweep the surface clean
         for rank in range(8):
             for file in range(16):
-                square = self.conv_rf_idx(rank, file)
+                square:int = self.conv_rf_idx(rank, file)
                 if not (square & 0x88):
                     self.board[square] = e
 
@@ -64,15 +80,16 @@ class board_state:
         self.castle = 0
         self.enpassant = squares['OFFBOARD']
 
-    def parse_fen(self, fen:str):
+    def parse_fen(self, fen:str) -> None:
         # clear board before parsing string
         self.clear_board()
 
         # load pieces onto board
         self.parsed_fen = fen
-        fen_segments = fen.split()
-        fen_pieces = fen_segments[0]
-        rank, file = 0, 0
+        fen_segments:list = fen.split()
+        fen_pieces:str = fen_segments[0]
+        rank:int = 0
+        file:int = 0
 
         for sym in fen_pieces:
             if sym == '/':
@@ -84,7 +101,7 @@ class board_state:
                     file += int(sym)
                 else:
                     assert (ord('a') <= ord(sym) <= ord('z')) or (ord('A') <= ord(sym) <= ord('Z')) # unorthodoxed method to check FEN string but it works
-                    square = self.conv_rf_idx(rank, file)
+                    square:int = self.conv_rf_idx(rank, file)
                     if not (square & 0x88):
                         if is_piece(char_pieces[sym]):
                             self.pceList[char_pieces[sym]][self.pceNum[char_pieces[sym]]] = square
@@ -94,16 +111,17 @@ class board_state:
                             elif sym == 'k': self.king_square[sides['black']] = square
 
                             self.board[square] = char_pieces[sym]
+
                         file += 1
 
         # choose which side goes first
-        fen_side = fen_segments[1]
+        fen_side:str = fen_segments[1]
         if fen_side == 'w': self.side = sides['white']
         elif fen_side == 'b': self.side = sides['black']
         else: self.side = -1
 
         # castle rights parsing
-        fen_castle = fen_segments[2]
+        fen_castle:str = fen_segments[2]
         for sym in fen_castle:
             if sym == 'K': self.castle |= castling_vals['K']
             if sym == 'Q': self.castle |= castling_vals['Q']
@@ -112,10 +130,10 @@ class board_state:
             if sym == '-': break
 
         # load enpassant square
-        fen_ep = fen_segments[3]
+        fen_ep:str = fen_segments[3]
         if fen_ep != '-':
-            file = ord(fen_ep[0]) - ord('a')
-            rank = 8 - (ord(fen_ep[1]) - ord('0'))
+            file:int = ord(fen_ep[0]) - ord('a')
+            rank:int = 8 - (ord(fen_ep[1]) - ord('0'))
             self.enpassant = self.conv_rf_idx(rank, file)
         else: self.enpassant = squares['OFFBOARD']
 
@@ -155,36 +173,36 @@ class board_state:
 
         # knight attacks
         for i in range(8):
-            target_sq = square + knight_offsets[i]
+            target_sq:int = square + knight_offsets[i]
             if 0 <= target_sq <= 127:
-                target_piece = self.board[target_sq]
+                target_piece:int = self.board[target_sq]
                 if not (target_sq & 0x88):
                     if (target_piece == N) if side else (target_piece == n): return 1
 
         # king attacks
         for i in range(8):
-            target_sq = square + king_offsets[i]
+            target_sq:int = square + king_offsets[i]
             if 0 <= target_sq <= 127:
-                target_piece = self.board[target_sq]
+                target_piece:int = self.board[target_sq]
                 if not (target_sq & 0x88):
                     if (target_piece == K) if side else (target_piece == k): return 1
 
         # bishop attacks
         for i in range(4):
-            target_sq = square + bishop_offsets[i]
+            target_sq:int = square + bishop_offsets[i]
             while not (target_sq & 0x88):
                 if 0 <= target_sq <= 127:
-                    target_piece = self.board[target_sq]
+                    target_piece:int = self.board[target_sq]
                     if (target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q): return 1
                     if target_piece: break
                     target_sq += bishop_offsets[i]
 
         # rook attacks
         for i in range(4):
-            target_sq = square + rook_offsets[i]
+            target_sq:int = square + rook_offsets[i]
             while not (target_sq & 0x88):
                 if 0 <= target_sq <= 127:
-                    target_piece = self.board[target_sq]
+                    target_piece:int = self.board[target_sq]
                     if (target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q): return 1
                     if target_piece: break
                     target_sq += rook_offsets[i]
@@ -197,7 +215,7 @@ class board_state:
 
 
 
-    def make_move(self, move:int, capture_flag:int):
+    def make_move(self, move:int, capture_flag:int) -> int:
 
         # filter out the None moves
         if move is None: return 0
@@ -205,19 +223,19 @@ class board_state:
         # quiet moves
         if capture_flag == capture_flags['all_moves']:
             # copy stuff
-            board_cpy = full_cpy(self.board)
-            side_cpy = full_cpy(self.side)
-            enpassant_cpy = full_cpy(self.enpassant)
-            castle_cpy = full_cpy(self.castle)
-            king_square_cpy = full_cpy(self.king_square)
+            board_cpy:list = full_cpy(self.board)
+            side_cpy:int = full_cpy(self.side)
+            enpassant_cpy:int = full_cpy(self.enpassant)
+            castle_cpy:int = full_cpy(self.castle)
+            king_square_cpy:list = full_cpy(self.king_square)
 
             # get move source and the square it moves to
-            from_square = get_move_source(move)
-            to_square = get_move_target(move)
-            promoted_piece = get_move_piece(move)
-            enpass = get_move_enpassant(move)
-            double_push = get_move_pawn(move)
-            castling = get_move_castling(move)
+            from_square:int = get_move_source(move)
+            to_square:int = get_move_target(move)
+            promoted_piece:int = get_move_piece(move)
+            enpass:int = get_move_enpassant(move)
+            double_push:int = get_move_pawn(move)
+            castling:int = get_move_castling(move)
 
             # perform the move
             self.board[to_square] = self.board[from_square]
@@ -265,17 +283,17 @@ class board_state:
             if get_move_capture(move): self.make_move(move, capture_flags['all_moves'])
             else: return 0 # move is not a capture
 
-    def add_move(self, move_list:moves_struct, move:int):
+    def add_move(self, move_list:moves_struct, move:int) -> None:
         move_list.moves[move_list.count] = move
         move_list.count += 1
 
-    def gen_moves(self, move_list:moves_struct):
+    def gen_moves(self, move_list:moves_struct) -> None:
         move_list.count = 0
         for sq in range(BOARD_SQ_NUM):
             if not (sq & 0x88):
                 if self.side:
                     if self.board[sq] == P:
-                        to_sq = sq - 16
+                        to_sq:int = sq - 16
                         if not (to_sq & 0x88) and (not self.board[to_sq]):
                             if sq >= squares['a7'] and sq <= squares['h7']:
                                 self.add_move(move_list, encode_move(sq, to_sq, Q, 0, 0, 0, 0))
@@ -287,9 +305,9 @@ class board_state:
                                 if (sq >= squares['a2'] and sq <= squares['h2']) and (not self.board[sq - 32]):
                                     self.add_move(move_list, encode_move(sq, sq - 32, 0, 0, 1, 0, 0))
                         for i in range(4):
-                            pawn_offset = bishop_offsets[i]
+                            pawn_offset:int = bishop_offsets[i]
                             if pawn_offset < 0:
-                                to_sq = sq + pawn_offset
+                                to_sq:int = sq + pawn_offset
                                 if not (to_sq & 0x88):
                                     if (sq >= squares['a7'] and sq <= squares['h7']) and\
                                         (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
@@ -311,7 +329,7 @@ class board_state:
                                     self.add_move(move_list, encode_move(squares['e1'], squares['c1'], 0, 0, 0, 0, 1))
                 else:
                     if self.board[sq] == p:
-                        to_sq = sq + 16
+                        to_sq:int = sq + 16
                         if not (to_sq & 0x88) and not self.board[to_sq]:
                             if sq >= squares['a2'] and sq <= squares['h2']:
                                 self.add_move(move_list, encode_move(sq, to_sq, q, 0, 0, 0, 0))
@@ -323,7 +341,7 @@ class board_state:
                                 if (sq >= squares['a7'] and sq <= squares['h7']) and (not self.board[sq + 32]):
                                     self.add_move(move_list, encode_move(sq, sq + 32, 0, 0, 1, 0, 0))
                         for i in range(4):
-                            pawn_offset = bishop_offsets[i]
+                            pawn_offset:int = bishop_offsets[i]
                             if pawn_offset > 0:
                                 to_sq = sq + pawn_offset
                                 if not (to_sq & 0x88):
@@ -348,9 +366,9 @@ class board_state:
 
                 if (self.board[sq] == N) if self.side else (self.board[sq] == n):
                     for i in range(8):
-                        to_sq = sq + knight_offsets[i]
+                        to_sq:int = sq + knight_offsets[i]
                         if 0 <= to_sq < BOARD_SQ_NUM:
-                            piece = self.board[to_sq]
+                            piece:int = self.board[to_sq]
                             if not (to_sq & 0x88):
                                 if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
                                     (not piece or (piece >= 1 and piece <= 6)):
@@ -360,9 +378,9 @@ class board_state:
 
                 if (self.board[sq] == K) if self.side else (self.board[sq] == k):
                     for i in range(8):
-                        to_sq = sq + king_offsets[i]
+                        to_sq:int = sq + king_offsets[i]
                         if 0 <= to_sq < BOARD_SQ_NUM:
-                            piece = self.board[to_sq]
+                            piece:int = self.board[to_sq]
                             if not (to_sq & 0x88):
                                 if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
                                     (not piece or (piece >= 1 and piece <= 6)):
@@ -373,10 +391,10 @@ class board_state:
                 if (((self.board[sq] == B) or (self.board[sq] == Q)) if self.side\
                     else ((self.board[sq] == b) or (self.board[sq] == q))):
                     for i in range(4):
-                        to_sq = sq + bishop_offsets[i]
+                        to_sq:int = sq + bishop_offsets[i]
                         while not (to_sq & 0x88):
                             if 0 <= to_sq <= 127:
-                                piece = self.board[to_sq]
+                                piece:int = self.board[to_sq]
                                 if (1 <= piece <= 6) if self.side else (7 <= piece <= 12): break
                                 if (7 <= piece <= 12) if self.side else (1 <= piece <= 6):
                                     self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
@@ -388,10 +406,10 @@ class board_state:
                 if (((self.board[sq] == R) or (self.board[sq] == Q)) if self.side\
                     else ((self.board[sq] == r) or (self.board[sq] == q))):
                     for i in range(4):
-                        to_sq = sq + rook_offsets[i]
+                        to_sq:int = sq + rook_offsets[i]
                         while not (to_sq & 0x88):
                             if 0 <= to_sq <= 127:
-                                piece = self.board[to_sq]
+                                piece:int = self.board[to_sq]
                                 if (1 <= piece <= 6) if self.side else (7 <= piece <= 12): break
                                 if (7 <= piece <= 12) if self.side else (1 <= piece <= 6):
                                     self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
@@ -402,14 +420,14 @@ class board_state:
 
 
 
-    def perft_driver(self, depth:int):
+    def perft_driver(self, depth:int) -> None:
         # break out of recursive state
-        if not depth:
+        if depth <= 0:
             self.nodes += 1
             return
 
         # define struct
-        move_list = moves_struct()
+        move_list:moves_struct = moves_struct()
 
         # generate moves
         self.gen_moves(move_list)
@@ -418,11 +436,11 @@ class board_state:
         for mv_count in range(move_list.count):
 
             # copy board state
-            board_cpy = full_cpy(self.board)
-            side_cpy = full_cpy(self.side)
-            enpassant_cpy = full_cpy(self.enpassant)
-            castle_cpy = full_cpy(self.castle)
-            king_square_cpy = full_cpy(self.king_square)
+            board_cpy:list = full_cpy(self.board)
+            side_cpy:int = full_cpy(self.side)
+            enpassant_cpy:int = full_cpy(self.enpassant)
+            castle_cpy:int = full_cpy(self.castle)
+            king_square_cpy:list = full_cpy(self.king_square)
 
             # filter out the illegal moves
             if not self.make_move(move_list.moves[mv_count], capture_flags['all_moves']): continue
@@ -437,36 +455,36 @@ class board_state:
             self.castle = full_cpy(castle_cpy)
             self.king_square = full_cpy(king_square_cpy)
 
-    def perft_test(self, depth:int):
+    def perft_test(self, depth:int) -> None:
         print('\n  [   PERFT TEST GENERATING MOVES   ]\n')
 
         # init start time
         start_time = perf_counter()
 
         # define move list
-        move_list = moves_struct()
+        move_list:moves_struct = moves_struct()
 
         # generate moves
         self.gen_moves(move_list)
 
         # loop over move list
         for move_count in range(move_list.count):
-            board_cpy = full_cpy(self.board)
-            side_cpy = full_cpy(self.side)
-            enpassant_cpy = full_cpy(self.enpassant)
-            castle_cpy = full_cpy(self.castle)
-            king_square_cpy = full_cpy(self.king_square)
+            board_cpy:list = full_cpy(self.board)
+            side_cpy:int = full_cpy(self.side)
+            enpassant_cpy:int = full_cpy(self.enpassant)
+            castle_cpy:int = full_cpy(self.castle)
+            king_square_cpy:list = full_cpy(self.king_square)
 
             if not self.make_move(move_list.moves[move_count], capture_flags['all_moves']): continue
 
             # cummulative NODES
-            cummulative_nodes = self.nodes
+            cummulative_nodes:int = self.nodes
 
             # recursive call
             self.perft_driver(depth - 1)
 
             # old nodes
-            old_nodes = self.nodes - cummulative_nodes
+            old_nodes:int = self.nodes - cummulative_nodes
 
             # restore board state
             self.board = full_cpy(board_cpy)
@@ -492,7 +510,7 @@ class board_state:
         print(f'  [DEPTH SEARCHED]: {depth}')
         print(f'  [TOTAL NODES]: {self.nodes}')
 
-    def print_board(self):
+    def print_board(self) -> None:
         print()
         print('________________________________\n\n')
         for rank in range(8):
@@ -574,7 +592,7 @@ class board_state:
         else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
         print(f'[PARSED FEN]: {self.parsed_fen}')
 
-def print_move_list(move_list:moves_struct, mode:str) -> None:
+def print_move_list(move_list, mode:str):
     if mode == 'full':
         print('\nMOVE   CAPTURE   DOUBLE   ENPASS   CASTLING\n')
     else: print()
@@ -602,14 +620,14 @@ if __name__ == '__main__':
     print(f'[RUNNING ON]: {version}')
 
     # init board and parse FEN
-    bboard = board_state()
+    bboard:board_state = board_state()
     start_time = perf_counter()
     bboard.parse_fen(start_position)
     bboard.print_board()
 
-    bboard.perft_test(3)
+    bboard.perft_test(4)
 
     end_time = perf_counter()
-    program_runtime = end_time - start_time
+    program_runtime:float = end_time - start_time
 
     print(f'\n  [PROGRAM FINISHED IN {convert_to_ms(program_runtime)} MS, {program_runtime} SEC]')
