@@ -7,7 +7,15 @@ import copy
 import __future__
 
 # constants
-MAX_MOVES_INGAME = 2048
+NAME:str = "TEMPEST 1.0"
+BOARD_SQ_NUM:int = 128
+MAX_MOVES_INGAME:int = 2048
+MAX_POSITION_MOVES:int = 256
+MAX_DEPTH:int = 50
+INFINITE:int = 30000
+IS_MATE:int = (INFINITE - MAX_DEPTH)
+MAX_AMOUNT_EACH_PIECE:int = 10
+MAX_PIECE_TYPE:int = 13
 
 # stopwatch
 convert_to_ms = lambda x : round(x * 1000)
@@ -18,16 +26,16 @@ ascii_pieces:str = ".PNBRQKpnbrqko"
 unicode_pieces:str = ".♙♘♗♖♕♔♙♞♝♜♛♚" # only used with CPython
 
 # castling rights
-castling_rights:list = [
-      7, 15, 15, 15,  3, 15, 15, 11,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-     13, 15, 15, 15, 12, 15, 15, 14,  o, o, o, o, o, o, o, o,
-]
+castling_rights:tuple = (
+     7, 15, 15, 15,  3, 15, 15, 11,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    13, 15, 15, 15, 12, 15, 15, 14,  o, o, o, o, o, o, o, o,
+)
 
 # mapping values to match coordinates or into strings
 squares:dict = {
@@ -38,7 +46,7 @@ squares:dict = {
     "a4":64, "b4":65, "c4":66, "d4":67, "e4":68, "f4":69, "g4":70, "h4":71,
     "a3":80, "b3":81, "c3":82, "d3":83, "e3":84, "f3":85, "g3":86, "h3":87,
     "a2":96, "b2":97, "c2":98, "d2":99, "e2":100, "f2":101, "g2":102, "h2":103,
-    "a1":112, "b1":113, "c1":114, "d1":115, "e1":116, "f1":117, "g1":118, "h1":119, "null_sq":120,
+    "a1":112, "b1":113, "c1":114, "d1":115, "e1":116, "f1":117, "g1":118, "h1":119, "OFFBOARD":120,
 }
 
 # tuple for converting board coordinates into string
@@ -62,22 +70,22 @@ promoted_pieces:dict = { Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n' 
 
 # required utilities
 encode_move = lambda source, target, piece, capture, pawn, enpassant, castling:                                                                                   \
-              (source)                                                        |                                                                                   \
-              (target << 7)                                                   |                                                                                   \
-              (piece << 14)                                                   |                                                                                   \
-              (capture << 18)                                                 |                                                                                   \
-              (pawn << 19)                                                    |                                                                                   \
-              (enpassant << 20)                                               |                                                                                   \
-              (castling << 21)                                                                                                                                    \
+              ( source )                                                        |                                                                                   \
+              ( target << 7 )                                                   |                                                                                   \
+              ( piece << 14 )                                                   |                                                                                   \
+              ( capture << 18 )                                                 |                                                                                   \
+              ( pawn << 19 )                                                    |                                                                                   \
+              ( enpassant << 20 )                                               |                                                                                   \
+              ( castling << 21 )                                                                                                                                    \
 
 # only used on moves applied with encode_move
-get_move_source = lambda move : (move & 0x7f)
-get_move_target = lambda move : ((move >> 7) & 0x7f)
-get_move_piece = lambda move : ((move >> 14) & 0xf)
-get_move_capture = lambda move : ((move >> 18) & 0x1)
-get_move_pawn = lambda move : ((move >> 19) & 0x1)
-get_move_enpassant = lambda move : ((move >> 20) & 0x1)
-get_move_castling = lambda move : ((move >> 21) & 0x1)
+get_move_source = lambda move : ( move & 0x7f )
+get_move_target = lambda move : ( (move >> 7) & 0x7f )
+get_move_piece = lambda move : ( (move >> 14) & 0xf )
+get_move_capture = lambda move : ( (move >> 18) & 0x1 )
+get_move_pawn = lambda move : ( (move >> 19) & 0x1 )
+get_move_enpassant = lambda move : ( (move >> 20) & 0x1 )
+get_move_castling = lambda move : ( (move >> 21) & 0x1 )
 
 # initial values
 sides:dict = { 'black':0, 'white':1 }
