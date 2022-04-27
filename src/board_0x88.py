@@ -10,6 +10,7 @@ from validate import *
 # localize imports, for some reason performance declines if I don't localize it
 on_board = on_board_
 is_piece = is_piece_
+nodes_per_sec = lambda nodes, t_time: round(nodes // t_time)
 
 # used for storing moves and debugging
 class MovesStruct():
@@ -492,9 +493,13 @@ class BoardState():
                     square_to_coords[get_move_target(move_list.moves[move_count])],
                     old_nodes,
                 ))
-        print(f'\n  [SEARCH TIME]: {convert_to_ms(perf_counter() - start_time)} MS, {perf_counter() - start_time} SEC')
+
+        end_time = perf_counter()
+        elapsed = end_time - start_time
+        print(f'\n  [SEARCH TIME]: {convert_to_ms(elapsed)} MS, {elapsed} SEC')
         print(f'  [DEPTH SEARCHED]: {depth}')
         print(f'  [TOTAL NODES]: {self.nodes}')
+        print(f'  [TEST NPS]: {nodes_per_sec(self.nodes, elapsed)}')
 
     def print_board(self) -> None:
         print()
@@ -608,7 +613,8 @@ if __name__ == '__main__':
     # init board and parse FEN
     bboard: BoardState = BoardState()
     start_time: float = perf_counter()
-    bboard.parse_fen(start_position)
+    bboard.parse_fen("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1")
+    # bboard.parse_fen(start_position)
     bboard.print_board()
 
     bboard.perft_test(4)
