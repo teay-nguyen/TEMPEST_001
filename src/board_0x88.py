@@ -50,7 +50,7 @@ class BoardState():
             R, N, B, Q, K, B, N, R,  o, o, o, o, o, o, o, o,
         ]
 
-    def clear_board(self):
+    def clear_board(self) -> None:
         # sweep the surface clean
         for rank in range(8):
             for file in range(16):
@@ -445,7 +445,7 @@ class BoardState():
         print('\n  [   PERFT TEST GENERATING MOVES   ]\n')
 
         # init start time
-        start_time = perf_counter()
+        start_time:float = perf_counter()
 
         # define move list
         move_list: MovesStruct = MovesStruct()
@@ -607,13 +607,13 @@ if __name__ == '__main__':
 
     # init board and parse FEN
     bboard: BoardState = BoardState()
-    start_time = perf_counter()
+    start_time: float = perf_counter()
     bboard.parse_fen(start_position)
     bboard.print_board()
 
     bboard.perft_test(4)
 
-    end_time = perf_counter()
+    end_time: float = perf_counter()
     program_runtime:float = end_time - start_time
 
     print(f'\n  [PROGRAM FINISHED IN {convert_to_ms(program_runtime)} MS, {program_runtime} SEC]')
