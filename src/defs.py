@@ -4,18 +4,31 @@
 
 # imports
 from copy import deepcopy
-import __future__
 
 # constants
 NAME: str = "TEMPEST 1.0"
 BOARD_SQ_NUM: int = 128
 MAX_MOVES_INGAME: int = 2048
-MAX_POSITION_MOVES: int = 256
-MAX_DEPTH: int = 50
-INFINITE: int = 30000
-IS_MATE: int = (INFINITE - MAX_DEPTH)
+GEN_STACK: int = 256
 MAX_AMOUNT_EACH_PIECE: int = 10
 MAX_PIECE_TYPE: int = 13
+
+MAX_PLY: int = 20
+HIST_STACK: int = 400
+
+# table and list entries
+class gen_entry:
+    def __init__(self):
+        self.move = None
+        self.score = None
+
+class hist_entry:
+    def __init__(self):
+        self.b: list
+        self.s: int
+        self.e: int
+        self.c: int
+        self.k_s: list
 
 # stopwatch
 convert_to_ms = lambda x: round(x * 1000)
