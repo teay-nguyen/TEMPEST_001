@@ -215,7 +215,7 @@ class BoardState():
 
 
 
-    def make_move(self, move:int, capture_flag:int) -> int:
+    def make_move(self, move:int, capture_flag:int):
 
         # filter out the None moves
         if move is None: return 0
