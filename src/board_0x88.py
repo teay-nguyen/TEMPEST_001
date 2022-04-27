@@ -1,24 +1,24 @@
 #!/usr/bin/env pypy3 -u
 
 # imports
+import __future__
 from sys import version
 from time import perf_counter
 from defs import *
 from validate import *
-import __future__
 
 # localize imports, for some reason performance declines if I don't localize it
 on_board = on_board_
 is_piece = is_piece_
 
 # used for storing moves and debugging
-class moves_struct():
+class MovesStruct():
     def __init__(self) -> None:
         self.moves:list = [None for _ in range(MAX_POSITION_MOVES)]
         self.count:int = 0
 
 # main driver
-class board_state():
+class BoardState():
     def __init__(self) -> None:
 
         # static type checking, don't know if this works but it definitely helps me debug
@@ -283,11 +283,11 @@ class board_state():
             if get_move_capture(move): self.make_move(move, capture_flags['all_moves'])
             else: return 0 # move is not a capture
 
-    def add_move(self, move_list:moves_struct, move:int) -> None:
+    def add_move(self, move_list: MovesStruct, move: int) -> None:
         move_list.moves[move_list.count] = move
         move_list.count += 1
 
-    def gen_moves(self, move_list:moves_struct) -> None:
+    def gen_moves(self, move_list: MovesStruct) -> None:
         move_list.count = 0
         for sq in range(BOARD_SQ_NUM):
             if not (sq & 0x88):
@@ -427,7 +427,7 @@ class board_state():
             return
 
         # define struct
-        move_list:moves_struct = moves_struct()
+        move_list: MovesStruct = MovesStruct()
 
         # generate moves
         self.gen_moves(move_list)
@@ -462,7 +462,7 @@ class board_state():
         start_time = perf_counter()
 
         # define move list
-        move_list:moves_struct = moves_struct()
+        move_list: MovesStruct = MovesStruct()
 
         # generate moves
         self.gen_moves(move_list)
@@ -620,7 +620,7 @@ if __name__ == '__main__':
     print(f'[RUNNING ON]: {version}')
 
     # init board and parse FEN
-    bboard:board_state = board_state()
+    bboard: BoardState = BoardState()
     start_time = perf_counter()
     bboard.parse_fen(start_position)
     bboard.print_board()

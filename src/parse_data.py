@@ -6,18 +6,17 @@ import chess
 processed_file = open('processed/openings.txt', 'w+')
 
 def get_dataset():
-    vals = {'1/2-1/2':0, '0-1':-1, '1-0':1}
+    vals:dict = {'1/2-1/2':0, '0-1':-1, '1-0':1}
     gn = 0
     for fn in os.listdir('data'):
         pgn = open(os.path.join('data', fn))
         while 1:
             game = chess.pgn.read_game(pgn)
-            if game is None:
-                break
+
+            if game is None: break
 
             res = game.headers['Result']
-            if res not in vals:
-                continue
+            if res not in vals: continue
 
             board = game.board()
             for move in game.mainline_moves():
