@@ -21,43 +21,25 @@ class MovesStruct():
 class BoardState():
     def __init__(self) -> None:
 
-        # static type checking, don't know if this works but it definitely helps me debug
-        self.board:list
-
-        self.material:list
-        self.history:list
-        self.pceNum:list
-        self.pceList:list
-        self.zobristKey:int
-        self.rep_history:list
-        self.fiftyMove:int
-        self.ply:int
-        self.hisPly:int
-
-        self.nodes:int
-        self.parsed_fen:str
-        self.king_square:list
-        self.side:int
-        self.castle:int
-        self.enpassant:int
-
-        # the actual defining
         self.conv_rf_idx = lambda rank, file: rank * 16 + file
-        self.nodes = 0
-        self.parsed_fen = ''
-        self.king_square = [squares['e8'], squares['e1']]
-        self.side = -1
-        self.castle = 15
-        self.enpassant = squares['OFFBOARD']
+        self.nodes:int = 0
+        self.parsed_fen:str = ''
+        self.king_square:list = [squares['e8'], squares['e1']]
+        self.side:int = -1
+        self.castle:int = 15
+        self.enpassant:int = squares['OFFBOARD']
+        self.ply:int = 0
+        self.his_ply:int = 0
+        self.fifty_move:int = 0
 
-        self.material = [0, 0] # storing materal count for both sides
-        self.history = [0 for _ in range(MAX_MOVES_INGAME)] # game state history
-        self.pceNum = [0 for _ in range(MAX_PIECE_TYPE)] # for recording the number of pieces
-        self.pceList = [[0 for _ in range(MAX_AMOUNT_EACH_PIECE)] for _ in range(MAX_PIECE_TYPE)] # recording positions
-        self.rep_history = [0 for _ in range(MAX_MOVES_INGAME)]
+        self.material:list = [0, 0] # storing materal count for both sides
+        self.history:list = [0 for _ in range(MAX_MOVES_INGAME)] # game state history
+        self.pceNum:list = [0 for _ in range(MAX_PIECE_TYPE)] # for recording the number of pieces
+        self.pceList:list = [[0 for _ in range(MAX_AMOUNT_EACH_PIECE)] for _ in range(MAX_PIECE_TYPE)] # recording positions
+        self.rep_history:list = [0 for _ in range(MAX_MOVES_INGAME)]
 
 
-        self.board = [
+        self.board:list = [
             r, n, b, q, k, b, n, r,  o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,  o, o, o, o, o, o, o, o,
             e, e, e, e, e, e, e, e,  o, o, o, o, o, o, o, o,
@@ -236,6 +218,10 @@ class BoardState():
             enpass:int = get_move_enpassant(move)
             double_push:int = get_move_pawn(move)
             castling:int = get_move_castling(move)
+
+            # check validity of move
+            assert (0 <= from_square)
+            assert (0 <= to_square)
 
             # perform the move
             self.board[to_square] = self.board[from_square]
