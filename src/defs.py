@@ -7,6 +7,7 @@ from copy import deepcopy
 
 # constants
 NAME: str = "TEMPEST 1.0"
+VERSION: str = "v1.196 HashHobo"
 BOARD_SQ_NUM: int = 128
 MAX_MOVES_INGAME: int = 2048
 GEN_STACK: int = 256

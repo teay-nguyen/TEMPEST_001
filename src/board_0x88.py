@@ -8,7 +8,6 @@ from defs import *
 from validate import *
 
 # I don't know what I did here
-on_board = on_board_
 is_piece = is_piece_
 nodes_per_sec = lambda nodes, t_time: round(nodes // t_time)
 
@@ -26,6 +25,7 @@ class BoardState():
         self.parsed_fen:str = ''
         self.king_square:list = [squares['e8'], squares['e1']]
         self.side:int = -1
+        self.xside:int = -1
         self.castle:int = 15
         self.enpassant:int = squares['OFFBOARD']
 
@@ -36,7 +36,7 @@ class BoardState():
         self.hash_key: int = 0 # unique number corresponding to the current position
         self.ply: int = 0 # number of half-moves since the root of the search tree
         self.hist_ply: int = 0 # the number of ply since the beginning of the game
-        self.history: list = [[None for _ in range(128)] for _ in range(128)] # the history heuristic array (used for move ordering)
+        self.history: list = [[None for _ in range(BOARD_SQ_NUM)] for _ in range(BOARD_SQ_NUM)] # the history heuristic array (used for move ordering)
         self.hist_dat: list = [hist_entry() for _ in range(HIST_STACK)] # we need a list of hist_entry so we can take back moves
         self.first_move: list = [None for _ in range(MAX_PLY)] # the move list for ply n starts at first_move[n] and ends at first_move[n+1]
         self.pv: list = [[None for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
@@ -69,6 +69,7 @@ class BoardState():
                     self.board[square] = e
 
         self.side = -1
+        self.xside = -1
         self.castle = 0
         self.enpassant = 120
 
@@ -108,9 +109,15 @@ class BoardState():
 
         # choose which side goes first
         fen_side:str = fen_segments[1]
-        if fen_side == 'w': self.side = sides['white']
-        elif fen_side == 'b': self.side = sides['black']
-        else: self.side = -1
+        if fen_side == 'w':
+            self.side = sides['white']
+            self.xside = sides['black']
+        elif fen_side == 'b':
+            self.side = sides['black']
+            self.xside = sides['white']
+        else:
+            self.side = -1
+            self.xside = -1
 
         # castle rights parsing
         fen_castle:str = fen_segments[2]
@@ -139,7 +146,7 @@ class BoardState():
         # bishop and queen
         for i in range(4):
             target_sq = square + bishop_offsets[i]
-            while on_board(target_sq):
+            while not (target_sq & 0x88):
                 if 0 <= target_sq <= 127:
                     target_piece = self.board[target_sq]
                     if (target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q): return 1
@@ -148,7 +155,7 @@ class BoardState():
         # rook and queen
         for i in range(4):
             target_sq = square + rook_offsets[i]
-            while on_board(target_sq):
+            while not (target_sq & 0x88):
                 if 0 <= target_sq <= 127:
                     target_piece = self.board[target_sq]
                     if (target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q): return 1
@@ -217,6 +224,7 @@ class BoardState():
             # copy stuff
             board_cpy:list = full_cpy(self.board)
             side_cpy:int = self.side
+            xside_cpy:int = self.xside
             enpassant_cpy:int = self.enpassant
             castle_cpy:int = self.castle
             king_square_cpy:list = full_cpy(self.king_square)
@@ -265,11 +273,13 @@ class BoardState():
 
             # change sides
             self.side ^= 1
+            self.xside ^= 1
 
             # take back move if king is under attack
-            if self.is_square_attacked(self.king_square[self.side ^ 1], self.side):
+            if self.is_square_attacked(self.king_square[self.xside], self.side):
                 self.board = full_cpy(board_cpy)
                 self.side = side_cpy
+                self.xside = xside_cpy
                 self.enpassant = enpassant_cpy
                 self.castle = castle_cpy
                 self.king_square = full_cpy(king_square_cpy)
@@ -284,7 +294,6 @@ class BoardState():
         move_list.count += 1
 
     def gen_moves(self, move_list: MovesStruct) -> None:
-        self.first_move[self.ply + 1] = self.first_move[self.ply]
         move_list.count = 0
         for sq in range(BOARD_SQ_NUM):
             if not (sq & 0x88):
@@ -435,6 +444,7 @@ class BoardState():
             # copy board state
             board_cpy:list = full_cpy(self.board)
             side_cpy:int = self.side
+            xside_cpy:int = self.xside
             enpassant_cpy:int = self.enpassant
             castle_cpy:int = self.castle
             king_square_cpy:list = full_cpy(self.king_square)
@@ -448,6 +458,7 @@ class BoardState():
             # restore position
             self.board = full_cpy(board_cpy)
             self.side = side_cpy
+            self.xside = xside_cpy
             self.enpassant = enpassant_cpy
             self.castle = castle_cpy
             self.king_square = full_cpy(king_square_cpy)
@@ -468,6 +479,7 @@ class BoardState():
         for move_count in range(move_list.count):
             board_cpy:list = full_cpy(self.board)
             side_cpy:int = self.side
+            xside_cpy:int = self.xside
             enpassant_cpy:int = self.enpassant
             castle_cpy:int = self.castle
             king_square_cpy:list = full_cpy(self.king_square)
@@ -486,6 +498,7 @@ class BoardState():
             # restore board state
             self.board = full_cpy(board_cpy)
             self.side = side_cpy
+            self.xside = xside_cpy
             self.enpassant = enpassant_cpy
             self.castle = castle_cpy
             self.king_square = full_cpy(king_square_cpy)
@@ -519,7 +532,7 @@ class BoardState():
                 square = rank * 16 + file
                 if (file == 0):
                     print('     ', 8 - rank, end='  ')
-                if (on_board(square)):
+                if (not (square & 0x88)):
                     print(ascii_pieces[self.board[square]], end=' ')
             print()
         print('\n         a b c d e f g h\n')
@@ -544,7 +557,7 @@ class BoardState():
                 square = rank * 16 + file
                 if (file == 0):
                     print(8 - rank, end='  ')
-                if (on_board(square)):
+                if (not (square & 0x88)):
                     print('x' if self.is_square_attacked(square, side) else '.', end=' ')
             print()
         print('\n   a b c d e f g h\n')
@@ -576,7 +589,7 @@ class BoardState():
                 square = rank * 16 + file
                 if (file == 0):
                     print(8 - rank, end='  ')
-                if (on_board(square)):
+                if (not (square & 0x88)):
                     print(unicode_pieces[self.board[square]], end=' ')
             print()
         print('\n   a b c d e f g h\n')
@@ -619,6 +632,7 @@ if __name__ == '__main__':
     # init and print stuff because yes
     print(f'\n[WELCOME TO {NAME}]')
     print(f'[RUNNING ON]: {version}')
+    print(f'[VERSION {VERSION}]')
 
     # init board and parse FEN
     bboard: BoardState = BoardState()
