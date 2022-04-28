@@ -14,23 +14,22 @@ nodes_per_sec = lambda nodes, t_time: round(nodes // t_time)
 # used for storing moves and debugging
 class MovesStruct():
     def __init__(self) -> None:
-        self.moves:list = [gen_entry() for _ in range(GEN_STACK)]
-        self.count:int = 0
+        self.moves: list = [gen_entry() for _ in range(GEN_STACK)]
+        self.count: int = 0
 
 # main driver
 class BoardState():
     def __init__(self) -> None:
+        self.nodes: int = 0
+        self.parsed_fen: str = ''
+        self.king_square: list = [squares['e8'], squares['e1']]
+        self.side: int = -1
+        self.xside: int = -1
+        self.castle: int = 15
+        self.enpassant: int = squares['OFFBOARD']
 
-        self.nodes:int = 0
-        self.parsed_fen:str = ''
-        self.king_square:list = [squares['e8'], squares['e1']]
-        self.side:int = -1
-        self.xside:int = -1
-        self.castle:int = 15
-        self.enpassant:int = squares['OFFBOARD']
-
-        self.pceNum:list = [0 for _ in range(MAX_PIECE_TYPE)] # for recording the number of pieces
-        self.pceList:list = [[None for _ in range(MAX_AMOUNT_EACH_PIECE)] for _ in range(MAX_PIECE_TYPE)] # storing piece positions
+        self.pceNum: list = [0 for _ in range(MAX_PIECE_TYPE)] # for recording the number of pieces
+        self.pceList: list = [[None for _ in range(MAX_AMOUNT_EACH_PIECE)] for _ in range(MAX_PIECE_TYPE)] # storing piece positions
 
         self.fifty: int = 0 # the number of moves since a capture or pawn move, used to handle the fifty move draw rule
         self.hash_key: int = 0 # unique number corresponding to the current position
@@ -519,10 +518,10 @@ class BoardState():
 
         end_time = perf_counter()
         elapsed = end_time - start_time
-        print(f'\n  [SEARCH TIME]: {convert_to_ms(elapsed)} MS, {elapsed} SEC')
+        print(f'\n  [SEARCH TIME]: {convert_to_ms(elapsed)} ms, {elapsed} sec')
         print(f'  [DEPTH SEARCHED]: {depth} ply')
-        print(f'  [TOTAL NODES]: {self.nodes}')
-        print(f'  [TEST NPS]: {nodes_per_sec(self.nodes, elapsed)}')
+        print(f'  [TOTAL NODES]: {self.nodes} nodes')
+        print(f'  [TEST NPS]: {int(self.nodes//elapsed)} nps')
 
     def print_board(self) -> None:
         print()
