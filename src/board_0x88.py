@@ -2,7 +2,7 @@
 #!/usr/bin/env pypy3 -u
 
 # imports
-from sys import version
+from sys import version, argv
 from time import perf_counter
 from defs import *
 from validate import *
@@ -639,7 +639,7 @@ if __name__ == '__main__':
     bboard.init_entire_state(start_position)
     bboard.print_board()
 
-    bboard.perft_test(4)
+    bboard.perft_test(int(argv[1]))
 
     end_time: float = perf_counter()
     program_runtime:float = end_time - start_time
