@@ -122,5 +122,3 @@ king_offsets: tuple = ( 16, -16, 1, -1, 15, 17, -15, -17 )
 # deep copy of arbitrary objects
 full_cpy = lambda obj: deepcopy(obj)
 
-
-
