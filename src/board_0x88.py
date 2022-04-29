@@ -1,9 +1,10 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env pypy3 -u
+# -*- coding: utf-8 -*-
 
 # imports
 from copy import deepcopy
 from sys import version, argv
+from eval import eval_position
 from time import perf_counter
 from defs import *
 
@@ -610,10 +611,12 @@ if __name__ == '__main__':
     bboard: BoardState = BoardState()
     start_time: float = perf_counter()
     # bboard.init_entire_state("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
-    bboard.init_entire_state(start_position)
+    bboard.init_entire_state("rnbqkbnr/pppppppp/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1")
     bboard.print_board()
 
     bboard.perft_test(int(argv[1]))
+
+    print(f'  [EVALUATED SCORE]: {eval_position(bboard.board, bboard.side)}')
 
     end_time: float = perf_counter()
     program_runtime:float = end_time - start_time
