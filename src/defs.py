@@ -1,38 +1,13 @@
 
-
-
-
-# imports
-from copy import deepcopy
-
 # constants
 NAME: str = "TEMPEST 1.0"
-VERSION: str = "v1.196 HashHobo"
+VERSION: str = "v2.204 HashHobo"
 BOARD_SQ_NUM: int = 128
-MAX_MOVES_INGAME: int = 2048
 GEN_STACK: int = 256
-MAX_AMOUNT_EACH_PIECE: int = 10
-MAX_PIECE_TYPE: int = 13
 
-MAX_PLY: int = 20
-HIST_STACK: int = 400
-
-# table and list entries
-class gen_entry:
-    def __init__(self):
-        self.move = None
-        self.score = None
-
-class hist_entry:
-    def __init__(self):
-        self.b: list
-        self.s: int
-        self.e: int
-        self.c: int
-        self.k_s: list
-
-# stopwatch
-convert_to_ms = lambda x: round(x * 1000)
+# capture flags (just give em random number)
+ALL_MOVES = 257
+CAPTURE_MOVES = 258
 
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 # 0, 100, 280, 320, 479, 929, 0, 100, 280, 320, 479, 929
@@ -104,12 +79,9 @@ get_move_castling = lambda move: (move >> 21) & 0x1
 # initial values
 sides: dict = { 'black':0, 'white':1 }
 castling_vals: dict = { 'K':1, 'Q':2, 'k':4, 'q':8 }
-capture_flags: dict = { "all_moves":45514, "only_captures":18760 } # very specific keys
 
 # fen debug positions
 start_position: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-custom_endgame_position: str = '8/5R2/8/k7/1r6/4K3/6R1/8 w - - 0 1'
-custom_middlegame_position: str = 'r1bq1rk1/ppp1bppp/2n2n2/3pp3/2BPP3/2N1BN2/PP3PPP/R2Q1RK1 w - - 0 1'
 empty_board: str = '8/8/8/8/8/8/8/8 w - - 0 1'
 tricky_position: str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'
 
@@ -118,7 +90,3 @@ knight_offsets: tuple = ( 33, 31, 18, 14, -33, -31, -18, -14 )
 bishop_offsets: tuple = ( 15, 17, -15, -17 )
 rook_offsets: tuple = ( 16, -16, 1, -1 )
 king_offsets: tuple = ( 16, -16, 1, -1, 15, 17, -15, -17 )
-
-# deep copy of arbitrary objects
-full_cpy = lambda obj: deepcopy(obj)
-
