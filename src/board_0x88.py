@@ -237,8 +237,8 @@ class BoardState():
             castling:int = get_move_castling(move.move)
 
             # check validity of move
-            assert (0 <= from_square)
-            assert (0 <= to_square)
+            assert 0 <= from_square
+            assert 0 <= to_square
 
             # perform the move
             self.board[to_square] = self.board[from_square]
@@ -307,7 +307,7 @@ class BoardState():
                                 self.add_move(move_list, encode_move(sq, to_sq, N, 0, 0, 0, 0))
                             else:
                                 self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
-                                if (sq >= squares['a2'] and sq <= squares['h2']) and (not self.board[sq - 32]):
+                                if sq >= squares['a2'] and sq <= squares['h2'] and not self.board[sq - 32]:
                                     self.add_move(move_list, encode_move(sq, sq - 32, 0, 0, 1, 0, 0))
                         for i in range(4):
                             pawn_offset:int = bishop_offsets[i]
@@ -343,7 +343,7 @@ class BoardState():
                                 self.add_move(move_list, encode_move(sq, to_sq, n, 0, 0, 0, 0))
                             else:
                                 self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
-                                if (sq >= squares['a7'] and sq <= squares['h7']) and (not self.board[sq + 32]):
+                                if sq >= squares['a7'] and sq <= squares['h7'] and not self.board[sq + 32]:
                                     self.add_move(move_list, encode_move(sq, sq + 32, 0, 0, 1, 0, 0))
                         for i in range(4):
                             pawn_offset:int = bishop_offsets[i]
