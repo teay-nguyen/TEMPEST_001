@@ -48,6 +48,7 @@ class BoardState():
         self.pceNum: list = [0 for _ in range(MAX_PIECE_TYPE)] # for recording the number of pieces
         self.pceList: list = [[None for _ in range(MAX_AMOUNT_EACH_PIECE)] for _ in range(MAX_PIECE_TYPE)] # storing piece positions
 
+        self.material: list = [0, 0] # calculate the material for both sides, indexed by sides[<color>]
         self.fifty: int = 0 # the number of moves since a capture or pawn move, used to handle the fifty move draw rule
         self.hash_key: int = 0 # unique number corresponding to the current position
         self.ply: int = 0 # number of half-moves since the root of the search tree
