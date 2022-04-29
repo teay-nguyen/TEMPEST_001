@@ -16,6 +16,24 @@ class MovesStruct():
         self.moves: list = [gen_entry() for _ in range(GEN_STACK)]
         self.count: int = 0
 
+'''
+
+    NOTE:
+
+    - hist_dat entry must contain the following:
+
+        board
+        side
+        xside
+        enpassant
+        castle
+        king_square
+        fifty
+        pceNum
+        pceList
+
+'''
+
 # main driver
 class BoardState():
     def __init__(self) -> None:
@@ -36,7 +54,6 @@ class BoardState():
         self.hist_ply: int = 0 # the number of ply since the beginning of the game
         self.history: list = [[None for _ in range(BOARD_SQ_NUM)] for _ in range(BOARD_SQ_NUM)] # the history heuristic array (used for move ordering)
         self.hist_dat: list = [hist_entry() for _ in range(HIST_STACK)] # we need a list of hist_entry so we can take back moves
-        self.first_move: list = [None for _ in range(MAX_PLY)] # the move list for ply n starts at first_move[n] and ends at first_move[n+1]
         self.pv: list = [[None for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
         self.pv_length: list = [None for _ in range(MAX_PLY)]
 
@@ -56,7 +73,6 @@ class BoardState():
 
         self.ply = 0
         self.hist_ply = 0
-        self.first_move[0] = 0
 
     def clear_board(self) -> None:
         # sweep the surface clean
