@@ -9,7 +9,6 @@ from validate import *
 
 # I don't know what I did here
 is_piece = is_piece_
-nodes_per_sec = lambda nodes, t_time: round(nodes // t_time)
 
 # used for storing moves and debugging
 class MovesStruct():
