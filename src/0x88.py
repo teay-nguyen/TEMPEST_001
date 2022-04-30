@@ -137,28 +137,6 @@ class BoardState():
 
 
 
-
-
-
-    def xray_attacks(self, square:int, side:int):
-        # bishop and queen
-        for i in range(4):
-            target_sq = square + bishop_offsets[i]
-            while not (target_sq & 0x88):
-                if 0 <= target_sq <= 127:
-                    target_piece = self.board[target_sq]
-                    if (target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q): return 1
-                    target_sq += bishop_offsets[i]
-
-        # rook and queen
-        for i in range(4):
-            target_sq = square + rook_offsets[i]
-            while not (target_sq & 0x88):
-                if 0 <= target_sq <= 127:
-                    target_piece = self.board[target_sq]
-                    if (target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q): return 1
-                    target_sq += rook_offsets[i]
-
     def is_square_attacked(self, square:int, side:int) -> int:
         # pawn attacks
         if side:
