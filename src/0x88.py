@@ -13,7 +13,7 @@ import sys
 # used for storing moves and debugging
 class MovesStruct():
     def __init__(self) -> None:
-        self.moves: list = [None for _ in range(GEN_STACK)]
+        self.moves: list = [None,]*GEN_STACK
         self.count: int = 0
 
 # main driver
@@ -585,9 +585,10 @@ def print_move_list(move_list, mode:str):
     for idx in range(move_list.count):
         move = move_list.moves[idx]
         if move is None: continue
-        formated_move = '{}{}'.format(square_to_coords[get_move_source(move)], square_to_coords[get_move_target(move)])
-        promotion_move = promoted_pieces[get_move_piece(move)] if (get_move_piece(move)) else ' '
-        joined_str = '{}{}'.format(formated_move, promotion_move)
+        formated_move = f'{square_to_coords[get_move_source(move)]}{square_to_coords[get_move_target(move)]}'
+        promotion_move = promoted_pieces[get_move_piece(move)] if get_move_piece(move) else ' '
+        # joined_str = '{}{}'.format(formated_move, promotion_move)
+        joined_str = f'{formated_move}{promotion_move}'
         if mode == 'full':
             print('{}  {}         {}        {}        {}'.format(
                         joined_str,
@@ -602,9 +603,10 @@ def print_move_list(move_list, mode:str):
 if __name__ == '__main__':
 
     # init and print stuff because yes
-    print(f'\n[WELCOME TO {NAME}]')
+    print(f'\n[STARTING UP {NAME}]')
     print(f'[RUNNING ON]: {sys.version}')
     print(f'[ENGINE VERSION {VERSION}]')
+    print(f'[ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
 
     # init board and parse FEN
     bboard: BoardState = BoardState()
@@ -614,7 +616,7 @@ if __name__ == '__main__':
 
     bboard.perft_test(int(sys.argv[1]))
 
-    print(f'  [EVALUATED SCORE]: {eval_position(bboard.board, bboard.side)}')
+    # print(f'  [EVALUATED SCORE]: {eval_position(bboard.board, bboard.side)}')
     print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
 
     end_time: float = perf_counter()

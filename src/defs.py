@@ -2,29 +2,13 @@
 # constants
 NAME: str = "TEMPEST 1.0"
 VERSION: str = "v2.204 HashHobo"
+ENGINE_STATUS: str = "WIP"
 BOARD_SQ_NUM: int = 128
 GEN_STACK: int = 256
 
 # capture flags (just give em random number)
-ALL_MOVES = 257
-CAPTURE_MOVES = 258
-
-# piece encoding
-e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 # 0, 100, 280, 320, 479, 929, 0, 100, 280, 320, 479, 929
-ascii_pieces: str = ".PNBRQKpnbrqko"
-unicode_pieces: str = ".♙♘♗♖♕♔♙♞♝♜♛♚" # only used with CPython
-
-# castling rights
-castling_rights: tuple = (
-     7, 15, 15, 15,  3, 15, 15, 11,  o, o, o, o, o, o, o, o,
-    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
-    13, 15, 15, 15, 12, 15, 15, 14,  o, o, o, o, o, o, o, o,
-)
+ALL_MOVES: int = 257
+CAPTURE_MOVES: int = 258
 
 # mapping values to match coordinates or into strings
 squares: dict = {
@@ -48,6 +32,35 @@ square_to_coords: tuple = (
     "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", "i3", "j3", "k3", "l3", "m3", "n3", "o3", "p3",
     "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", "i2", "j2", "k2", "l2", "m2", "n2", "o2", "p2",
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1", "l1", "m1", "n1", "o1", "p1",
+)
+
+# mirror the board because there is no optimal way to flip the board, (no not the [::-1] or the numpy flip, board is a 1d array)
+mirror_board = (
+    squares['a1'], squares['b1'], squares['c1'], squares['d1'], squares['e1'], squares['f1'], squares['g1'], squares['h1'],
+    squares['a2'], squares['b2'], squares['c2'], squares['d2'], squares['e2'], squares['f2'], squares['g2'], squares['h2'],
+    squares['a3'], squares['b3'], squares['c3'], squares['d3'], squares['e3'], squares['f3'], squares['g3'], squares['h3'],
+    squares['a4'], squares['b4'], squares['c4'], squares['d4'], squares['e4'], squares['f4'], squares['g4'], squares['h4'],
+    squares['a5'], squares['b5'], squares['c5'], squares['d5'], squares['e5'], squares['f5'], squares['g5'], squares['h5'],
+    squares['a6'], squares['b6'], squares['c6'], squares['d6'], squares['e6'], squares['f6'], squares['g6'], squares['h6'],
+    squares['a7'], squares['b7'], squares['c7'], squares['d7'], squares['e7'], squares['f7'], squares['g7'], squares['h7'],
+    squares['a8'], squares['b8'], squares['c8'], squares['d8'], squares['e8'], squares['f8'], squares['g8'], squares['h8'],
+)
+
+# piece encoding
+e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 # 0, 100, 280, 320, 479, 929, 0, 100, 280, 320, 479, 929
+ascii_pieces: str = ".PNBRQKpnbrqko"
+unicode_pieces: str = ".♙♘♗♖♕♔♙♞♝♜♛♚" # only used with CPython
+
+# castling rights
+castling_rights: tuple = (
+     7, 15, 15, 15,  3, 15, 15, 11,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    15, 15, 15, 15, 15, 15, 15, 15,  o, o, o, o, o, o, o, o,
+    13, 15, 15, 15, 12, 15, 15, 14,  o, o, o, o, o, o, o, o,
 )
 
 # conversion into string or int, primarily for print
