@@ -52,6 +52,7 @@ square_to_coords: tuple = (
 
 # conversion into string or int, primarily for print
 char_pieces: dict = { 'P':P, 'N':N, 'B':B, 'R':R, 'Q':Q, 'K':K, 'p':p, 'n':n, 'b':b, 'r':r, 'q':q, 'k':k }
+int_pieces: dict = { P:'P', N:'N', B:'B', R:'R', Q:'Q', K:'K', p:'p', n:'n', b:'b', r:'r', q:'q', k:'k' }
 promoted_pieces: dict = { Q:'q', R:'r', B:'b', N:'n', q:'q', r:'r', b:'b', n:'n' }
 
 #    source, target params must be a valid value from the "squares" dict

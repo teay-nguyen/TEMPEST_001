@@ -52,6 +52,32 @@ class BoardState():
         self.castle = 0
         self.enpassant = 120
 
+    def generate_fen(self):
+        fen_string: str = ''
+        empty: int = 0
+
+        # filling up the string with pieces
+        for r in range(8):
+            for f in range(16):
+                sq = r * 16 + f
+                if not (sq & 0x88):
+                    if self.board[sq] == e: empty += 1
+                    elif 1 <= self.board[sq] <= 12:
+                        if empty:
+                            fen_string = f'{fen_string}{empty}'
+                            empty = 0
+                        fen_string = f'{fen_string}{int_pieces[self.board[sq]]}'
+            if empty:
+                fen_string = f'{fen_string}{empty}'
+                empty = 0
+            fen_string = f'{fen_string}/'
+        fen_string = fen_string[:-1]
+
+        if self.side: fen_string = f'{fen_string} w '
+        else: fen_string = f'{fen_string} b '
+
+        return fen_string
+
     def parse_fen(self, fen:str) -> None:
         # clear board before parsing string
         self.clear_board()
@@ -618,6 +644,7 @@ if __name__ == '__main__':
     bboard.perft_test(int(argv[1]))
 
     print(f'  [EVALUATED SCORE]: {eval_position(bboard.board, bboard.side)}')
+    print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
 
     end_time: float = perf_counter()
     program_runtime:float = end_time - start_time
