@@ -1,7 +1,7 @@
 from defs import *
 
 piece_val = (0, 100, 280, 320, 479, 929, 60000, -100, -280, -320, -479, -929, -60000)
-pawn_pcsq = (
+pawn_pscq = (
      0,   0,   0,   0,   0,   0,   0,   0,
     78,  83,  86,  73, 102,  82,  85,  90,
      7,  29,  21,  44,  40,  31,  44,   7,
@@ -54,7 +54,7 @@ queen_pscq = (
    -36, -18,   0, -19, -15, -15, -21, -38
 )
 
-king_pcsq = (
+king_pscq = (
     4,  54,  47, -99, -99,  60,  83, -62,
    -32,  10,  55,  56,  56,  55,  10,   3,
    -62,  12, -57,  44, -67,  28,  37, -31,
@@ -66,16 +66,16 @@ king_pcsq = (
 )
 
 psqt = {
-    P:pawn_pcsq,
+    P:pawn_pscq,
     N:knight_pscq,
     B:bishop_pscq,
     R:rook_pscq,
     Q:queen_pscq,
-    K:king_pcsq,
-    p:pawn_pcsq[::-1],
+    K:king_pscq,
+    p:pawn_pscq[::-1],
     n:knight_pscq[::-1],
     b:bishop_pscq[::-1],
     r:rook_pscq[::-1],
     q:queen_pscq[::-1],
-    k:king_pcsq[::-1],
+    k:king_pscq[::-1],
 }
