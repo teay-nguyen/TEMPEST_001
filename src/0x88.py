@@ -4,9 +4,10 @@
 # imports
 from __future__ import print_function
 from copy import deepcopy
-from sys import version, argv
 from eval import eval_position
 from time import perf_counter
+import numpy as np
+import sys
 from defs import *
 
 # used for storing moves and debugging
@@ -627,26 +628,25 @@ def print_move_list(move_list, mode:str):
 if __name__ == '__main__':
 
     # checks
-    assert int(argv[1])
+    assert int(sys.argv[1])
 
     # init and print stuff because yes
     print(f'\n[WELCOME TO {NAME}]')
-    print(f'[RUNNING ON]: {version}')
+    print(f'[RUNNING ON]: {sys.version}')
     print(f'[ENGINE VERSION {VERSION}]')
 
     # init board and parse FEN
     bboard: BoardState = BoardState()
     start_time: float = perf_counter()
-    # bboard.init_entire_state("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
     bboard.init_entire_state(start_position)
     bboard.print_board()
 
-    bboard.perft_test(int(argv[1]))
+    bboard.perft_test(int(sys.argv[1]))
 
     print(f'  [EVALUATED SCORE]: {eval_position(bboard.board, bboard.side)}')
     print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
 
     end_time: float = perf_counter()
-    program_runtime:float = end_time - start_time
+    program_runtime: float = end_time - start_time
 
     print(f'\n  [PROGRAM FINISHED IN {round(program_runtime * 1000)} MS, {program_runtime} SEC]')
