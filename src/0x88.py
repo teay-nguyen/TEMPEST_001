@@ -5,7 +5,6 @@
 
 # imports
 from copy import deepcopy
-from eval import eval_position
 from time import perf_counter
 from defs import *
 import sys
@@ -13,7 +12,7 @@ import sys
 # used for storing moves and debugging
 class MovesStruct():
     def __init__(self) -> None:
-        self.moves: list = [None,]*GEN_STACK
+        self.moves: list = [-1,]*GEN_STACK
         self.count: int = 0
 
 # main driver
@@ -120,11 +119,11 @@ class BoardState():
 
         # castle rights parsing
         for sym in fen_segments[2]:
-            if sym == 'K': self.castle |= castling_vals['K']
-            if sym == 'Q': self.castle |= castling_vals['Q']
-            if sym == 'k': self.castle |= castling_vals['k']
-            if sym == 'q': self.castle |= castling_vals['q']
             if sym == '-': break
+            elif sym == 'K': self.castle |= castling_vals['K']
+            elif sym == 'Q': self.castle |= castling_vals['Q']
+            elif sym == 'k': self.castle |= castling_vals['k']
+            elif sym == 'q': self.castle |= castling_vals['q']
 
         # load enpassant square
         fen_ep:str = fen_segments[3]
@@ -193,7 +192,7 @@ class BoardState():
     def make_move(self, move:int, capture_flag:int):
 
         # filter out the None moves
-        if move is None: return 0
+        if move == -1: return 0
 
         # quiet moves
         if capture_flag == ALL_MOVES:
@@ -366,8 +365,8 @@ class BoardState():
                                         self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
-                if (((self.board[sq] == B) or (self.board[sq] == Q)) if self.side\
-                    else ((self.board[sq] == b) or (self.board[sq] == q))):
+                if ((self.board[sq] == B) or (self.board[sq] == Q)) if self.side\
+                    else ((self.board[sq] == b) or (self.board[sq] == q)):
                     for i in range(4):
                         to_sq:int = sq + bishop_offsets[i]
                         while not (to_sq & 0x88):
@@ -381,8 +380,8 @@ class BoardState():
                                 to_sq += bishop_offsets[i]
 
 
-                if (((self.board[sq] == R) or (self.board[sq] == Q)) if self.side\
-                    else ((self.board[sq] == r) or (self.board[sq] == q))):
+                if ((self.board[sq] == R) or (self.board[sq] == Q)) if self.side\
+                    else ((self.board[sq] == r) or (self.board[sq] == q)):
                     for i in range(4):
                         to_sq:int = sq + rook_offsets[i]
                         while not (to_sq & 0x88):
@@ -475,26 +474,18 @@ class BoardState():
             self.castle = castle_cpy
             self.king_square = deepcopy(king_square_cpy)
 
-            if get_move_piece(move_list.moves[move_count]):
-                print('  {}{}{}:   {}'.format(
-                    square_to_coords[get_move_source(move_list.moves[move_count])],
-                    square_to_coords[get_move_target(move_list.moves[move_count])],
-                    promoted_pieces[get_move_piece(move_list.moves[move_count])],
-                    old_nodes,
-                ))
-            else:
-                print('  {}{}:   {}'.format(
-                    square_to_coords[get_move_source(move_list.moves[move_count])],
-                    square_to_coords[get_move_target(move_list.moves[move_count])],
-                    old_nodes,
-                ))
+            curr_elapsed = perf_counter() - start_time
+
+            if int(sys.argv[2]):
+                if get_move_piece(move_list.moves[move_count]): print(f'  {square_to_coords[get_move_source(move_list.moves[move_count])]}{square_to_coords[get_move_target(move_list.moves[move_count])]}{promoted_pieces[get_move_piece(move_list.moves[move_count])]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
+                else: print(f'  {square_to_coords[get_move_source(move_list.moves[move_count])]}{square_to_coords[get_move_target(move_list.moves[move_count])]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
 
         end_time = perf_counter()
         elapsed = end_time - start_time
         print(f'\n  [SEARCH TIME]: {round(elapsed * 1000)} ms, {elapsed} sec')
         print(f'  [DEPTH SEARCHED]: {depth} ply')
         print(f'  [TOTAL NODES]: {self.nodes} nodes')
-        print(f'  [TEST NPS]: {int(self.nodes//elapsed)} nps')
+        print(f'  [NPS]: {(self.nodes//elapsed)} nps')
 
     def print_board(self) -> None:
         print()
@@ -616,8 +607,8 @@ if __name__ == '__main__':
 
     bboard.perft_test(int(sys.argv[1]))
 
-    # print(f'  [EVALUATED SCORE]: {eval_position(bboard.board, bboard.side)}')
-    print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
+    if int(sys.argv[2]):
+        print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
 
     end_time: float = perf_counter()
     program_runtime: float = end_time - start_time
