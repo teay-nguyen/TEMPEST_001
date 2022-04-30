@@ -435,7 +435,7 @@ class BoardState():
             self.king_square = deepcopy(king_square_cpy)
 
     def perft_test(self, depth:int) -> None:
-        print('\n  [ PERFT TEST GENERATING MOVES ]\n')
+        if int(sys.argv[2]): print('\n  [ PERFT TEST GENERATING MOVES ]\n')
 
         # define move list
         move_list: MovesStruct = MovesStruct()
@@ -485,7 +485,7 @@ class BoardState():
         print(f'\n  [SEARCH TIME]: {round(elapsed * 1000)} ms, {elapsed} sec')
         print(f'  [DEPTH SEARCHED]: {depth} ply')
         print(f'  [TOTAL NODES]: {self.nodes} nodes')
-        print(f'  [NPS]: {(self.nodes//elapsed)} nps')
+        print(f'  [NPS]: {int(self.nodes//elapsed)} nps')
 
     def print_board(self) -> None:
         print()
@@ -596,7 +596,7 @@ if __name__ == '__main__':
     # init and print stuff because yes
     print(f'\n[STARTING UP {NAME}]')
     print(f'[RUNNING ON]: {sys.version}')
-    print(f'[ENGINE VERSION {VERSION}]')
+    print(f'[ENGINE VERSION]: {VERSION}')
     print(f'[ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
 
     # init board and parse FEN
