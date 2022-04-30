@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # imports
+from __future__ import print_function
 from copy import deepcopy
 from sys import version, argv
 from eval import eval_position
@@ -611,7 +612,7 @@ if __name__ == '__main__':
     bboard: BoardState = BoardState()
     start_time: float = perf_counter()
     # bboard.init_entire_state("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
-    bboard.init_entire_state("rnbqkbnr/pppppppp/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1")
+    bboard.init_entire_state(start_position)
     bboard.print_board()
 
     bboard.perft_test(int(argv[1]))
