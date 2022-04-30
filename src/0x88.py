@@ -1,14 +1,14 @@
+
+
 #!/usr/bin/env pypy3 -u
 # -*- coding: utf-8 -*-
 
 # imports
-from __future__ import print_function
 from copy import deepcopy
 from eval import eval_position
 from time import perf_counter
-import numpy as np
-import sys
 from defs import *
+import sys
 
 # used for storing moves and debugging
 class MovesStruct():
@@ -235,10 +235,6 @@ class BoardState():
             double_push:int = get_move_pawn(move)
             castling:int = get_move_castling(move)
 
-            # check validity of move
-            assert 0 <= from_square
-            assert 0 <= to_square
-
             # perform the move
             self.board[to_square] = self.board[from_square]
             self.board[from_square] = e
@@ -462,7 +458,7 @@ class BoardState():
             self.king_square = deepcopy(king_square_cpy)
 
     def perft_test(self, depth:int) -> None:
-        print('\n  [   PERFT TEST GENERATING MOVES   ]\n')
+        print('\n  [ PERFT TEST GENERATING MOVES ]\n')
 
         # define move list
         move_list: MovesStruct = MovesStruct()
@@ -626,9 +622,6 @@ def print_move_list(move_list, mode:str):
     print(f'\n  [TOTAL MOVES: {move_list.count}, TEMPEST_001]')
 
 if __name__ == '__main__':
-
-    # checks
-    assert int(sys.argv[1])
 
     # init and print stuff because yes
     print(f'\n[WELCOME TO {NAME}]')
