@@ -35,7 +35,7 @@ square_to_coords: tuple = (
 )
 
 # mirror the board because there is no optimal way to flip the board, (no not the [::-1] or the numpy flip, board is a 1d array)
-mirror_board = (
+mirror_board: tuple = (
     squares['a1'], squares['b1'], squares['c1'], squares['d1'], squares['e1'], squares['f1'], squares['g1'], squares['h1'],
     squares['a2'], squares['b2'], squares['c2'], squares['d2'], squares['e2'], squares['f2'], squares['g2'], squares['h2'],
     squares['a3'], squares['b3'], squares['c3'], squares['d3'], squares['e3'], squares['f3'], squares['g3'], squares['h3'],

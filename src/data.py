@@ -6,7 +6,7 @@ OPENING_PHASE_SCORE: int = 6192
 ENDGAME_PHASE_SCORE: int = 518
 
 # positional score [phase][piece][square]
-positional_score = [[[  0,   0,   0,   0,   0,   0,  0,   0,
+positional_score: list = [[[  0,   0,   0,   0,   0,   0,  0,   0,
                        98, 134,  61,  95,  68, 126, 34, -11,
                        -6,   7,  26,  31,  65,  56, 25, -20,
                       -14,  13,   6,  21,  23,  12, 17, -23,
@@ -104,7 +104,7 @@ positional_score = [[[  0,   0,   0,   0,   0,   0,  0,   0,
                      -53, -34, -21, -11, -28, -14, -24, -43]]]
 
 # get rank utility
-get_rank = (
+get_rank: tuple = (
     7, 7, 7, 7, 7, 7, 7, 7,
     6, 6, 6, 6, 6, 6, 6, 6,
     5, 5, 5, 5, 5, 5, 5, 5,
@@ -116,38 +116,38 @@ get_rank = (
 )
 
 # double pawn penalty
-double_pawn_penalty_opening = -5
-double_pawn_penalty_endgame = -10
+double_pawn_penalty_opening: int = -5
+double_pawn_penalty_endgame: int = -10
 
 # isolated pawn penalty
-isolated_pawn_penalty_opening = -5
-isolated_pawn_penalty_endgame = -10
+isolated_pawn_penalty_opening: int = -5
+isolated_pawn_penalty_endgame: int = -10
 
 # passed pawn bonus
-passed_pawn_bonus = { 0, 10, 30, 50, 75, 100, 150, 200 }
+passed_pawn_bonus: tuple = ( 0, 10, 30, 50, 75, 100, 150, 200 )
 
 # semi open file score
-semi_open_file_score = 10
+semi_open_file_score: int = 10
 
 # open file score
-open_file_score = 15
+open_file_score: int = 15
 
 # mobility units
-bishop_unit = 4
-queen_unit = 9
+bishop_unit: int = 4
+queen_unit: int = 9
 
 # mobility bonus
-bishop_mobility_opening = 5
-bishop_mobility_endgame = 5
-queen_mobility_opening = 1
-queen_mobility_endgame = 2
+bishop_mobility_opening: int = 5
+bishop_mobility_endgame: int = 5
+queen_mobility_opening: int = 1
+queen_mobility_endgame: int = 2
 
 # king shield bonus
-king_shield_bonus = 5
+king_shield_bonus: int = 5
 
 # piece value, 2d matrix because index opening phase and endgame phase
 piece_val: list = [[0, 82, 337, 365, 477, 1025, 12000, -82, -337, -365, -477, -1025, -12000],
                     [0, 94, 281, 297, 512,  936, 12000, -94, -281, -297, -512,  -936, -12000]]
 
 # self explanitory
-phases = {'opening':0, 'endgame':1, 'midgame':2}
+phases: dict = {'opening':0, 'endgame':1, 'midgame':2}
