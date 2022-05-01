@@ -6,10 +6,12 @@
 # imports
 from copy import deepcopy
 from time import perf_counter
+from dataclasses import dataclass
 from defs import *
 import sys
 
 # used for storing moves and debugging
+@dataclass
 class MovesStruct():
     def __init__(self) -> None:
         self.moves: list = [move_t(-1) for _ in range(GEN_STACK)]
