@@ -9,11 +9,10 @@
 
     - 0x88 board representation
     - I have not decided what kind of search algorithm to use yet, but I'm more inclined into choosing AlphaBeta or Monte-Carlo
-    - Zobrist Hashing and Transposition Tables (I'm not sure if this is necessary in Monte-Carlo search)
     - Some other search pruning techniques
+    - Rudimentary features: Transposition Table, Iterative Deepening, Aspiration Windows, Quiescence Search
 
                                  [LANGUAGE: PYTHON 3.8.9, VERSION: v1.0]
 
     - I actually document or keep my older implementations of this, so you can check it out and probably send a PR if you want
     - I put the first version in the old trash implementation folder because it is indeed trash and doesn't work anyway
-    - My old version was largely imcompatible with Pypy because Pypy somehow runs incredibly slow with my old version, maybe its because of pygame or just my trash coding skills
