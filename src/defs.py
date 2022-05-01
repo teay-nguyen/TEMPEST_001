@@ -97,7 +97,7 @@ castling_vals: dict = { 'K':1, 'Q':2, 'k':4, 'q':8 }
 # fen debug positions
 start_position: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 empty_board: str = '8/8/8/8/8/8/8/8 w - - 0 1'
-tricky_position: str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'
+tricky_position: str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - '
 
 # piece movement offsets
 knight_offsets: tuple = ( 33, 31, 18, 14, -33, -31, -18, -14 )
