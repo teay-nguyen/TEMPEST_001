@@ -45,18 +45,6 @@ square_to_coords: tuple = (
     "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", "i1", "j1", "k1", "l1", "m1", "n1", "o1", "p1",
 )
 
-# mirror the board because there is no optimal way to flip the board, (no not the [::-1] or the numpy flip, board is a 1d array)
-mirror_board: tuple = (
-    squares['a1'], squares['b1'], squares['c1'], squares['d1'], squares['e1'], squares['f1'], squares['g1'], squares['h1'],
-    squares['a2'], squares['b2'], squares['c2'], squares['d2'], squares['e2'], squares['f2'], squares['g2'], squares['h2'],
-    squares['a3'], squares['b3'], squares['c3'], squares['d3'], squares['e3'], squares['f3'], squares['g3'], squares['h3'],
-    squares['a4'], squares['b4'], squares['c4'], squares['d4'], squares['e4'], squares['f4'], squares['g4'], squares['h4'],
-    squares['a5'], squares['b5'], squares['c5'], squares['d5'], squares['e5'], squares['f5'], squares['g5'], squares['h5'],
-    squares['a6'], squares['b6'], squares['c6'], squares['d6'], squares['e6'], squares['f6'], squares['g6'], squares['h6'],
-    squares['a7'], squares['b7'], squares['c7'], squares['d7'], squares['e7'], squares['f7'], squares['g7'], squares['h7'],
-    squares['a8'], squares['b8'], squares['c8'], squares['d8'], squares['e8'], squares['f8'], squares['g8'], squares['h8'],
-)
-
 # piece encoding
 e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 # 0, 100, 280, 320, 479, 929, 0, 100, 280, 320, 479, 929
 ascii_pieces: str = ".PNBRQKpnbrqko"

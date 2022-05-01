@@ -218,7 +218,7 @@ class BoardState():
             castling:int = get_move_castling(move)
 
             # perform the move
-            captured_piece = self.board[to_square]
+            captured_piece:int = self.board[to_square]
             self.board[to_square] = self.board[from_square]
             self.board[from_square] = e
 
