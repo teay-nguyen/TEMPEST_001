@@ -1,4 +1,8 @@
 
+
+# imports
+from dataclasses import dataclass
+
 # constants
 NAME: str = "TEMPEST 1.0"
 VERSION: str = "v2.204 HashHobo"
@@ -9,6 +13,13 @@ GEN_STACK: int = 256
 # capture flags (just give em random number)
 ALL_MOVES: int = 257
 CAPTURE_MOVES: int = 258
+
+# state storing
+
+@dataclass
+class move_t:
+    move: int
+    score: int = 0
 
 # mapping values to match coordinates or into strings
 squares: dict = {
