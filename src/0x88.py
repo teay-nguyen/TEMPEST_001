@@ -12,7 +12,7 @@ import sys
 # used for storing moves and debugging
 class MovesStruct():
     def __init__(self) -> None:
-        self.moves: list = [-1,]*GEN_STACK
+        self.moves: list = [None]*GEN_STACK
         self.count: int = 0
 
 # main driver
@@ -189,10 +189,10 @@ class BoardState():
 
 
 
-    def make_move(self, move:int, capture_flag:int):
+    def make_move(self, move:int, capture_flag:int) -> int:
 
         # filter out the None moves
-        if move == -1: return 0
+        if move is None: return 0
 
         # quiet moves
         if capture_flag == ALL_MOVES:
@@ -259,6 +259,7 @@ class BoardState():
         elif capture_flag == CAPTURE_MOVES:
             if get_move_capture(move): self.make_move(move, ALL_MOVES)
             else: return 0 # move is not a capture
+        return 0 # shouldn't reach here
 
     def add_move(self, move_list: MovesStruct, move: int) -> None:
         move_list.moves[move_list.count] = move
@@ -480,8 +481,7 @@ class BoardState():
                 if get_move_piece(move_list.moves[move_count]): print(f'  {square_to_coords[get_move_source(move_list.moves[move_count])]}{square_to_coords[get_move_target(move_list.moves[move_count])]}{promoted_pieces[get_move_piece(move_list.moves[move_count])]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
                 else: print(f'  {square_to_coords[get_move_source(move_list.moves[move_count])]}{square_to_coords[get_move_target(move_list.moves[move_count])]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
 
-        end_time = perf_counter()
-        elapsed = end_time - start_time
+        elapsed = perf_counter() - start_time
         print(f'\n  [SEARCH TIME]: {round(elapsed * 1000)} ms, {elapsed} sec')
         print(f'  [DEPTH SEARCHED]: {depth} ply')
         print(f'  [TOTAL NODES]: {self.nodes} nodes')
@@ -607,10 +607,8 @@ if __name__ == '__main__':
 
     bboard.perft_test(int(sys.argv[1]))
 
-    if int(sys.argv[2]):
-        print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
+    if int(sys.argv[2]): print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
 
-    end_time: float = perf_counter()
-    program_runtime: float = end_time - start_time
+    program_runtime: float = perf_counter() - start_time
 
     print(f'\n  [PROGRAM FINISHED IN {round(program_runtime * 1000)} MS, {program_runtime} SEC]')
