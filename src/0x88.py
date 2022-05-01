@@ -458,14 +458,14 @@ class BoardState():
 
             if not self.make_move(move_list.moves[move_count], ALL_MOVES): continue
 
-            # cummulative NODES
-            cummulative_nodes:int = self.nodes
+            # leaf NODES
+            leaf_nodes:int = self.nodes
 
             # recursive call
             self.perft_driver(depth - 1)
 
             # old nodes
-            old_nodes:int = self.nodes - cummulative_nodes
+            old_nodes:int = self.nodes - leaf_nodes
 
             # restore board state
             self.board = deepcopy(board_cpy)
