@@ -561,11 +561,7 @@ if __name__ == '__main__':
     bboard.parse_fen(start_position)
     bboard.print_board()
     depth = sys.argv[1]
-
-    # debug info
-    if int(sys.argv[2]):
-        print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
-        print(f'  [EVALUATION (HANDCRAFTED)]: {evaluate(bboard.board, bboard.side, bboard.pce_count)}, {"whites" if bboard.side else "blacks"} side')
+    debug_info = sys.argv[2]
 
     program_runtime: float = perf_counter() - start_time
 
