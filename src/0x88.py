@@ -3,9 +3,19 @@
 # imports
 from copy import deepcopy
 from time import perf_counter
-from eval import evaluate
 import sys
+import uuid
 from defs import *
+
+def rand_U64() -> int:
+    return uuid.uuid1().int>>64
+
+class Zobrist:
+    def __init__(self):
+        self.piecesquare:list = [[rand_U64() for _ in range(BOARD_SQ_NUM)] for _ in range(13)]
+        self.side:int = rand_U64()
+        self.castling:list = [rand_U64() for _ in range(16)]
+        self.ep:list = [rand_U64() for _ in range(BOARD_SQ_NUM)]
 
 class MovesStruct:
     def __init__(self) -> None:
@@ -14,6 +24,8 @@ class MovesStruct:
 
 class BoardState:
     def __init__(self) -> None:
+        self.zobrist = Zobrist()
+        self.hash_key: int = 0
         self.nodes: int = 0
         self.parsed_fen: str = ""
         self.king_square: list = [squares['e8'], squares['e1']]
@@ -21,7 +33,7 @@ class BoardState:
         self.xside: int = -1
         self.castle: int = 15
         self.enpassant: int = squares['OFFBOARD']
-        self.pce_count: list = [0]*13
+        self.pce_count: list = [0 for _ in range(13)]
         self.board: list = [
             r, n, b, q, k, b, n, r,  o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,  o, o, o, o, o, o, o, o,
@@ -32,6 +44,23 @@ class BoardState:
             P, P, P, P, P, P, P, P,  o, o, o, o, o, o, o, o,
             R, N, B, Q, K, B, N, R,  o, o, o, o, o, o, o, o,
         ]
+
+    def gen_hashkey(self):
+        self.hash_key = 0
+
+        for sq in range(len(self.board)):
+            if not (sq & 0x88):
+                piece:int = self.board[sq]
+                if piece:
+                    self.hash_key ^= self.zobrist.piecesquare[piece][sq]
+
+        if self.enpassant != squares['OFFBOARD']: self.hash_key ^= self.zobrist.ep[self.enpassant]
+        self.hash_key ^= self.zobrist.castling[self.castle]
+        if not self.side: self.hash_key ^= self.zobrist.side
+
+    def init_state(self, fen:str) -> None:
+        self.parse_fen(fen)
+        self.gen_hashkey()
 
     def clear_board(self) -> None:
         # sweep the surface clean
@@ -44,7 +73,7 @@ class BoardState:
         self.side = -1
         self.xside = -1
         self.castle = 0
-        self.enpassant = 120
+        self.enpassant = squares['OFFBOARD']
 
     def generate_fen(self) -> str:
         fen_string: str = ''
@@ -200,6 +229,7 @@ class BoardState:
             castle_cpy:int = self.castle
             king_square_cpy:list = deepcopy(self.king_square)
             pce_count_cpy:list = deepcopy(self.pce_count)
+            hashkey_cpy:int = self.hash_key
 
             # get move source and the square it moves to
             from_square:int = get_move_source(move)
@@ -210,45 +240,69 @@ class BoardState:
             castling:int = get_move_castling(move)
 
             # perform the move
+            self.hash_key ^= self.zobrist.piecesquare[self.board[from_square]][from_square]
+            self.hash_key ^= self.zobrist.piecesquare[self.board[from_square]][to_square]
             captured_piece:int = self.board[to_square]
             self.board[to_square] = self.board[from_square]
             self.board[from_square] = e
 
             # adjusting board state
-            if captured_piece: self.pce_count[captured_piece] -= 1
+            if captured_piece:
+                self.hash_key ^= self.zobrist.piecesquare[captured_piece][to_square]
+                self.pce_count[captured_piece] -= 1
             if promoted_piece:
                 self.pce_count[self.board[to_square]] -= 1
                 self.board[to_square] = promoted_piece
                 self.pce_count[promoted_piece] += 1
+                if self.side: self.hash_key ^= self.zobrist.piecesquare[P][to_square]
+                else: self.hash_key ^= self.zobrist.piecesquare[p][to_square]
+                self.hash_key ^= self.zobrist.piecesquare[promoted_piece][to_square]
             if enpass:
                 self.pce_count[self.board[to_square + 16 if self.side else to_square - 16]] -= 1
                 self.board[to_square + 16 if self.side else to_square - 16] = e
+                if self.side: self.hash_key ^= self.zobrist.piecesquare[p][to_square+16]
+                else: self.hash_key ^= self.zobrist.piecesquare[P][to_square-16]
+            if self.enpassant != squares['OFFBOARD']: self.hash_key ^= self.zobrist.ep[self.enpassant]
             self.enpassant = squares['OFFBOARD']
-            if double_push: self.enpassant = to_square + 16 if self.side else to_square - 16
+            if double_push:
+                self.enpassant = to_square + 16 if self.side else to_square - 16
+                if self.side: self.hash_key ^= self.zobrist.ep[to_square+16]
+                else: self.hash_key ^= self.zobrist.ep[to_square-16]
             if castling:
                 if to_square == squares['g1']:
                     self.board[squares['f1']] = self.board[squares['h1']]
                     self.board[squares['h1']] = e
+                    self.hash_key ^= self.zobrist.piecesquare[R][squares['h1']]
+                    self.hash_key ^= self.zobrist.piecesquare[R][squares['f1']]
                 elif to_square == squares['c1']:
                     self.board[squares['d1']] = self.board[squares['a1']]
                     self.board[squares['a1']] = e
+                    self.hash_key ^= self.zobrist.piecesquare[R][squares['a1']]
+                    self.hash_key ^= self.zobrist.piecesquare[R][squares['d1']]
                 elif to_square == squares['g8']:
                     self.board[squares['f8']] = self.board[squares['h8']]
                     self.board[squares['h8']] = e
+                    self.hash_key ^= self.zobrist.piecesquare[r][squares['h8']]
+                    self.hash_key ^= self.zobrist.piecesquare[r][squares['f8']]
                 elif to_square == squares['c8']:
                     self.board[squares['d8']] = self.board[squares['a8']]
                     self.board[squares['a8']] = e
+                    self.hash_key ^= self.zobrist.piecesquare[r][squares['a8']]
+                    self.hash_key ^= self.zobrist.piecesquare[r][squares['d1']]
 
             # update king square
             if self.board[to_square] == K or self.board[to_square] == k: self.king_square[self.side] = to_square
 
             # update castling rights
+            self.hash_key ^= self.zobrist.castling[self.castle]
             self.castle &= castling_rights[from_square]
             self.castle &= castling_rights[to_square]
+            self.hash_key ^= self.zobrist.castling[self.castle]
 
             # change sides
             self.side ^= 1
             self.xside ^= 1
+            self.hash_key ^= self.zobrist.side
 
             # take back move if king is under attack
             if self.is_square_attacked(self.king_square[self.xside], self.side):
@@ -259,6 +313,7 @@ class BoardState:
                 self.castle = castle_cpy
                 self.king_square = deepcopy(king_square_cpy)
                 self.pce_count = deepcopy(pce_count_cpy)
+                self.hash_key = hashkey_cpy
                 return 0 # illegal
             else: return 1 # legal
         elif capture_flag == CAPTURE_MOVES:
@@ -426,6 +481,7 @@ class BoardState:
             castle_cpy:int = self.castle
             king_square_cpy:list = deepcopy(self.king_square)
             pce_count_cpy:list = deepcopy(self.pce_count)
+            hashkey_cpy:int = self.hash_key
 
             # filter out the illegal moves
             if not self.make_move(move_list.moves[mv_count].move, ALL_MOVES): continue
@@ -441,6 +497,7 @@ class BoardState:
             self.castle = castle_cpy
             self.king_square = deepcopy(king_square_cpy)
             self.pce_count = deepcopy(pce_count_cpy)
+            self.hash_key = hashkey_cpy
 
     def perft_test(self, depth:int) -> None:
         if int(sys.argv[2]): print('\n  [ PERFT TEST GENERATING MOVES ]\n')
@@ -463,6 +520,7 @@ class BoardState:
             castle_cpy:int = self.castle
             king_square_cpy:list = deepcopy(self.king_square)
             pce_count_cpy:list = deepcopy(self.pce_count)
+            hashkey_cpy:int = self.hash_key
 
             if not self.make_move(move_list.moves[mv_count].move, ALL_MOVES): continue
 
@@ -483,6 +541,7 @@ class BoardState:
             self.castle = castle_cpy
             self.king_square = deepcopy(king_square_cpy)
             self.pce_count = deepcopy(pce_count_cpy)
+            self.hash_key = hashkey_cpy
 
             curr_elapsed:float = perf_counter() - start_time
 
@@ -558,10 +617,12 @@ if __name__ == '__main__':
     # init board and parse FEN
     bboard: BoardState = BoardState()
     start_time: float = perf_counter()
-    bboard.parse_fen(start_position)
+    bboard.init_state(start_position)
     bboard.print_board()
     depth = sys.argv[1]
     debug_info = sys.argv[2]
+
+    print(f'\n  [UNIQUE HASHKEY]: {bboard.hash_key}')
 
     program_runtime: float = perf_counter() - start_time
 
