@@ -42,7 +42,14 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
     # tedious stuff right here
     for sq in range(len(board)):
         if not (sq & 0x88):
+            # define the piece
             piece:int = board[sq]
+
+            # material count
+            score_opening += piece_val[phases['opening']][piece]
+            score_endgame += piece_val[phases['endgame']][piece]
+
+            # piece square table calculating
             if piece == P:
                 score_opening += positional_score[phases['opening']][PAWN][sq]
                 score_endgame += positional_score[phases['endgame']][PAWN][sq]
@@ -88,15 +95,14 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
 
     # just debugging, no need to look at this
     game_phase_res:str = ''
-    if not game_phase:
-        game_phase_res = 'OPENING'
-    elif game_phase == 1:
-        game_phase_res = 'ENDGAME'
-    elif game_phase == 2:
-        game_phase_res = 'MIDDLEGAME'
+    if not game_phase: game_phase_res = 'OPENING'
+    elif game_phase == 1: game_phase_res = 'ENDGAME'
+    elif game_phase == 2: game_phase_res = 'MIDDLEGAME'
 
+    # print debug info
     print(f'  [GAME PHASE]: {game_phase_res}')
+    print(f'  [STATIC EVAL, NO PERSPECTIVE]: {score}')
 
     # return the score, what else you expect
     # based on the side perspective of course
-    return score if side else (score * -1)
+    return score if side else -score
