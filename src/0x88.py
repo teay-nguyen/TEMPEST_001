@@ -494,7 +494,11 @@ class BoardState:
         print(f'\n  [SEARCH TIME]: {round(elapsed * 1000)} ms, {elapsed} sec')
         print(f'  [DEPTH SEARCHED]: {depth} ply')
         print(f'  [TOTAL NODES]: {self.nodes} nodes')
-        print(f'  [NPS]: {int(self.nodes//elapsed)} nps')
+        print(f'  [NPS]: {int(self.nodes//elapsed)} nps\n')
+
+    def test_suite(self):
+        for depth in range(4):
+            self.perft_test(depth)
 
     def print_board(self) -> None:
         print()
