@@ -6,6 +6,9 @@ from defs import *
 OPENING_PHASE_SCORE: int = 6192
 ENDGAME_PHASE_SCORE: int = 518
 
+# tempo bonus
+TEMPO: tuple = (-5, 5)
+
 # positional score [phase][piece][square]
 positional_score: list = [ [[   0,   0,   0,   0,   0,   0,  0,   0, o, o, o, o, o, o, o, o, # opening
                                98, 134,  61,  95,  68, 126, 34, -11, o, o, o, o, o, o, o, o,

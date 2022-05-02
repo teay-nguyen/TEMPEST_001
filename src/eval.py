@@ -10,18 +10,11 @@ def get_game_phase_score(pceNum:list) -> int:
     # define the variables
     wp_scores:int = 0; bp_scores:int = 0
 
-    print()
-
     # loop through pieces and add them to the variables
     for piece in range(N, K):
         wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
-        print(f'  [White {int_pieces[piece]}]: {pceNum[piece] * piece_val[phases["opening"]][piece]}')
     for piece in range(n, k):
         bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
-        print(f'  [Black {int_pieces[piece]}]: {pceNum[piece] * -piece_val[phases["opening"]][piece]}')
-
-    print(f'  [WHITE MATERIAL]: {wp_scores}')
-    print(f'  [BLACK MATERIAL]: {bp_scores}\n')
 
     # return the total amount of material, minus the pawns
     return (wp_scores + bp_scores)
@@ -42,6 +35,10 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
 
     # define score variables
     score:int = 0; score_opening:int = 0; score_endgame:int = 0
+
+    # tempo calc
+    score_opening += TEMPO[side]
+    score_endgame += TEMPO[side]
 
     # tedious stuff right here
     for sq in range(len(board)):
@@ -96,17 +93,6 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
     if game_phase == phases['midgame']: score = float((score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE)
     elif game_phase == phases['opening']: score = float(score_opening)
     elif game_phase == phases['endgame']: score = float(score_endgame)
-
-    # just debugging, no need to look at this
-    game_phase_res:str = ''
-    if not game_phase: game_phase_res = 'OPENING'
-    elif game_phase == 1: game_phase_res = 'ENDGAME'
-    elif game_phase == 2: game_phase_res = 'MIDDLEGAME'
-
-    # print debug info
-    print(f'  [GAME PHASE SCORE]: {game_phase_score}')
-    print(f'  [GAME PHASE]: {game_phase_res}')
-    print(f'  [STATIC EVAL, NO PERSPECTIVE]: {score}')
 
     # return the score, what else you expect
     # based on the side perspective of course

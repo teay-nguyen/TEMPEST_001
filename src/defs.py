@@ -89,6 +89,12 @@ get_move_pawn = lambda move: (move >> 19) & 0x1
 get_move_enpassant = lambda move: (move >> 20) & 0x1
 get_move_castling = lambda move: (move >> 21) & 0x1
 
+# board utility
+get_row = lambda sq: sq >> 4
+get_col = lambda sq: sq & 7
+same_row = lambda sq1, sq2: get_row(sq1) == get_row(sq2)
+same_col = lambda sq1, sq2: get_col(sq1) == get_col(sq2)
+
 # initial values
 sides: dict = { 'black':0, 'white':1 }
 castling_vals: dict = { 'K':1, 'Q':2, 'k':4, 'q':8 }
