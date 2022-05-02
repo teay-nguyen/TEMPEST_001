@@ -216,6 +216,7 @@ class BoardState:
             # adjusting board state
             if captured_piece: self.pce_count[captured_piece] -= 1
             if promoted_piece:
+                self.pce_count[self.board[to_square]] -= 1
                 self.board[to_square] = promoted_piece
                 self.pce_count[promoted_piece] += 1
             if enpass:
@@ -579,8 +580,10 @@ if __name__ == '__main__':
     bboard.parse_fen(start_position)
     bboard.print_board()
 
+    # run perft test
     bboard.perft_test(int(sys.argv[1]))
 
+    # debug info
     if int(sys.argv[2]):
         print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
         print(f'  [PIECE COUNT]: {bboard.pce_count}')
@@ -588,4 +591,5 @@ if __name__ == '__main__':
 
     program_runtime: float = perf_counter() - start_time
 
+    # print program runtime
     print(f'\n  [PROGRAM FINISHED IN {round(program_runtime * 1000)} MS, {program_runtime} SEC]')
