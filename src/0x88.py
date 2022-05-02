@@ -46,7 +46,7 @@ class BoardState:
         self.castle = 0
         self.enpassant = 120
 
-    def generate_fen(self):
+    def generate_fen(self) -> str:
         fen_string: str = ''
         empty: int = 0
 
@@ -184,10 +184,11 @@ class BoardState:
 
 
 
-    def make_move(self, move:int, capture_flag:int) -> int:
+    def make_move(self, move:int, capture_flag:int) -> int: # bound to return a int, in replacement for bool
 
         # filter out the None moves
-        if move == -1: return 0
+        if move == -1 or move is None:
+            return 0 # illegal anyway because this is not a valid move on the board
 
         # quiet moves
         if capture_flag == ALL_MOVES:
