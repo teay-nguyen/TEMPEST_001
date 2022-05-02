@@ -1,24 +1,18 @@
-
-
 #!/usr/bin/env pypy3 -u
-# -*- coding: utf-8 -*-
 
 # imports
 from copy import deepcopy
 from time import perf_counter
-from dataclasses import dataclass
-from defs import *
+from eval import evaluate
 import sys
+from defs import *
 
-# used for storing moves and debugging
-@dataclass
-class MovesStruct():
+class MovesStruct:
     def __init__(self) -> None:
-        self.moves: list = [move_t(-1) for _ in range(GEN_STACK)]
-        self.count: int = 0
+        self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
+        self.count:int = 0
 
-# main driver
-class BoardState():
+class BoardState:
     def __init__(self) -> None:
         self.nodes: int = 0
         self.parsed_fen: str = ""
@@ -27,7 +21,7 @@ class BoardState():
         self.xside: int = -1
         self.castle: int = 15
         self.enpassant: int = squares['OFFBOARD']
-        self.pce_count: list = [0 for _ in range(13)]
+        self.pce_count: list = [0]*13
         self.board: list = [
             r, n, b, q, k, b, n, r,  o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,  o, o, o, o, o, o, o, o,
@@ -38,9 +32,6 @@ class BoardState():
             P, P, P, P, P, P, P, P,  o, o, o, o, o, o, o, o,
             R, N, B, Q, K, B, N, R,  o, o, o, o, o, o, o, o,
         ]
-
-    def init_entire_state(self, fen:str) -> None:
-        self.parse_fen(fen)
 
     def clear_board(self) -> None:
         # sweep the surface clean
@@ -585,8 +576,8 @@ if __name__ == '__main__':
     # init board and parse FEN
     bboard: BoardState = BoardState()
     start_time: float = perf_counter()
-    # bboard.parse_fen('8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ')
-    bboard.parse_fen(start_position)
+    # bboard.parse_fen("r1bqkb1r/ppp2ppp/2n2n2/3pp3/3PP3/2N2N2/PPP2PPP/R1BQKB1R w KQkq - 0 1")
+    bboard.parse_fen('r1bqkb1r/ppp2ppp/2n2n2/3pp3/3PP3/2N2N2/PPP2PPP/R1BQKBR1 w Qkq - 0 1')
     bboard.print_board()
 
     bboard.perft_test(int(sys.argv[1]))
@@ -594,6 +585,7 @@ if __name__ == '__main__':
     if int(sys.argv[2]):
         print(f'  [GENERATED FEN]: {bboard.generate_fen()}')
         print(f'  [PIECE COUNT]: {bboard.pce_count}')
+        print(f'  [EVALUATION (HANDCRAFTED)]: {evaluate(bboard.board, bboard.side, bboard.pce_count)}, {"whites" if bboard.side else "blacks"} perspective')
 
     program_runtime: float = perf_counter() - start_time
 
