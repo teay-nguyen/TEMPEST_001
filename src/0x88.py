@@ -521,30 +521,6 @@ class BoardState:
         print(f'  [KING SQUARE]: {square_to_coords[self.king_square[self.side]]} | {self.king_square[self.side]}')
         print(f'  [PARSED FEN]: {self.parsed_fen}')
 
-    def print_board_fancy(self):
-        print()
-        for rank in range(8):
-            for file in range(16):
-                square = rank * 16 + file
-                if (file == 0):
-                    print(8 - rank, end='  ')
-                if (not (square & 0x88)):
-                    print(unicode_pieces[self.board[square]], end=' ')
-            print()
-        print('\n   a b c d e f g h\n')
-        print('________________________________\n')
-        print(f'[SIDE TO MOVE]: {"white" if self.side else "black"}')
-        print('[CURRENT CASTLING RIGHTS]: {}{}{}{}'.format(
-                'K' if (self.castle & castling_vals['K']) else '-',
-                'Q' if (self.castle & castling_vals['Q']) else '-',
-                'k' if (self.castle & castling_vals['k']) else '-',
-                'q' if (self.castle & castling_vals['q']) else '-',
-            ))
-        if self.enpassant != squares['null_sq']:
-            print(f'[ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]}')
-        else: print(f'[ENPASSANT TARGET SQUARE]: NONE')
-        print(f'[PARSED FEN]: {self.parsed_fen}')
-
 def print_move_list(move_list, mode:str):
     if mode == 'full':
         print('\nMOVE   CAPTURE   DOUBLE   ENPASS   CASTLING\n')
@@ -571,7 +547,7 @@ if __name__ == '__main__':
     # init and print stuff because yes
     print(f'\n  [STARTING UP {NAME}]')
     print(f'  [RUNNING ON]: {sys.version}')
-    print(f'  [ENGINE VERSION]: {VERSION}')
+    print(f'  [ENGINE VERSION]: {ENGINE_VERSION}')
     print(f'  [ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
 
     # init board and parse FEN

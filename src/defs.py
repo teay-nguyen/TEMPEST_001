@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 # constants
 NAME: str = "TEMPEST 1.0"
-VERSION: str = "v1.204 HashHobo"
+ENGINE_VERSION: str = "v1.204 HashHobo"
 ENGINE_STATUS: str = "WIP"
 BOARD_SQ_NUM: int = 128
 GEN_STACK: int = 256
