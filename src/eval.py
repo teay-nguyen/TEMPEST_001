@@ -15,9 +15,18 @@ def get_game_phase_score(pceNum:list) -> int:
     # define the variables
     wp_scores:int = 0; bp_scores:int = 0
 
+    print()
+
     # loop through pieces and add them to the variables
-    for piece in range(N, K): wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
-    for piece in range(n, k): bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
+    for piece in range(N, K):
+        wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
+        print(f'  [White {int_pieces[piece]}]: {pceNum[piece] * piece_val[phases["opening"]][piece]}')
+    for piece in range(n, k):
+        bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
+        print(f'  [Black {int_pieces[piece]}]: {pceNum[piece] * -piece_val[phases["opening"]][piece]}')
+
+    print(f'  [WHITE MATERIAL]: {wp_scores}')
+    print(f'  [BLACK MATERIAL]: {bp_scores}\n')
 
     # return the total amount of material, minus the pawns
     return (wp_scores + bp_scores)
@@ -100,6 +109,7 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
     elif game_phase == 2: game_phase_res = 'MIDDLEGAME'
 
     # print debug info
+    print(f'  [GAME PHASE SCORE]: {game_phase_score}')
     print(f'  [GAME PHASE]: {game_phase_res}')
     print(f'  [STATIC EVAL, NO PERSPECTIVE]: {score}')
 
