@@ -2,6 +2,7 @@
 from data import *
 from defs import *
 
+# predefined variables so code can be more readable
 PAWN = 0
 KNIGHT = 1
 BISHOP = 2
@@ -11,24 +12,33 @@ KING = 5
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
-    wp_scores, bp_scores = 0, 0
+    wp_scores:int = 0; bp_scores:int = 0
 
-    for piece in range(N, K): wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
-    for piece in range(n, k): bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
+    for piece in range(N, K):
+        wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
+    for piece in range(n, k):
+        bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
 
-    return wp_scores + bp_scores
+    return (wp_scores + bp_scores)
 
 # the good stuff :)
-def evaluate(board: list, side: int, pceNum: list) -> int:
+def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know what to say if you don't understand this part
+
+    # fetch game phase score to determine game phase
     game_phase_score:int = get_game_phase_score(pceNum)
+
+    # init game phase variable
     game_phase:int = -1
 
+    # specify game phase var based on game phase score
     if game_phase_score > OPENING_PHASE_SCORE: game_phase = phases['opening']
     elif game_phase_score < ENDGAME_PHASE_SCORE: game_phase = phases['endgame']
     else: game_phase = phases['midgame']
 
+    # define score variables
     score:int = 0; score_opening:int = 0; score_endgame:int = 0
 
+    # tedious stuff right here
     for sq in range(len(board)):
         if not (sq & 0x88):
             piece:int = board[sq]
@@ -69,10 +79,12 @@ def evaluate(board: list, side: int, pceNum: list) -> int:
                 score_opening -= positional_score[phases['opening']][KING][mirror_board[sq]]
                 score_endgame -= positional_score[phases['endgame']][KING][mirror_board[sq]]
 
-    if (game_phase == phases['midgame']): score = (score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE
-    elif game_phase == phases['opening']: score = score_opening
-    elif game_phase == phases['endgame']: score = score_endgame
+    # determine the final score based on game phase
+    if game_phase == phases['midgame']: score = float((score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE)
+    elif game_phase == phases['opening']: score = float(score_opening)
+    elif game_phase == phases['endgame']: score = float(score_endgame)
 
+    # just debugging, no need to look at this
     game_phase_res:str = ''
     if not game_phase:
         game_phase_res = 'OPENING'
@@ -83,4 +95,6 @@ def evaluate(board: list, side: int, pceNum: list) -> int:
 
     print(f'  [GAME PHASE]: {game_phase_res}')
 
+    # return the score, what else you expect
+    # based on the side perspective of course
     return score if side else (score * -1)

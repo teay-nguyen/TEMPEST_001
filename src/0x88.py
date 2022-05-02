@@ -568,16 +568,15 @@ def print_move_list(move_list, mode:str):
 if __name__ == '__main__':
 
     # init and print stuff because yes
-    print(f'\n[STARTING UP {NAME}]')
-    print(f'[RUNNING ON]: {sys.version}')
-    print(f'[ENGINE VERSION]: {VERSION}')
-    print(f'[ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
+    print(f'\n  [STARTING UP {NAME}]')
+    print(f'  [RUNNING ON]: {sys.version}')
+    print(f'  [ENGINE VERSION]: {VERSION}')
+    print(f'  [ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
 
     # init board and parse FEN
     bboard: BoardState = BoardState()
     start_time: float = perf_counter()
-    # bboard.parse_fen("r1bqkb1r/ppp2ppp/2n2n2/3pp3/3PP3/2N2N2/PPP2PPP/R1BQKB1R w KQkq - 0 1")
-    bboard.parse_fen('r1bqkb1r/ppp2ppp/2n2n2/3pp3/3PP3/2N2N2/PPP2PPP/R1BQKBR1 w Qkq - 0 1')
+    bboard.parse_fen(start_position)
     bboard.print_board()
 
     bboard.perft_test(int(sys.argv[1]))

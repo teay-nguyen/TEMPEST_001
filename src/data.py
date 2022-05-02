@@ -133,8 +133,8 @@ mirror_board: tuple = (
 )
 
 # piece value, 2d matrix because index opening phase and endgame phase
-piece_val: list = [[0, 82, 337, 365, 477, 1025, 12000, -82, -337, -365, -477, -1025, -12000],
-                    [0, 94, 281, 297, 512,  936, 12000, -94, -281, -297, -512,  -936, -12000]]
+piece_val: list = [[0, 82, 337, 365, 477, 1025, 0, -82, -337, -365, -477, -1025, 0],
+                    [0, 94, 281, 297, 512,  936, 0, -94, -281, -297, -512,  -936, 0]]
 
 # self explanitory
 phases: dict = {'opening':0, 'endgame':1, 'midgame':2}
