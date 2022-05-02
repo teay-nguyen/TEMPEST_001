@@ -554,7 +554,7 @@ if __name__ == '__main__':
     # init board and parse FEN
     bboard: BoardState = BoardState()
     start_time: float = perf_counter()
-    bboard.parse_fen(start_position)
+    bboard.parse_fen('rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  ')
     bboard.print_board()
 
     # run perft test
