@@ -3,12 +3,7 @@ from data import *
 from defs import *
 
 # predefined variables so code can be more readable
-PAWN = 0
-KNIGHT = 1
-BISHOP = 2
-ROOK = 3
-QUEEN = 4
-KING = 5
+PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
