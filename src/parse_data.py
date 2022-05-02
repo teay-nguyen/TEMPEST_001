@@ -1,4 +1,10 @@
 
+'''
+
+    MIGHT NOT NEED THIS FILE, BUT ILL KEEP IT
+
+'''
+
 import os
 import chess.pgn
 import chess

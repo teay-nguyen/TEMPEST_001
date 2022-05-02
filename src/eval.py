@@ -12,13 +12,14 @@ KING = 5
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
+    # define the variables
     wp_scores:int = 0; bp_scores:int = 0
 
-    for piece in range(N, K):
-        wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
-    for piece in range(n, k):
-        bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
+    # loop through pieces and add them to the variables
+    for piece in range(N, K): wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
+    for piece in range(n, k): bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
 
+    # return the total amount of material, minus the pawns
     return (wp_scores + bp_scores)
 
 # the good stuff :)
@@ -80,6 +81,7 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
                 score_endgame -= positional_score[phases['endgame']][KING][mirror_board[sq]]
 
     # determine the final score based on game phase
+    # my nvim lsp keep throwing errors this things a nuisance, i need the exact float/value because better move ordering equals better playing strength
     if game_phase == phases['midgame']: score = float((score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE)
     elif game_phase == phases['opening']: score = float(score_opening)
     elif game_phase == phases['endgame']: score = float(score_endgame)
