@@ -55,7 +55,7 @@ class Transposition:
         if not self.tt_size: return NO_HASH_ENTRY
 
         # get entry from table
-        entry = self.tt_table[hashkey & self.tt_size]
+        entry = self.tt_table[hashkey % self.tt_size]
 
         # return score based on flag
         if entry.hash_key == hashkey:
@@ -71,7 +71,7 @@ class Transposition:
         if not self.tt_size: return
 
         # get entry from table
-        entry = self.tt_table[hashkey & self.tt_size]
+        entry = self.tt_table[hashkey % self.tt_size]
 
         # if there is a better entry scrap this one
         if entry.hash_key == hashkey and entry.depth > depth: return
@@ -102,12 +102,12 @@ class Transposition:
     
     def tteval_probe(self, hashkey):
         if not self.tteval_size: return NO_HASH_ENTRY
-        entry = self.tteval_table[hashkey & self.tteval_size]
+        entry = self.tteval_table[hashkey % self.tteval_size]
         if entry.hash_key == hashkey: return entry.score
         return NO_HASH_ENTRY
 
     def tteval_save(self, score, hashkey):
         if not self.tteval_size: return
-        entry = self.tteval_table[hashkey & self.tteval_size]
+        entry = self.tteval_table[hashkey % self.tteval_size]
         entry.hash_key = hashkey
         entry.score = score
