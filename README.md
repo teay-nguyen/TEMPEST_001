@@ -9,9 +9,9 @@ This code is just a rough adaptation from the original source code (written in C
 
 Implemented in Python 3.8
 
-# Notes
+# How to Run
 
-Run this engine with Pypy or compile it with Cython  
+Run "tempest.py" with Pypy  
 Essentially just run this with a faster implementation of Python
 
 # Contributors
