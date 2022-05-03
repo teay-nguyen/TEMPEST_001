@@ -619,8 +619,10 @@ if __name__ == '__main__':
     start_time: float = perf_counter()
     bboard.init_state(start_position)
     bboard.print_board()
-    depth = sys.argv[1]
-    debug_info = sys.argv[2]
+    depth = int(sys.argv[1])
+    debug_info = int(sys.argv[2])
+
+    bboard.perft_test(depth)
 
     print(f'\n  [UNIQUE HASHKEY]: {bboard.hash_key}')
 

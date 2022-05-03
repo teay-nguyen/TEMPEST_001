@@ -146,6 +146,10 @@ phases: dict = {'opening':0, 'endgame':1, 'midgame':2}
 
 #                        SEARCH                        #
 
+INFINITE:int = 50000
+MATE_VALUE:int = 49000
+MATE_SCORE:int = 48000
+
 MAX_PLY: int = 30
 MVV_LVA: tuple = (
     105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
