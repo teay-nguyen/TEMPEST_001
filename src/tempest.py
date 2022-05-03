@@ -1,3 +1,4 @@
+#!/usr/bin/env pypy3 -u
 
 import sys
 from board0x88 import BoardState
