@@ -12,7 +12,9 @@ KNIGHT_PAIR: int = 10
 ROOK_PAIR: int = 15
 
 # positional score [phase][piece][square]
-positional_score: list = [ [[   0,   0,   0,   0,   0,   0,  0,   0, o, o, o, o, o, o, o, o, # opening
+
+                                #                       OPENING                           #
+positional_score: list = [ [[   0,   0,   0,   0,   0,   0,  0,   0, o, o, o, o, o, o, o, o,
                                98, 134,  61,  95,  68, 126, 34, -11, o, o, o, o, o, o, o, o,
                                -6,   7,  26,  31,  65,  56, 25, -20, o, o, o, o, o, o, o, o,
                               -14,  13,   6,  21,  23,  12, 17, -23, o, o, o, o, o, o, o, o,
@@ -67,10 +69,10 @@ positional_score: list = [ [[   0,   0,   0,   0,   0,   0,  0,   0, o, o, o, o,
                              -15,  36,  12, -54,   8, -28,  24,  14, o, o, o, o, o, o, o, o]],
 
 
+                            #                           ENDGAME                             #
 
 
-
-                          [[   0,   0,   0,   0,   0,   0,   0,   0, o, o, o, o, o, o, o, o, # endgame
+                          [[   0,   0,   0,   0,   0,   0,   0,   0, o, o, o, o, o, o, o, o,
                              178, 173, 158, 134, 147, 132, 165, 187, o, o, o, o, o, o, o, o,
                               94, 100,  85,  67,  56,  53,  82,  84, o, o, o, o, o, o, o, o,
                               32,  24,  13,   5,  -2,   4,  17,  17, o, o, o, o, o, o, o, o,
