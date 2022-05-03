@@ -1,10 +1,12 @@
 
+# imports
 from sys import getsizeof
 from dataclasses import dataclass
 
-HASH_EXACT:int = 0; HASH_ALPHA:int = 1; HASH_BETA:int = 2
-NO_HASH_ENTRY:int = 100000
+# variables
+HASH_EXACT:int = 0; HASH_ALPHA:int = 1; HASH_BETA:int = 2; NO_HASH_ENTRY:int = 100000
 
+# entries
 @dataclass
 class tt_entry:
     hash_key:int = 0
@@ -12,55 +14,100 @@ class tt_entry:
     flag:int = 0
     score:int = 0
 
+@dataclass
+class tteval_entry:
+    hash_key:int = 0
+    score:int = 0
+
+# main driver
 class Transposition:
     def __init__(self):
-        self.hash_table:list = []
-        self.hash_entries:int = 0
+        self.tt_table:list = list()
+        self.tteval_table:list = list()
 
-    def init_hashtable(self, mb:int):
-        # define hash size
-        hash_size:int = 0x100000 * mb
+        self.tt_size:int = 0
+        self.tteval_size:int = 0
+    
+    def tt_setsize(self, size:int):
+        # check if size is a power of 2. if not, make it the next power of 2
+        # this allows for faster access to the entry needed
 
-        # determine the number of hash entries
-        self.hash_entries = hash_size // getsizeof(tt_entry)
+        if (size & (size - 1)):
+            size -= 1
+            for i in (2**x for x in range(1, 32)):
+                size |= size >> i
+            size += 1
+            size >>= 1
 
-        # clear hash table if not empty
-        if len(self.hash_table) != 0:
-            self.hash_table = []
+        if size < 16:
+            self.tt_size = 0
+            return 0
 
-        # renew hash table
-        self.hash_table = [tt_entry() for _ in range(self.hash_entries * getsizeof(tt_entry))]
+        self.tt_size = (size // getsizeof(tt_entry)) - 1
+        self.tt_table = [tt_entry() for _ in range(size)]
 
-    def clear_hashtable(self):
-        # loop through hash table and reset every entry
-        for idx in range(len(self.hash_table)):
-            self.hash_table[idx].hash_key = 0
-            self.hash_table[idx].depth = 0
-            self.hash_table[idx].flag = 0
-            self.hash_table[idx].score = 0
+        return 0
 
-    def tt_probe(self, alpha, beta, depth, hash_key) -> int:
-        # the formula to indexing is the zobrist key % size of hash table
-        hash_entry = self.hash_table[hash_key % self.hash_entries]
+    def tt_probe(self, depth, alpha, beta, hashkey):
+        # checks the table for any record of the position before actually parsing and calculating the position
+        # this is the whole purpose of the transposition table
 
-        # check if we're dealing with the exact position needed
-        if hash_entry.hash_key == hash_key:
-            # ensure the depth being searched at is matched
-            if hash_entry.depth >= depth:
-                # this part is eelf explanitory
-                score:int = hash_entry.score
-                if hash_entry.flag == HASH_EXACT: return score
-                if hash_entry.flag == HASH_ALPHA and score <= alpha: return alpha
-                if hash_entry.flag == HASH_BETA and score >= beta: return beta
-        # return an impossible value if no hash entry is found or no criteria above is met
+        if not self.tt_size: return NO_HASH_ENTRY
+
+        # get entry from table
+        entry = self.tt_table[hashkey & self.tt_size]
+
+        # return score based on flag
+        if entry.hash_key == hashkey:
+            if entry.depth >= depth:
+                if entry.flag == HASH_EXACT: return entry.score
+                elif entry.flag == HASH_ALPHA and entry.score <= alpha: return alpha
+                elif entry.flag == HASH_BETA and entry.score >= beta: return beta
+
+        # there is no valid entry, return no hash value
         return NO_HASH_ENTRY
 
-    def tt_write(self, score, depth, hash_flag, hash_key):
-        hash_entry = self.hash_table[hash_key % self.hash_entries]
+    def tt_save(self, depth, score, flag, hashkey):
+        if not self.tt_size: return
 
-        if hash_entry.hash_key == hash_key and hash_entry.depth > depth: return
+        # get entry from table
+        entry = self.tt_table[hashkey & self.tt_size]
 
-        hash_entry.hash_key = hash_key
-        hash_entry.depth = depth
-        hash_entry.flag = hash_flag
-        hash_entry.score = score
+        # if there is a better entry scrap this one
+        if entry.hash_key == hashkey and entry.depth > depth: return
+
+        # set the value
+        entry.hash_key = hashkey
+        entry.score = score
+        entry.flag = flag
+        entry.depth = depth
+
+    def tteval_setsize(self, size:int):
+
+        if (size & (size - 1)):
+            size -= 1
+            for i in (2**x for x in range(1, 32)):
+                size |= size >> i
+            size += 1
+            size >>= 1
+
+        if size < 16:
+            self.tteval_size = 0
+            return 0
+
+        self.tteval_size = (size // getsizeof(tteval_entry)) - 1
+        self.tteval_table = [tteval_entry() for _ in range(size)]
+
+        return 0
+    
+    def tteval_probe(self, hashkey):
+        if not self.tteval_size: return NO_HASH_ENTRY
+        entry = self.tteval_table[hashkey & self.tteval_size]
+        if entry.hash_key == hashkey: return entry.score
+        return NO_HASH_ENTRY
+
+    def tteval_save(self, score, hashkey):
+        if not self.tteval_size: return
+        entry = self.tteval_table[hashkey & self.tteval_size]
+        entry.hash_key = hashkey
+        entry.score = score
