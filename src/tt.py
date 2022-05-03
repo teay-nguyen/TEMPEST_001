@@ -57,6 +57,8 @@ class Transposition:
     def tt_write(self, score, depth, hash_flag, hash_key):
         hash_entry = self.hash_table[hash_key % self.hash_entries]
 
+        if hash_entry.hash_key == hash_key and hash_entry.depth > depth: return
+
         hash_entry.hash_key = hash_key
         hash_entry.depth = depth
         hash_entry.flag = hash_flag
