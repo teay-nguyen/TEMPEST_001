@@ -29,23 +29,23 @@ def eval_pawn(board, sq, side) -> int:
     if side:
         if (board[sq + supported[1][0]] == P and 0 <= (sq + supported[1][0]) <= 127) or (board[sq + supported[1][1]] == P and 0 <= (sq + supported[1][1]) <= 127):
             flagIsWeak = 0
-            score += 20
-        else: score -= 15
+            score += SUPPORTED_BONUS
+        else: score -= NOT_SUPPORTED_PENALTY
         if 0 <= (sq - 16) <= 127:
             if board[sq - 16] == P:
                 flagIsDoubled = 1
-                score -= 20
-            else: score += 13
+                score -= DOUBLED_PENALTY
+            else: score += NOT_DOUBLED_BONUS
     else:
         if (board[sq + supported[0][0]] == p and 0 <= (sq + supported[0][0]) <= 127) or (board[sq + supported[0][1]] == p and 0 <= (sq + supported[0][1]) <= 127):
             flagIsWeak = 0
-            score += 20
-        else: score -= 15
+            score += SUPPORTED_BONUS
+        else: score -= NOT_SUPPORTED_PENALTY
         if 0 <= (sq + 16) <= 127:
             if board[sq + 16] == p:
                 flagIsDoubled = 1
-                score -= 20
-            else: score += 13
+                score -= DOUBLED_PENALTY
+            else: score += NOT_DOUBLED_BONUS
 
     # calculate the penalty based on doubled pawns and weak pawns
     penalty = 13 * (flagIsWeak + flagIsDoubled)

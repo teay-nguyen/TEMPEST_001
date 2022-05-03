@@ -11,6 +11,12 @@ BISHOP_PAIR: int = 20
 KNIGHT_PAIR: int = 10
 ROOK_PAIR: int = 15
 
+# pawn bonuses
+SUPPORTED_BONUS: int = 20
+NOT_SUPPORTED_PENALTY: int = 15
+NOT_DOUBLED_BONUS: int = 13
+DOUBLED_PENALTY: int = 20
+
 # positional score [phase][piece][square]
 
                                 #                       OPENING                           #
