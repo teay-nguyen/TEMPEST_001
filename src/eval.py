@@ -58,8 +58,7 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int: # I rea
 
     # probe the table for any available entries
     tt_score:int = tt.tteval_probe(hashkey)
-    if tt_score != NO_HASH_ENTRY:
-        return tt_score
+    if tt_score != NO_HASH_ENTRY: return tt_score
 
     # fetch game phase score to determine game phase
     game_phase_score:int = get_game_phase_score(pceNum)
