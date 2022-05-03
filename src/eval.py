@@ -11,10 +11,8 @@ def get_game_phase_score(pceNum:list) -> int:
     wp_scores:int = 0; bp_scores:int = 0
 
     # loop through pieces and add them to the variables
-    for piece in range(N, K):
-        wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
-    for piece in range(n, k):
-        bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
+    for piece in range(N, K): wp_scores += pceNum[piece] * piece_val[phases['opening']][piece]
+    for piece in range(n, k): bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
 
     # return the total amount of material, minus the pawns
     return (wp_scores + bp_scores)

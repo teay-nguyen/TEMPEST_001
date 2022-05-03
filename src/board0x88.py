@@ -3,37 +3,40 @@
 # imports
 from copy import deepcopy
 from time import perf_counter
-import sys
-import uuid
+from uuid import uuid1
 from defs import *
 
-def rand_U64() -> int:
-    return uuid.uuid1().int>>64
-
 class Zobrist:
-    def __init__(self):
-        self.piecesquare:list = [[rand_U64() for _ in range(BOARD_SQ_NUM)] for _ in range(13)]
-        self.side:int = rand_U64()
-        self.castling:list = [rand_U64() for _ in range(16)]
-        self.ep:list = [rand_U64() for _ in range(BOARD_SQ_NUM)]
+    def __init__(self) -> None:
+        self.piecesquare: list = [[self.random_U64() for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
+        self.side: int = self.random_U64()
+        self.castling: list = [self.random_U64() for _ in range(CASTLE_VAL)]
+        self.ep: list = [self.random_U64() for _ in range(BOARD_SQ_NUM)]
+
+    def random_U64(self) -> int:
+        return uuid1().int >> 64
 
 class MovesStruct:
     def __init__(self) -> None:
-        self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
+        self.moves:list = []
         self.count:int = 0
+        self.init_movestruct()
+
+    def init_movestruct(self):
+        self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
 
 class BoardState:
     def __init__(self) -> None:
         self.zobrist = Zobrist()
         self.hash_key: int = 0
         self.nodes: int = 0
-        self.parsed_fen: str = ""
+        self.parsed_fen: str = ''
         self.king_square: list = [squares['e8'], squares['e1']]
         self.side: int = -1
         self.xside: int = -1
         self.castle: int = 15
         self.enpassant: int = squares['OFFBOARD']
-        self.pce_count: list = [0 for _ in range(13)]
+        self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
         self.board: list = [
             r, n, b, q, k, b, n, r,  o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,  o, o, o, o, o, o, o, o,
@@ -59,6 +62,7 @@ class BoardState:
         if not self.side: self.hash_key ^= self.zobrist.side
 
     def init_state(self, fen:str) -> None:
+        self.pce_count = [0 for _ in range(PIECE_TYPES)]
         self.parse_fen(fen)
         self.gen_hashkey()
 
@@ -70,6 +74,7 @@ class BoardState:
                 if not (square & 0x88):
                     self.board[square] = e
 
+        self.pce_count = [0 for _ in range(PIECE_TYPES)]
         self.side = -1
         self.xside = -1
         self.castle = 0
@@ -216,7 +221,7 @@ class BoardState:
     def make_move(self, move:int, capture_flag:int) -> int: # bound to return a int, in replacement for bool
 
         # filter out the None moves
-        if move == -1 or move is None:
+        if move == -1:
             return 0 # illegal anyway because this is not a valid move on the board
 
         # quiet moves
@@ -240,11 +245,12 @@ class BoardState:
             castling:int = get_move_castling(move)
 
             # perform the move
-            self.hash_key ^= self.zobrist.piecesquare[self.board[from_square]][from_square]
-            self.hash_key ^= self.zobrist.piecesquare[self.board[from_square]][to_square]
             captured_piece:int = self.board[to_square]
+            piece_moved:int = self.board[from_square]
             self.board[to_square] = self.board[from_square]
             self.board[from_square] = e
+            self.hash_key ^= self.zobrist.piecesquare[piece_moved][from_square]
+            self.hash_key ^= self.zobrist.piecesquare[piece_moved][to_square]
 
             # adjusting board state
             if captured_piece:
@@ -260,14 +266,14 @@ class BoardState:
             if enpass:
                 self.pce_count[self.board[to_square + 16 if self.side else to_square - 16]] -= 1
                 self.board[to_square + 16 if self.side else to_square - 16] = e
-                if self.side: self.hash_key ^= self.zobrist.piecesquare[p][to_square+16]
-                else: self.hash_key ^= self.zobrist.piecesquare[P][to_square-16]
+                if self.side: self.hash_key ^= self.zobrist.piecesquare[p][to_square + 16]
+                else: self.hash_key ^= self.zobrist.piecesquare[P][to_square - 16]
             if self.enpassant != squares['OFFBOARD']: self.hash_key ^= self.zobrist.ep[self.enpassant]
             self.enpassant = squares['OFFBOARD']
             if double_push:
                 self.enpassant = to_square + 16 if self.side else to_square - 16
-                if self.side: self.hash_key ^= self.zobrist.ep[to_square+16]
-                else: self.hash_key ^= self.zobrist.ep[to_square-16]
+                if self.side: self.hash_key ^= self.zobrist.ep[to_square + 16]
+                else: self.hash_key ^= self.zobrist.ep[to_square - 16]
             if castling:
                 if to_square == squares['g1']:
                     self.board[squares['f1']] = self.board[squares['h1']]
@@ -500,7 +506,7 @@ class BoardState:
             self.hash_key = hashkey_cpy
 
     def perft_test(self, depth:int) -> None:
-        if int(sys.argv[2]): print('\n  [ PERFT TEST GENERATING MOVES ]\n')
+        print('\n  [PERFT TEST GENERATING MOVES]\n')
 
         # define move list
         move_list: MovesStruct = MovesStruct()
@@ -545,9 +551,8 @@ class BoardState:
 
             curr_elapsed:float = perf_counter() - start_time
 
-            if int(sys.argv[2]):
-                if get_move_piece(move_list.moves[mv_count].move): print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}{promoted_pieces[get_move_piece(move_list.moves[mv_count].move)]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
-                else: print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
+            if get_move_piece(move_list.moves[mv_count].move): print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}{promoted_pieces[get_move_piece(move_list.moves[mv_count].move)]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
+            else: print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
 
         elapsed:float = perf_counter() - start_time
         print(f'\n  [SEARCH TIME]: {round(elapsed * 1000)} ms, {elapsed} sec')
@@ -605,29 +610,3 @@ def print_move_list(move_list, mode:str):
         elif mode == 'raw': print(joined_str)
 
     print(f'\n  [TOTAL MOVES: {move_list.count}, TEMPEST_001]')
-
-if __name__ == '__main__':
-
-    # init and print stuff because yes
-    print(f'\n  [STARTING UP {NAME}]')
-    print(f'  [RUNNING ON]: {sys.version}')
-    print(f'  [ENGINE VERSION]: {ENGINE_VERSION}')
-    print(f'  [ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
-
-    # init board and parse FEN
-    bboard: BoardState = BoardState()
-    start_time: float = perf_counter()
-    bboard.init_state(start_position)
-    bboard.print_board()
-
-    depth = int(sys.argv[1])
-    debug_info = int(sys.argv[2])
-
-    bboard.perft_test(depth)
-
-    print(f'\n  [UNIQUE HASHKEY]: {bboard.hash_key}')
-
-    program_runtime: float = perf_counter() - start_time
-
-    # print program runtime
-    print(f'\n  [PROGRAM FINISHED IN {round(program_runtime * 1000)} MS, {program_runtime} SEC]')
