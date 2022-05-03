@@ -3,6 +3,7 @@ from data import *
 from defs import *
 from transposition import Transposition, NO_HASH_ENTRY
 
+# initialize the transposition table
 tt = Transposition()
 tt.tteval_setsize(0x100000)
 
@@ -23,23 +24,31 @@ def eval_pawn(board, sq, side) -> int:
     flagIsDoubled:int = 0
 
     if side:
-        if (board[sq + supported[1][0]] == P and 0 <= (sq + supported[1][0]) <= 127) or (board[sq + supported[1][1]] == P and 0 <= (sq + supported[1][1]) <= 127): flagIsWeak = 0
-        else: score -= 10
+        if (board[sq + supported[1][0]] == P and 0 <= (sq + supported[1][0]) <= 127) or (board[sq + supported[1][1]] == P and 0 <= (sq + supported[1][1]) <= 127):
+            flagIsWeak = 0
+            score += 20
+        else: score -= 15
         if 0 <= (sq - 16) <= 127:
             if board[sq - 16] == P:
                 flagIsDoubled = 1
                 score -= 20
+            else: score += 13
     else:
-        if (board[sq + supported[0][0]] == p and 0 <= (sq + supported[0][0]) <= 127) or (board[sq + supported[0][1]] == p and 0 <= (sq + supported[0][1]) <= 127): flagIsWeak = 0
-        else: score -= 10
+        if (board[sq + supported[0][0]] == p and 0 <= (sq + supported[0][0]) <= 127) or (board[sq + supported[0][1]] == p and 0 <= (sq + supported[0][1]) <= 127):
+            flagIsWeak = 0
+            score += 20
+        else: score -= 15
         if 0 <= (sq + 16) <= 127:
             if board[sq + 16] == p:
                 flagIsDoubled = 1
                 score -= 20
+            else: score += 13
 
-    adjustment = 11 * (flagIsWeak + flagIsDoubled)
+    penalty = 13 * (flagIsWeak + flagIsDoubled)
 
-    return score - adjustment
+    print(f'  pawn_score: {score - penalty}')
+
+    return score - penalty
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
@@ -53,8 +62,8 @@ def get_game_phase_score(pceNum:list) -> int:
     # return the total amount of material, minus the pawns
     return (wp_scores + bp_scores)
 
-# the good stuff :)
-def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int: # I really don't know what to say if you don't understand this part
+# main driver
+def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
 
     # probe the table for any available entries
     tt_score:int = tt.tteval_probe(hashkey)
@@ -74,10 +83,6 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int: # I rea
     # define score variables
     score:int = 0; score_opening:int = 0; score_endgame:int = 0
 
-    # tempo calc
-    score_opening += TEMPO[side]
-    score_endgame += TEMPO[side]
-
     # pair bonuses
     if pceNum[B] > 1:
         score_opening += BISHOP_PAIR
@@ -88,20 +93,20 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int: # I rea
         score_endgame -= BISHOP_PAIR
 
     if pceNum[N] > 1:
-        score_opening -= KNIGHT_PAIR
-        score_endgame -= KNIGHT_PAIR
-
-    if pceNum[n] > 1:
         score_opening += KNIGHT_PAIR
         score_endgame += KNIGHT_PAIR
 
-    if pceNum[R] > 1:
-        score_opening -= ROOK_PAIR
-        score_endgame -= ROOK_PAIR
+    if pceNum[n] > 1:
+        score_opening -= KNIGHT_PAIR
+        score_endgame -= KNIGHT_PAIR
 
-    if pceNum[r] > 1:
+    if pceNum[R] > 1:
         score_opening += ROOK_PAIR
         score_endgame += ROOK_PAIR
+
+    if pceNum[r] > 1:
+        score_opening -= ROOK_PAIR
+        score_endgame -= ROOK_PAIR
 
     # tedious stuff right here
     for sq in range(len(board)):
@@ -166,7 +171,12 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int: # I rea
     # return the score, what else you expect
     # based on the side perspective because negamax framework requires so
 
-    # store the score
-    tt.tteval_save((score if side else -score), hashkey)
+    # change the score based on stm
+    if side == sides['black']:
+        score = -score
 
-    return score if side else (score * -1)
+    # store the score in the tt table in case of encountering this position again
+    tt.tteval_save(score, hashkey)
+
+    # return the score
+    return score

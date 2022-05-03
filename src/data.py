@@ -7,12 +7,9 @@ OPENING_PHASE_SCORE: int = 6192
 ENDGAME_PHASE_SCORE: int = 518
 
 # pair bonus
-BISHOP_PAIR: int = 23
+BISHOP_PAIR: int = 20
 KNIGHT_PAIR: int = 10
-ROOK_PAIR: int = 19
-
-# tempo bonus
-TEMPO: tuple = (-5, 5)
+ROOK_PAIR: int = 15
 
 # positional score [phase][piece][square]
 positional_score: list = [ [[   0,   0,   0,   0,   0,   0,  0,   0, o, o, o, o, o, o, o, o, # opening

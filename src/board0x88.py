@@ -1,5 +1,3 @@
-#!/usr/bin/env pypy3 -u
-
 # imports
 from copy import deepcopy
 from time import perf_counter
