@@ -1,15 +1,16 @@
 
 from sys import getsizeof
+from dataclasses import dataclass
 
 HASH_EXACT:int = 0; HASH_ALPHA:int = 1; HASH_BETA:int = 2
 NO_HASH_ENTRY:int = 100000
 
+@dataclass
 class tt_entry:
-    def __init__(self):
-        self.hash_key:int = 0
-        self.depth:int = 0
-        self.flag:int = 0
-        self.score:int = 0
+    hash_key:int = 0
+    depth:int = 0
+    flag:int = 0
+    score:int = 0
 
 class Transposition:
     def __init__(self):
