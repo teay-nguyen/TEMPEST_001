@@ -11,6 +11,18 @@ The estimate NPS for this engine is around 10K to 60K nodes per second, dependan
 git clone https://github.com/HashingTerry/TEMPEST_001.git
 ```
 
+## Usage
+
+```
+pypy3 tempest.py
+```
+
+or  
+
+```
+python tempest.py
+```
+
 ## Contributing
 
 Pull Requests are highly encouraged, I need some assistance with my engine  

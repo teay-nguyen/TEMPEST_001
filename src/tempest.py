@@ -17,7 +17,7 @@ if __name__ == '__main__':
     # init board and parse FEN
     board: BoardState = BoardState()
     start_time: float = perf_counter()
-    board.init_state('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - ')
+    board.init_state(start_position)
     board.print_board()
 
     # calc program runtime
