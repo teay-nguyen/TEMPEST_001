@@ -619,6 +619,7 @@ if __name__ == '__main__':
     start_time: float = perf_counter()
     bboard.init_state(start_position)
     bboard.print_board()
+
     depth = int(sys.argv[1])
     debug_info = int(sys.argv[2])
 
