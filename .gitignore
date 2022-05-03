@@ -129,5 +129,4 @@ dmypy.json
 .pyre/
 
 # Others
-test_branch/
 nnue-probe/
