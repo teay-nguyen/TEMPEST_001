@@ -22,6 +22,7 @@ class tteval_entry:
 # main driver
 class Transposition:
     def __init__(self):
+        # define main variables
         self.tt_table:list = list()
         self.tteval_table:list = list()
 
@@ -69,12 +70,15 @@ class Transposition:
         self.tteval_size = size
     
     def tteval_probe(self, hashkey):
+        # a but more straightforward than other tt tables
+        # just fetches the score and the hashkey
         if not self.tteval_size: return NO_HASH_ENTRY
         entry = self.tteval_table[hashkey % self.tteval_size]
         if entry.hash_key == hashkey: return entry.score
         return NO_HASH_ENTRY
 
     def tteval_save(self, score, hashkey):
+        # saves the score and the hashkey
         if not self.tteval_size: return
         entry = self.tteval_table[hashkey % self.tteval_size]
         entry.hash_key = hashkey
