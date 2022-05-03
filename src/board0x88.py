@@ -46,7 +46,7 @@ class BoardState:
             R, N, B, Q, K, B, N, R,  o, o, o, o, o, o, o, o,
         ]
 
-    def gen_hashkey(self):
+    def gen_hashkey(self) -> None:
         self.hash_key = 0
 
         for sq in range(len(self.board)):
@@ -550,7 +550,7 @@ class BoardState:
         print(f'  [TOTAL NODES]: {self.nodes} nodes')
         print(f'  [NPS]: {int(self.nodes//elapsed)} nps\n')
 
-    def test_suite(self):
+    def test_suite(self) -> None:
         for depth in range(4):
             self.perft_test(depth)
 

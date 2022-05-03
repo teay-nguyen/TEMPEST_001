@@ -171,10 +171,7 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
     elif game_phase == phases['opening']: score = float(score_opening)
     elif game_phase == phases['endgame']: score = float(score_endgame)
 
-    # return the score, what else you expect
-    # based on the side perspective because negamax framework requires so
-
-    # change the score based on stm
+    # change the score based on stm, required on the negamax framework
     if side == sides['black']:
         score = -score
 
