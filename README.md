@@ -1,4 +1,6 @@
 
+![Logo](logo.png)
+
 # INTRO
 
 The TEMPEST Chess Engine is an open-source minimal chess engine with features you would find in a mediocre chess engine  
