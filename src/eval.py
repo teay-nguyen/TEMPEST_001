@@ -14,15 +14,18 @@ PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:
 supported:list = [[-15, -17], [15, 17]]
 
 def eval_pawn(board, sq, side) -> int:
+    # check side
     if side:
         if board[sq] != P: return 0
     else:
         if board[sq] != p: return 0
 
+    # define vars
     score:int = 0
     flagIsWeak:int = 1
     flagIsDoubled:int = 0
 
+    # calc pawn score based on doubled pawns and supported pawns
     if side:
         if (board[sq + supported[1][0]] == P and 0 <= (sq + supported[1][0]) <= 127) or (board[sq + supported[1][1]] == P and 0 <= (sq + supported[1][1]) <= 127):
             flagIsWeak = 0
@@ -44,10 +47,10 @@ def eval_pawn(board, sq, side) -> int:
                 score -= 20
             else: score += 13
 
+    # calculate the penalty based on doubled pawns and weak pawns
     penalty = 13 * (flagIsWeak + flagIsDoubled)
 
-    print(f'  pawn_score: {score - penalty}')
-
+    # return the score deducting penalty
     return score - penalty
 
 # score to determine the game phase
