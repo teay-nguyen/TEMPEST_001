@@ -1,6 +1,10 @@
 
 from data import *
 from defs import *
+from transposition import Transposition, NO_HASH_ENTRY
+
+tt = Transposition()
+tt.tteval_setsize(0x100000)
 
 # predefined variables so code can be more readable
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
@@ -50,7 +54,12 @@ def get_game_phase_score(pceNum:list) -> int:
     return (wp_scores + bp_scores)
 
 # the good stuff :)
-def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know what to say if you don't understand this part
+def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int: # I really don't know what to say if you don't understand this part
+
+    # probe the table for any available entries
+    tt_score:int = tt.tteval_probe(hashkey)
+    if tt_score != NO_HASH_ENTRY:
+        return tt_score
 
     # fetch game phase score to determine game phase
     game_phase_score:int = get_game_phase_score(pceNum)
@@ -157,4 +166,8 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
 
     # return the score, what else you expect
     # based on the side perspective of course
+
+    # store the score
+    tt.tteval_save((score if side else -score), hashkey)
+
     return score if side else -score
