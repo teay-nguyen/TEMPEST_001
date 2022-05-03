@@ -129,14 +129,14 @@ positional_score: list = [ [[   0,   0,   0,   0,   0,   0,  0,   0, o, o, o, o,
 
 # mirror the board because there is no optimal way to flip the board, (no not the [::-1] or the numpy flip, board is a 1d array)
 mirror_board: tuple = (
-    squares['a1'], squares['b1'], squares['c1'], squares['d1'], squares['e1'], squares['f1'], squares['g1'], squares['h1'],     o, o, o, o, o, o, o, o,
-    squares['a2'], squares['b2'], squares['c2'], squares['d2'], squares['e2'], squares['f2'], squares['g2'], squares['h2'],     o, o, o, o, o, o, o, o,
-    squares['a3'], squares['b3'], squares['c3'], squares['d3'], squares['e3'], squares['f3'], squares['g3'], squares['h3'],     o, o, o, o, o, o, o, o,
-    squares['a4'], squares['b4'], squares['c4'], squares['d4'], squares['e4'], squares['f4'], squares['g4'], squares['h4'],     o, o, o, o, o, o, o, o,
-    squares['a5'], squares['b5'], squares['c5'], squares['d5'], squares['e5'], squares['f5'], squares['g5'], squares['h5'],     o, o, o, o, o, o, o, o,
-    squares['a6'], squares['b6'], squares['c6'], squares['d6'], squares['e6'], squares['f6'], squares['g6'], squares['h6'],     o, o, o, o, o, o, o, o,
-    squares['a7'], squares['b7'], squares['c7'], squares['d7'], squares['e7'], squares['f7'], squares['g7'], squares['h7'],     o, o, o, o, o, o, o, o,
-    squares['a8'], squares['b8'], squares['c8'], squares['d8'], squares['e8'], squares['f8'], squares['g8'], squares['h8'],     o, o, o, o, o, o, o, o,
+    squares['a1'], squares['b1'], squares['c1'], squares['d1'], squares['e1'], squares['f1'], squares['g1'], squares['h1'],         o, o, o, o, o, o, o, o,
+    squares['a2'], squares['b2'], squares['c2'], squares['d2'], squares['e2'], squares['f2'], squares['g2'], squares['h2'],         o, o, o, o, o, o, o, o,
+    squares['a3'], squares['b3'], squares['c3'], squares['d3'], squares['e3'], squares['f3'], squares['g3'], squares['h3'],         o, o, o, o, o, o, o, o,
+    squares['a4'], squares['b4'], squares['c4'], squares['d4'], squares['e4'], squares['f4'], squares['g4'], squares['h4'],         o, o, o, o, o, o, o, o,
+    squares['a5'], squares['b5'], squares['c5'], squares['d5'], squares['e5'], squares['f5'], squares['g5'], squares['h5'],         o, o, o, o, o, o, o, o,
+    squares['a6'], squares['b6'], squares['c6'], squares['d6'], squares['e6'], squares['f6'], squares['g6'], squares['h6'],         o, o, o, o, o, o, o, o,
+    squares['a7'], squares['b7'], squares['c7'], squares['d7'], squares['e7'], squares['f7'], squares['g7'], squares['h7'],         o, o, o, o, o, o, o, o,
+    squares['a8'], squares['b8'], squares['c8'], squares['d8'], squares['e8'], squares['f8'], squares['g8'], squares['h8'],         o, o, o, o, o, o, o, o,
 )
 
 # piece value, 2d matrix because index opening phase and endgame phase
@@ -151,11 +151,15 @@ phases: dict = {'opening':0, 'endgame':1, 'midgame':2}
 
 #                        SEARCH                        #
 
+# define values
 INFINITE:int = 50000
 MATE_VALUE:int = 49000
 MATE_SCORE:int = 48000
 
+# max ply to search at
 MAX_PLY: int = 40
+
+# most valuable victim <- least valuable aggressor/attacker
 MVV_LVA: tuple = (
     105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
     104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
