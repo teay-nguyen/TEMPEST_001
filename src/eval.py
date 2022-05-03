@@ -164,9 +164,9 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int: # I rea
     elif game_phase == phases['endgame']: score = float(score_endgame)
 
     # return the score, what else you expect
-    # based on the side perspective of course
+    # based on the side perspective because negamax framework requires so
 
     # store the score
     tt.tteval_save((score if side else -score), hashkey)
 
-    return score if side else -score
+    return score if side else (score * -1)

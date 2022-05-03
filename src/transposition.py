@@ -1,6 +1,5 @@
 
 # imports
-from sys import getsizeof
 from dataclasses import dataclass
 
 # variables
