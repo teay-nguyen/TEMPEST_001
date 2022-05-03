@@ -1,7 +1,7 @@
 
 # INTRO
 
-The TEMPEST Chess Engine is a minimal chess engine with features you would find in a mediocre chess engine  
+The TEMPEST Chess Engine is an open-source minimal chess engine with features you would find in a mediocre chess engine  
 This engine utilizes the UCI protocol and is a terminal based engine  
 The estimate NPS for this engine is around 10K to 60K nodes per second, dependant on how good your machine is
 
