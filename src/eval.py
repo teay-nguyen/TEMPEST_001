@@ -23,23 +23,23 @@ def eval_pawn(board, sq, side) -> int:
     flagIsDoubled:int = 0
 
     if side:
-        if (board[sq + supported[1][0]] == P and 0 <= (sq + supported[1][0]) <= 127) or (board[sq + supported[1][1]] == P and 0 <= (sq + supported[1][1]) <= 127):
-            flagIsWeak = 0
+        if (board[sq + supported[1][0]] == P and 0 <= (sq + supported[1][0]) <= 127) or (board[sq + supported[1][1]] == P and 0 <= (sq + supported[1][1]) <= 127): flagIsWeak = 0
         else: score -= 10
         if 0 <= (sq - 16) <= 127:
             if board[sq - 16] == P:
                 flagIsDoubled = 1
                 score -= 20
     else:
-        if (board[sq + supported[0][0]] == p and 0 <= (sq + supported[0][0]) <= 127) or (board[sq + supported[0][1]] == p and 0 <= (sq + supported[0][1]) <= 127):
-            flagIsWeak = 0
+        if (board[sq + supported[0][0]] == p and 0 <= (sq + supported[0][0]) <= 127) or (board[sq + supported[0][1]] == p and 0 <= (sq + supported[0][1]) <= 127): flagIsWeak = 0
         else: score -= 10
         if 0 <= (sq + 16) <= 127:
             if board[sq + 16] == p:
                 flagIsDoubled = 1
                 score -= 20
 
-    return score
+    adjustment = 11 * (flagIsWeak + flagIsDoubled)
+
+    return score - adjustment
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:

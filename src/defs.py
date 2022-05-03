@@ -30,7 +30,7 @@ squares: dict = {
      "a4":64,  "b4":65,  "c4":66,  "d4":67,  "e4":68,  "f4":69,  "g4":70,  "h4":71,
      "a3":80,  "b3":81,  "c3":82,  "d3":83,  "e3":84,  "f3":85,  "g3":86,  "h3":87,
      "a2":96,  "b2":97,  "c2":98,  "d2":99, "e2":100, "f2":101, "g2":102, "h2":103,
-    "a1":112, "b1":113, "c1":114, "d1":115, "e1":116, "f1":117, "g1":118, "h1":119, "OFFBOARD":120,
+    "a1":112, "b1":113, "c1":114, "d1":115, "e1":116, "f1":117, "g1":118, "h1":119,     "OFFBOARD":120,
 }
 
 # tuple for converting board coordinates into string
@@ -105,7 +105,7 @@ empty_board: str = '8/8/8/8/8/8/8/8 w - - 0 1'
 tricky_position: str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - '
 
 # piece movement offsets
-knight_offsets: tuple = ( 33, 31, 18, 14, -33, -31, -18, -14 )
-bishop_offsets: tuple = ( 15, 17, -15, -17 )
-rook_offsets: tuple = ( 16, -16, 1, -1 )
-king_offsets: tuple = ( 16, -16, 1, -1, 15, 17, -15, -17 )
+knight_offsets: tuple = (33, 31, 18, 14, -33, -31, -18, -14)
+bishop_offsets: tuple = (15, 17, -15, -17)
+rook_offsets: tuple = (16, -16, 1, -1)
+king_offsets: tuple = (16, -16, 1, -1, 15, 17, -15, -17)

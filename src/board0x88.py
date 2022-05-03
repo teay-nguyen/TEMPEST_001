@@ -212,12 +212,6 @@ class BoardState:
         return 0
 
 
-
-
-
-
-
-
     def make_move(self, move:int, capture_flag:int) -> int: # bound to return a int, in replacement for bool
 
         # filter out the None moves
@@ -460,8 +454,6 @@ class BoardState:
                                     break
                                 if not piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 to_sq += rook_offsets[i]
-
-
 
 
     def perft_driver(self, depth:int) -> None:
