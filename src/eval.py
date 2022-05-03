@@ -5,6 +5,38 @@ from defs import *
 # predefined variables so code can be more readable
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
 
+# other tools to help with eval
+supported:list = [[-15, -17], [15, 17]]
+
+def eval_pawn(board, sq, side) -> int:
+    if side:
+        if board[sq] != P: return 0
+    else:
+        if board[sq] != p: return 0
+
+    score:int = 0
+    flagIsWeak:int = 1
+    flagIsDoubled:int = 0
+
+    if side:
+        if (board[sq + supported[1][0]] == P and 0 <= (sq + supported[1][0]) <= 127) or (board[sq + supported[1][1]] == P and 0 <= (sq + supported[1][1]) <= 127):
+            flagIsWeak = 0
+        else: score -= 10
+        if 0 <= (sq - 16) <= 127:
+            if board[sq - 16] == P:
+                flagIsDoubled = 1
+                score -= 20
+    else:
+        if (board[sq + supported[0][0]] == p and 0 <= (sq + supported[0][0]) <= 127) or (board[sq + supported[0][1]] == p and 0 <= (sq + supported[0][1]) <= 127):
+            flagIsWeak = 0
+        else: score -= 10
+        if 0 <= (sq + 16) <= 127:
+            if board[sq + 16] == p:
+                flagIsDoubled = 1
+                score -= 20
+
+    return score
+
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
     # define the variables
@@ -38,6 +70,31 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
     score_opening += TEMPO[side]
     score_endgame += TEMPO[side]
 
+    # pair bonuses
+    if pceNum[B] > 1:
+        score_opening += BISHOP_PAIR
+        score_endgame += BISHOP_PAIR
+
+    if pceNum[b] > 1:
+        score_opening -= BISHOP_PAIR
+        score_endgame -= BISHOP_PAIR
+
+    if pceNum[N] > 1:
+        score_opening -= KNIGHT_PAIR
+        score_endgame -= KNIGHT_PAIR
+
+    if pceNum[n] > 1:
+        score_opening += KNIGHT_PAIR
+        score_endgame += KNIGHT_PAIR
+
+    if pceNum[R] > 1:
+        score_opening -= ROOK_PAIR
+        score_endgame -= ROOK_PAIR
+
+    if pceNum[r] > 1:
+        score_opening += ROOK_PAIR
+        score_endgame += ROOK_PAIR
+
     # tedious stuff right here
     for sq in range(len(board)):
         if not (sq & 0x88):
@@ -52,6 +109,9 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
             if piece == P:
                 score_opening += positional_score[phases['opening']][PAWN][sq]
                 score_endgame += positional_score[phases['endgame']][PAWN][sq]
+                pawn_eval = eval_pawn(board, sq, 1)
+                score_opening += pawn_eval
+                score_endgame += pawn_eval
             elif piece == N:
                 score_opening += positional_score[phases['opening']][KNIGHT][sq]
                 score_endgame += positional_score[phases['endgame']][KNIGHT][sq]
@@ -70,6 +130,9 @@ def evaluate(board: list, side: int, pceNum: list) -> int: # I really don't know
             elif piece == p:
                 score_opening -= positional_score[phases['opening']][PAWN][mirror_board[sq]]
                 score_endgame -= positional_score[phases['endgame']][PAWN][mirror_board[sq]]
+                pawn_eval = eval_pawn(board, sq, 0)
+                score_opening -= pawn_eval
+                score_endgame -= pawn_eval
             elif piece == n:
                 score_opening -= positional_score[phases['opening']][KNIGHT][mirror_board[sq]]
                 score_endgame -= positional_score[phases['endgame']][KNIGHT][mirror_board[sq]]

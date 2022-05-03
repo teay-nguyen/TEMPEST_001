@@ -6,6 +6,11 @@ from defs import *
 OPENING_PHASE_SCORE: int = 6192
 ENDGAME_PHASE_SCORE: int = 518
 
+# pair bonus
+BISHOP_PAIR: int = 23
+KNIGHT_PAIR: int = 10
+ROOK_PAIR: int = 19
+
 # tempo bonus
 TEMPO: tuple = (-5, 5)
 

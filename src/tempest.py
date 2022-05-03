@@ -3,6 +3,7 @@ import sys
 from board0x88 import BoardState
 from defs import *
 from time import perf_counter
+from eval import evaluate
 
 get_time_ms = lambda i: round(i * 1000)
 
@@ -15,13 +16,13 @@ if __name__ == '__main__':
     # init board and parse FEN
     board: BoardState = BoardState()
     start_time: float = perf_counter()
-    board.init_state(start_position)
+    board.init_state('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ')
     board.print_board()
 
-    board.perft_test(4)
 
     # print unique hash key
     print(f'\n  [UNIQUE HASHKEY]: {board.hash_key}')
+    print(f'  [HANDCRAFTED STATIC EVAL]: {evaluate(board.board, board.side, board.pce_count)}')
 
     # calc program runtime
     program_runtime: float = perf_counter() - start_time
