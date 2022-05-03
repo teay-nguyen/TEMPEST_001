@@ -29,24 +29,7 @@ class Transposition:
         self.tteval_size:int = 0
     
     def tt_setsize(self, size:int):
-        # check if size is a power of 2. if not, make it the next power of 2
-        # this allows for faster access to the entry needed
-
-        if (size & (size - 1)):
-            size -= 1
-            for i in (2**x for x in range(1, 32)):
-                size |= size >> i
-            size += 1
-            size >>= 1
-
-        if size < 16:
-            self.tt_size = 0
-            return 0
-
-        self.tt_size = (size // getsizeof(tt_entry)) - 1
-        self.tt_table = [tt_entry() for _ in range(size)]
-
-        return 0
+        self.tt_size = size
 
     def tt_probe(self, depth, alpha, beta, hashkey):
         # checks the table for any record of the position before actually parsing and calculating the position
@@ -83,22 +66,7 @@ class Transposition:
         entry.depth = depth
 
     def tteval_setsize(self, size:int):
-
-        if (size & (size - 1)):
-            size -= 1
-            for i in (2**x for x in range(1, 32)):
-                size |= size >> i
-            size += 1
-            size >>= 1
-
-        if size < 16:
-            self.tteval_size = 0
-            return 0
-
-        self.tteval_size = (size // getsizeof(tteval_entry)) - 1
-        self.tteval_table = [tteval_entry() for _ in range(size)]
-
-        return 0
+        self.tteval_size = size
     
     def tteval_probe(self, hashkey):
         if not self.tteval_size: return NO_HASH_ENTRY
