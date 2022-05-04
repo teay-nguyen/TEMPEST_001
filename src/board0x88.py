@@ -19,7 +19,7 @@ class MovesStruct:
         self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
         self.count:int = 0
 
-    def reset_(self):
+    def reset(self):
         self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
 
 class BoardState:
@@ -51,8 +51,7 @@ class BoardState:
         for sq in range(len(self.board)):
             if not (sq & 0x88):
                 piece:int = self.board[sq]
-                if piece:
-                    self.hash_key ^= self.zobrist.piecesquare[piece][sq]
+                if piece: self.hash_key ^= self.zobrist.piecesquare[piece][sq]
 
         if self.enpassant != squares['OFFBOARD']: self.hash_key ^= self.zobrist.ep[self.enpassant]
         self.hash_key ^= self.zobrist.castling[self.castle]

@@ -11,9 +11,6 @@ tt.tteval_setsize(0x100000)
 # predefined variables so code can be more readable
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
 
-# other tools to help with eval
-supported:list = [ [-15, -17], [15, 17] ]
-
 def eval_pawn(board, sq, side) -> int:
     # validate if piece is pawn on the given side or not
     if (board[sq] != P) if side else (board[sq] != p): return 0
@@ -61,7 +58,7 @@ def get_game_phase_score(pceNum:list) -> int:
     for piece in range(n, k): bp_scores += pceNum[piece] * -piece_val[phases['opening']][piece]
 
     # return the total amount of material, minus the pawns
-    return (wp_scores + bp_scores)
+    return wp_scores + bp_scores
 
 # main driver
 def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
