@@ -25,6 +25,11 @@ or
 python tempest.py
 ```
 
+## Testing
+
+Test FEN strings are stored in the tests folder in a seperate files, designated for its purpose  
+You can copy one of the FEN strings into the tempest file for it to parse the string, the doing what you want since the fen string is loaded
+
 ## Contributing
 
 Pull Requests are highly encouraged, I need some assistance with my engine  
