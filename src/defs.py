@@ -4,8 +4,8 @@
 from dataclasses import dataclass
 
 # constants
-NAME: str = "TEMPEST 1.2" # name of the chess engine
-ENGINE_VERSION: str = "v1.204 HashHobo" # commit version and author
+NAME: str = "TEMPEST 0.2" # name of the chess engine
+ENGINE_VERSION: str = "v0.204 HashHobo" # commit version and author
 ENGINE_STATUS: str = "WIP (WORK IN PROGRESS)" # engine status
 BOARD_SQ_NUM: int = 128 # max number of squares in a 0x88 board
 GEN_STACK: int = 256 # max number of moves in 1 position

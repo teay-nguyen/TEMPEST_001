@@ -5,6 +5,7 @@ from data import *
 from copy import deepcopy
 from eval import evaluate
 from board0x88 import MovesStruct
+from transposition import NO_HASH_ENTRY, HASH_ALPHA, HASH_BETA, HASH_EXACT, Transposition
 
 # setup and define variables
 killer_moves =                  [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
@@ -12,6 +13,10 @@ history_moves =    [[0 for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)
 pv_table =                  [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
 pv_length =                                           [0 for _ in range(MAX_PLY)]
 ply = 0
+
+# initialize the table
+tt = Transposition()
+tt.tt_setsize(0x100000)
 
 # "guess" the moves value and order them high up on the list if is a capture or is a killer move, if a move in the pv table is found, immediately return it as the best move
 # for the engine to search
@@ -41,10 +46,12 @@ def sort_moves(board:list, move_list):
     for count in range(move_list.count): move_list.moves[count].score = score_move(board, move_list.moves[count].move)
 
     # bubble sort the move list
-    for current in range(move_list.count):
-        for next in range(current+1, move_list.count):
-            if move_list.moves[current].score < move_list.moves[next].score:
-                move_list.moves[current], move_list.moves[next] = move_list.moves[next], move_list.moves[current]
+    #for current in range(move_list.count):
+    #    for next in range(current+1, move_list.count):
+    #        if move_list.moves[current].score < move_list.moves[next].score:
+    #            move_list.moves[current], move_list.moves[next] = move_list.moves[next], move_list.moves[current]
+
+    move_list.moves = sorted(move_list.moves, reverse=True, key=lambda x:x.score)
 
 # called when depth has reached 0, to check for any lingering captures left
 def quiescence(alpha, beta, depth, state, nodes):
@@ -123,6 +130,16 @@ def search(alpha, beta, depth, state, nodes):
     # initialize pv length
     pv_length[ply] = ply
 
+    # define hash flag
+    hash_flag_:int = HASH_ALPHA
+
+    # a small hack by Pedro Castro to figure out whether the current node is PV node or not
+    pv_node = beta - alpha > 1
+
+    # probe the hash table for any values
+    score = tt.tt_probe(depth, alpha, beta, state.hash_key)
+    if ply and score != NO_HASH_ENTRY and not pv_node: return score
+
     # if depth is 0 then activate quiescence search
     if not depth: return quiescence(alpha, beta, depth, state, nodes)
 
@@ -160,7 +177,10 @@ def search(alpha, beta, depth, state, nodes):
 
         legal += 1
 
-        score = -search(-beta, -alpha, depth - 1, state, nodes)
+        if score > alpha:
+            score = -search(-alpha - 1, -alpha, depth - 1, state, nodes)
+            if score > alpha and score < beta:
+                score = -search(-beta, -alpha, depth - 1, state, nodes)
 
         state.board = deepcopy(board_cpy)
         state.side = side_cpy
@@ -171,20 +191,24 @@ def search(alpha, beta, depth, state, nodes):
         state.hash_key = hashkey_cpy
 
         ply -= 1
-
-        if score >= beta:
-            killer_moves[1][ply] = killer_moves[0][ply]
-            killer_moves[0][ply] = move_list.moves[count].move
-            return beta
+ 
         if score > alpha:
+            hash_flag_ = HASH_EXACT
             history_moves[state.board[get_move_source(move_list.moves[count].move)]][get_move_target(move_list.moves[count].move)] += depth
             alpha = score
             pv_table[ply][ply] = move_list.moves[count].move
-            for i in range(ply+1, pv_length[ply+1]):
-                pv_table[ply][i] = pv_table[ply+1][i]
+            for next_ply in range(ply+1, pv_length[ply+1]): pv_table[ply][next_ply] = pv_table[ply+1][next_ply]
             pv_length[ply] = pv_length[ply+1]
+            if score >= beta:
+                tt.tt_save(depth, beta, HASH_BETA, state.hash_key)
+                killer_moves[1][ply] = killer_moves[0][ply]
+                killer_moves[0][ply] = move_list.moves[count].move
+                return beta
 
     if not legal:
         if in_check: return -MATE_VALUE + ply
         else: return 0
+
+    tt.tt_save(depth, alpha, hash_flag_, state.hash_key)
+
     return alpha
