@@ -1,7 +1,7 @@
 
 
                                         The TEMPEST Chess Engine
-                                        (A Minimal Chess Engine)
+                                     (A Minimal Python Chess Engine)
                                        (0x88 Board Representation)
                                                   by
                                                HashHobo
@@ -11,3 +11,5 @@
     - Brute force Negamax PVS framework
     - Some other search pruning techniques
     - Rudimentary features: Transposition Table, Iterative Deepening, Aspiration Windows, Quiescence Search
+
+    - Transposition Table: Hash Table for board positions and evaluations

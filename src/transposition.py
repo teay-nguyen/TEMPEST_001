@@ -22,8 +22,8 @@ class tteval_entry:
 class Transposition:
     def __init__(self):
         # define main variables
-        self.tt_table:list = list()
-        self.tteval_table:list = list()
+        self.tt_table:list = []
+        self.tteval_table:list = []
 
         self.tt_size:int = 0
         self.tteval_size:int = 0

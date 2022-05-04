@@ -48,10 +48,10 @@ def eval_pawn(board, sq, side) -> int:
             else: score += NOT_DOUBLED_BONUS
 
     # calculate the penalty based on doubled pawns and weak pawns
-    penalty = 13 * (flagIsWeak + flagIsDoubled)
+    penalty = 15 * (flagIsWeak + flagIsDoubled)
 
     # return the score deducting penalty
-    return score - penalty
+    return (score - penalty)
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
@@ -172,8 +172,7 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
     elif game_phase == phases['endgame']: score = float(score_endgame)
 
     # change the score based on stm, required on the negamax framework
-    if side == sides['black']:
-        score = -score
+    if side == sides['black']: score = -score
 
     # store the score in the tt table in case of encountering this position again
     tt.tteval_save(score, hashkey)
