@@ -6,6 +6,7 @@
 The TEMPEST Chess Engine is an open-source minimal chess engine with basic features you would find in a mediocre chess engine  
 This engine is an incomplete terminal based engine with no UCI options implemented yet  
 The estimate NPS for this engine is around 10K to 60K nodes per second, dependant on how good your machine is  
+TEMPEST has not yet supported NNUE evaluation, and has only been implemented with the classic handcrafted evaluation function
 
 ## Installation
 
