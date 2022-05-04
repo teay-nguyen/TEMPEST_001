@@ -16,11 +16,10 @@ class Zobrist:
 
 class MovesStruct:
     def __init__(self) -> None:
-        self.moves:list = []
+        self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
         self.count:int = 0
-        self.init_movestruct()
 
-    def init_movestruct(self):
+    def reset_(self):
         self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
 
 class BoardState:
@@ -61,6 +60,14 @@ class BoardState:
 
     def init_state(self, fen:str) -> None:
         self.pce_count = [0 for _ in range(PIECE_TYPES)]
+        self.hash_key = 0
+        self.nodes = 0
+        self.parsed_fen = ''
+        self.king_square = [squares['e8'], squares['e1']]
+        self.side: int = -1
+        self.xside: int = -1
+        self.castle: int = 15
+        self.enpassant: int = squares['OFFBOARD']
         self.parse_fen(fen)
         self.gen_hashkey()
 
@@ -73,10 +80,14 @@ class BoardState:
                     self.board[square] = e
 
         self.pce_count = [0 for _ in range(PIECE_TYPES)]
-        self.side = -1
-        self.xside = -1
-        self.castle = 0
-        self.enpassant = squares['OFFBOARD']
+        self.hash_key = 0
+        self.nodes = 0
+        self.parsed_fen = ''
+        self.king_square = [squares['e8'], squares['e1']]
+        self.side: int = -1
+        self.xside: int = -1
+        self.castle: int = 15
+        self.enpassant: int = squares['OFFBOARD']
 
     def generate_fen(self) -> str:
         fen_string: str = ''
@@ -213,8 +224,7 @@ class BoardState:
     def make_move(self, move:int, capture_flag:int) -> int: # bound to return a int, in replacement for bool
 
         # filter out the None moves
-        if move == -1:
-            return 0 # illegal anyway because this is not a valid move on the board
+        if move == -1: return 0 # illegal anyway because this is not a valid move on the board
 
         # quiet moves
         if capture_flag == ALL_MOVES:
@@ -555,8 +565,7 @@ class BoardState:
             self.perft_test(depth)
 
     def print_board(self) -> None:
-        print()
-        print('________________________________\n\n')
+        print('\n________________________________\n\n')
         for rank in range(8):
             for file in range(16):
                 square:int = rank * 16 + file

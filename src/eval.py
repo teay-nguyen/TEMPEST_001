@@ -1,4 +1,5 @@
 
+# imports
 from data import *
 from defs import *
 from transposition import Transposition, NO_HASH_ENTRY
@@ -11,14 +12,11 @@ tt.tteval_setsize(0x100000)
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
 
 # other tools to help with eval
-supported:list = [[-15, -17], [15, 17]]
+supported:list = [ [-15, -17], [15, 17] ]
 
 def eval_pawn(board, sq, side) -> int:
-    # check side
-    if side:
-        if board[sq] != P: return 0
-    else:
-        if board[sq] != p: return 0
+    # validate if piece is pawn on the given side or not
+    if (board[sq] != P) if side else (board[sq] != p): return 0
 
     # define vars
     score:int = 0
@@ -27,7 +25,7 @@ def eval_pawn(board, sq, side) -> int:
 
     # calc pawn score based on doubled pawns and supported pawns
     if side:
-        if (board[sq + supported[1][0]] == P and 0 <= (sq + supported[1][0]) <= 127) or (board[sq + supported[1][1]] == P and 0 <= (sq + supported[1][1]) <= 127):
+        if (board[sq + 15] == P and 0 <= (sq + 15) <= 127) or (board[sq + 17] == P and 0 <= (sq + 17) <= 127):
             flagIsWeak = 0
             score += SUPPORTED_BONUS
         else: score -= NOT_SUPPORTED_PENALTY
@@ -37,7 +35,7 @@ def eval_pawn(board, sq, side) -> int:
                 score -= DOUBLED_PENALTY
             else: score += NOT_DOUBLED_BONUS
     else:
-        if (board[sq + supported[0][0]] == p and 0 <= (sq + supported[0][0]) <= 127) or (board[sq + supported[0][1]] == p and 0 <= (sq + supported[0][1]) <= 127):
+        if (board[sq - 15] == p and 0 <= (sq - 15) <= 127) or (board[sq - 17] == p and 0 <= (sq - 17) <= 127):
             flagIsWeak = 0
             score += SUPPORTED_BONUS
         else: score -= NOT_SUPPORTED_PENALTY
@@ -167,9 +165,9 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
 
     # determine the final score based on game phase
     # my nvim lsp keep throwing errors this things a nuisance, i need the exact float/value because better move ordering equals better playing strength
-    if game_phase == phases['midgame']: score = float((score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE)
-    elif game_phase == phases['opening']: score = float(score_opening)
-    elif game_phase == phases['endgame']: score = float(score_endgame)
+    if game_phase == phases['midgame']: score = round((score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score) / OPENING_PHASE_SCORE), 2)
+    elif game_phase == phases['opening']: score = format(score_opening, '.2f')
+    elif game_phase == phases['endgame']: score = format(score_endgame, '.2f')
 
     # change the score based on stm, required on the negamax framework
     if side == sides['black']: score = -score

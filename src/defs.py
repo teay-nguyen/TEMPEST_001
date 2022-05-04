@@ -49,7 +49,7 @@ square_to_coords: tuple = (
 )
 
 # piece encoding
-e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 # 0, 100, 280, 320, 479, 929, 0, 100, 280, 320, 479, 929
+e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 ascii_pieces: str = ".PNBRQKpnbrqko"
 unicode_pieces: str = ".♙♘♗♖♕♔♙♞♝♜♛♚" # only used with CPython
 
