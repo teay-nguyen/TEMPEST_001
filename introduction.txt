@@ -5,7 +5,7 @@
                                        (0x88 Board Representation)
                                                   by
                                                HashHobo
-                                 [LANGUAGE: PYTHON 3.8.9, VERSION: v1.2]
+                                 [LANGUAGE: PYTHON 3.8.9, VERSION: v0.296]
 
     - 0x88 board representation
     - Brute force Negamax PVS framework
