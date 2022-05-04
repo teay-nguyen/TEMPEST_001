@@ -28,10 +28,10 @@ python tempest.py
 
 ## Testing
 
-Test FEN strings are stored in the tests folder in a seperate files named differently according to the positions  
+Test FEN strings are stored in the tests folder in a seperate files named differently according to the purpose of the positions  
 You can copy one of the FEN strings into the tempest file for it to parse the string, the doing what you want since the fen string is loaded
 
 ## Contributing
 
-Pull Requests are highly encouraged, I need some assistance with my engine  
+Pull Requests are highly encouraged, as doing this alone would take a long time  
 For major changes, please open an issue first to discuss what you would like to change
