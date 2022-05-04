@@ -11,6 +11,7 @@ BOARD_SQ_NUM: int = 128 # max number of squares in a 0x88 board
 GEN_STACK: int = 256 # max number of moves in 1 position
 PIECE_TYPES: int = 13 # number of piece types: from empty to black king
 CASTLE_VAL: int = 16 # max castle value
+IDS: int = 2
 
 # capture flags (just give em random number)
 ALL_MOVES: int = 12874
