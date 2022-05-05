@@ -59,6 +59,7 @@ def sort_moves(board:list, move_list):
 def quiescence(alpha, beta, depth, state, nodes):
     # increment nodes and make ply variable global
     global ply
+
     nodes += 1
 
     # search went too deep
@@ -101,6 +102,9 @@ def quiescence(alpha, beta, depth, state, nodes):
         # recursive call
         score = -quiescence(-beta, -alpha, depth, state, nodes)
 
+        # decrement ply
+        ply -= 1
+
         # restore previous board state
         state.board = deepcopy(board_cpy)
         state.side = side_cpy
@@ -110,9 +114,6 @@ def quiescence(alpha, beta, depth, state, nodes):
         state.king_square = deepcopy(king_square_cpy)
         state.pce_count = deepcopy(pce_count_cpy)
         state.hash_key = hashkey_cpy
-
-        # decrement ply
-        ply -= 1
 
         # same as above
         if score > alpha:
@@ -162,6 +163,8 @@ def search(alpha, beta, depth, state, nodes):
     state.gen_moves(move_list)
     sort_moves(state.board, move_list)
 
+    moves_searched:int = 0
+
     # loop through the move list
     for count in range(move_list.count):
         board_cpy:list = deepcopy(state.board)
@@ -181,10 +184,15 @@ def search(alpha, beta, depth, state, nodes):
 
         legal += 1
 
-        if score > alpha:
-            score = -search(-alpha - 1, -alpha, depth - 1, state, nodes)
-            if score > alpha and score < beta:
-                score = -search(-beta, -alpha, depth - 1, state, nodes)
+        if not moves_searched: score = -search(-beta, -alpha, depth - 1, state, nodes)
+        else:
+            score = alpha + 1
+            if score > alpha:
+                score = -search(-alpha - 1, -alpha, depth - 1, state, nodes)
+                if score > alpha and score < beta:
+                    score = -search(-beta, -alpha, depth - 1, state, nodes)
+
+        ply -= 1
 
         state.board = deepcopy(board_cpy)
         state.side = side_cpy
@@ -195,19 +203,20 @@ def search(alpha, beta, depth, state, nodes):
         state.pce_count = deepcopy(pce_count_cpy)
         state.hash_key = hashkey_cpy
 
-        ply -= 1
- 
+        moves_searched += 1
+
         if score > alpha:
             hash_flag_ = HASH_EXACT
-            history_moves[state.board[get_move_source(move_list.moves[count].move)]][get_move_target(move_list.moves[count].move)] += depth
+            if not get_move_capture(move_list.moves[count].move): history_moves[state.board[get_move_source(move_list.moves[count].move)]][get_move_target(move_list.moves[count].move)] += depth
             alpha = score
             pv_table[ply][ply] = move_list.moves[count].move
             for next_ply in range(ply+1, pv_length[ply+1]): pv_table[ply][next_ply] = pv_table[ply+1][next_ply]
             pv_length[ply] = pv_length[ply+1]
             if score >= beta:
                 tt.tt_save(depth, beta, HASH_BETA, state.hash_key)
-                killer_moves[1][ply] = killer_moves[0][ply]
-                killer_moves[0][ply] = move_list.moves[count].move
+                if not get_move_capture(move_list.moves[count].move):
+                    killer_moves[1][ply] = killer_moves[0][ply]
+                    killer_moves[0][ply] = move_list.moves[count].move
                 return beta
 
     if not legal:

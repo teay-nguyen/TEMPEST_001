@@ -5,7 +5,10 @@
 from dataclasses import dataclass
 
 # variables
-HASH_EXACT:int = 0; HASH_ALPHA:int = 1; HASH_BETA:int = 2; NO_HASH_ENTRY:int = 1000000
+HASH_EXACT:int = 0
+HASH_ALPHA:int = 1
+HASH_BETA:int = 2
+NO_HASH_ENTRY:int = 1000000
 
 # entries
 @dataclass
