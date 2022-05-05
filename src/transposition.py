@@ -1,9 +1,6 @@
 #!/usr/bin/env pypy3 -u
 # -*- coding: utf-8 -*-
 
-# imports
-from dataclasses import dataclass
-
 # variables
 HASH_EXACT:int = 0
 HASH_ALPHA:int = 1

@@ -17,8 +17,8 @@ processed_file = open('processed/openings.txt', 'w+')
 def get_dataset():
     vals:dict = {'1/2-1/2':0, '0-1':-1, '1-0':1}
     gn = 0
-    for fn in os.listdir('data_folder'):
-        pgn = open(os.path.join('data_folder', fn))
+    for fn in os.listdir('pgn_folder'):
+        pgn = open(os.path.join('pgn_folder', fn))
         while 1:
             game = chess.pgn.read_game(pgn)
 

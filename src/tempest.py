@@ -18,8 +18,10 @@ if __name__ == '__main__':
     # init board and parse FEN
     board: BoardState = BoardState()
     start_time: float = perf_counter()
-    board.init_state(tricky_position)
+    board.init_state(start_position)
     board.print_board()
+
+    board.perft_test(4)
 
     print(f'  [EVALUATION (HANDCRAFTED)]: {evaluate(board.board, board.side, board.pce_count, board.hash_key)}')
 
