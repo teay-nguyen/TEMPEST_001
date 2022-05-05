@@ -1,3 +1,5 @@
+#!/usr/bin/env pypy3 -u
+# -*- coding: utf-8 -*-
 
 # imports
 from defs import *
@@ -12,7 +14,7 @@ killer_moves:list =                  [[0 for _ in range(MAX_PLY)] for _ in range
 history_moves:list =    [[0 for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
 pv_table:list =                  [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
 pv_length:list =                                           [0 for _ in range(MAX_PLY)]
-ply:int = 0
+ply:int =                                                                            0
 
 # initialize the table
 tt:Transposition = Transposition()

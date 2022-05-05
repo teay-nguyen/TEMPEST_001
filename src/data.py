@@ -1,3 +1,5 @@
+#!/usr/bin/env pypy3 -u
+# -*- coding: utf-8 -*-
 
 # imports
 from defs import *
@@ -148,7 +150,7 @@ mirror_board: tuple = (
 
 # piece value, 2d matrix because index opening phase and endgame phase
 piece_val: list = [             [0, 82, 337, 365, 477, 1025, 60000, -82, -337, -365, -477, -1025, -60000],
-                                [0, 94, 281, 297, 512,  936, 60000, -94, -281, -297, -512,  -936, -60000]
+                                [0, 94, 281, 297, 512,  936, 60000, -94, -281, -297, -512,  -936, -60000],
                   ]
 
 # self explanitory

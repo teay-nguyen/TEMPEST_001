@@ -1,4 +1,5 @@
-
+#!/usr/bin/env pypy3 -u
+# -*- coding: utf-8 -*-
 
 # imports
 from dataclasses import dataclass

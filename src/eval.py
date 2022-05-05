@@ -1,3 +1,5 @@
+#!/usr/bin/env pypy3 -u
+# -*- coding: utf-8 -*-
 
 # imports
 from data import *

@@ -1,3 +1,6 @@
+#!/usr/bin/env pypy3 -u
+# -*- coding: utf-8 -*-
+
 # imports
 from copy import deepcopy
 from time import perf_counter
