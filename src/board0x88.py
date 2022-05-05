@@ -26,23 +26,65 @@ from time import perf_counter
 from uuid import uuid1
 from defs import *
 
+'''
+
+    Found UUID module to be faster, this is unused for now
+
+    RKISS is TEMPEST_001's pseudo random number generator (PRNG) used to compute hash keys.
+    George Marsaglia invented the RNG-Kiss-family in the early 90's. This is a
+    specific version that Heinz van Saanen derived from some public domain code
+    by Bob Jenkins. Following the feature list, as tested by Heinz.
+
+    - Quite platform independent
+    - Passes ALL dieharder tests! Here *nix sys-rand() e.g. fails miserably:-)
+    - ~12 times faster than my *nix sys-rand()
+    - ~4 times faster than SSE2-version of Mersenne twister
+    - Average cycle length: ~2^126
+    - 64 bit seed
+    - Return doubles with a full 53 bit mantissa
+    - Thread safe
+
+'''
+
+class RKISS:
+    def __init__(self):
+        self.a:int = 0; self.b:int = 0; self.c:int = 0; self.d:int = 0
+
+        # call init to calculate random unsigned 64 bit numbers
+        self.raninit()
+
+    def rotate(self, x:int, k:int):
+        return (x << k) | (x >> (64 - k))
+
+    def raninit(self):
+        self.a = 0xf1ea5eed
+        self.b = self.c = self.d = 0xd4e12c77
+        for _ in range(73):
+            self.rand64()
+
+    def rand64(self):
+        e = self.a - self.rotate(self.b, 7)
+        self.a = self.b ^ self.rotate(self.c, 13)
+        self.b = self.c + self.rotate(self.d, 37)
+        self.c = self.d + e
+        self.d = e + self.a
+        return self.d
+
 class Zobrist:
     def __init__(self) -> None:
-        self.piecesquare: list = [[self.random_U64() for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
-        self.side: int = self.random_U64()
-        self.castling: list = [self.random_U64() for _ in range(CASTLE_VAL)]
-        self.ep: list = [self.random_U64() for _ in range(BOARD_SQ_NUM)]
+        # self.rk:RKISS = RKISS()
+        self.piecesquare: list = [[self.rand64() for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
+        self.side: int = self.rand64()
+        self.castling: list = [self.rand64() for _ in range(CASTLE_VAL)]
+        self.ep: list = [self.rand64() for _ in range(BOARD_SQ_NUM)]
 
-    def random_U64(self) -> int:
+    def rand64(self):
         return uuid1().int >> 64
 
 class MovesStruct:
     def __init__(self) -> None:
         self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
         self.count:int = 0
-
-    def reset(self):
-        self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
 
 class BoardState:
     def __init__(self) -> None:
