@@ -43,7 +43,7 @@ def eval_pawn(board, sq, side) -> int:
             else: score += NOT_DOUBLED_BONUS
 
     # calculate the penalty based on doubled pawns and weak pawns
-    penalty = 15 * (flagIsWeak + flagIsDoubled)
+    penalty = 14 * (flagIsWeak + flagIsDoubled)
 
     # return the score deducting penalty
     return (score - penalty)
@@ -74,8 +74,8 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
     game_phase:int = -1
 
     # specify game phase var based on game phase score
-    if game_phase_score > OPENING_PHASE_SCORE: game_phase = phases['opening']
-    elif game_phase_score < ENDGAME_PHASE_SCORE: game_phase = phases['endgame']
+    if game_phase_score >= OPENING_PHASE_SCORE: game_phase = phases['opening']
+    elif game_phase_score <= ENDGAME_PHASE_SCORE: game_phase = phases['endgame']
     else: game_phase = phases['midgame']
 
     # define score variables
@@ -83,28 +83,28 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
 
     # pair bonuses
     if pceNum[B] > 1:
-        score_opening += BISHOP_PAIR
-        score_endgame += BISHOP_PAIR
+        score_opening += BISHOP_PAIR_BONUS
+        score_endgame += BISHOP_PAIR_BONUS
 
     if pceNum[b] > 1:
-        score_opening -= BISHOP_PAIR
-        score_endgame -= BISHOP_PAIR
+        score_opening -= BISHOP_PAIR_BONUS
+        score_endgame -= BISHOP_PAIR_BONUS
 
     if pceNum[N] > 1:
-        score_opening += KNIGHT_PAIR
-        score_endgame += KNIGHT_PAIR
+        score_opening += KNIGHT_PAIR_BONUS
+        score_endgame += KNIGHT_PAIR_BONUS
 
     if pceNum[n] > 1:
-        score_opening -= KNIGHT_PAIR
-        score_endgame -= KNIGHT_PAIR
+        score_opening -= KNIGHT_PAIR_BONUS
+        score_endgame -= KNIGHT_PAIR_BONUS
 
     if pceNum[R] > 1:
-        score_opening += ROOK_PAIR
-        score_endgame += ROOK_PAIR
+        score_opening += ROOK_PAIR_BONUS
+        score_endgame += ROOK_PAIR_BONUS
 
     if pceNum[r] > 1:
-        score_opening -= ROOK_PAIR
-        score_endgame -= ROOK_PAIR
+        score_opening -= ROOK_PAIR_BONUS
+        score_endgame -= ROOK_PAIR_BONUS
 
     # tedious stuff right here
     for sq in range(len(board)):

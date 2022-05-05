@@ -1,3 +1,4 @@
+
 # imports
 from defs import *
 
@@ -7,15 +8,15 @@ OPENING_PHASE_SCORE: int = 6192
 ENDGAME_PHASE_SCORE: int = 518
 
 # pair bonus
-BISHOP_PAIR: int = 20
-KNIGHT_PAIR: int = 10
-ROOK_PAIR: int = 15
+BISHOP_PAIR_BONUS: int = 15
+KNIGHT_PAIR_BONUS: int = 8
+ROOK_PAIR_BONUS: int = 12
 
 # pawn bonuses
-SUPPORTED_BONUS: int = 20
+SUPPORTED_BONUS: int = 19
 NOT_SUPPORTED_PENALTY: int = 15
-NOT_DOUBLED_BONUS: int = 13
-DOUBLED_PENALTY: int = 20
+NOT_DOUBLED_BONUS: int = 17
+DOUBLED_PENALTY: int = 24
 
 # positional score [phase][piece][square]
 
@@ -44,7 +45,7 @@ positional_score: list = [[[    0,   0,   0,   0,   0,   0,  0,   0,    o, o, o,
                               -4,   5,  19,  50,  37,  37,   7,  -2,    o, o, o, o, o, o, o, o,
                               -6,  13,  13,  26,  34,  12,  10,   4,    o, o, o, o, o, o, o, o,
                                0,  15,  15,  15,  14,  27,  18,  10,    o, o, o, o, o, o, o, o,
-                               4,  15,  16,   0,   7,  21,  33,   1,    o, o, o, o, o, o, o, o,
+                               4,  16,  16,   0,   7,  21,  33,   1,    o, o, o, o, o, o, o, o,
                              -33,  -3, -14, -21, -13, -12, -39, -21,    o, o, o, o, o, o, o, o],
 
                           [     32,  42,  32,  51, 63,  9,  31,  43,    o, o, o, o, o, o, o, o,
@@ -94,7 +95,7 @@ positional_score: list = [[[    0,   0,   0,   0,   0,   0,  0,   0,    o, o, o,
                              -18,  -6,  16,  25,  16,  17,   4, -18,    o, o, o, o, o, o, o, o,
                              -23,  -3,  -1,  15,  10,  -3, -20, -22,    o, o, o, o, o, o, o, o,
                              -42, -20, -10,  -5,  -2, -20, -23, -44,    o, o, o, o, o, o, o, o,
-                             -29, -51, -23, -15, -22, -18, -50, -64,    o, o, o, o, o, o, o, o],
+                             -31, -51, -23, -15, -22, -18, -50, -64,    o, o, o, o, o, o, o, o],
 
                           [   -14, -21, -11,  -8, -7,  -9, -17, -24,    o, o, o, o, o, o, o, o,
                                -8,  -4,   7, -12, -3, -13,  -4, -14,    o, o, o, o, o, o, o, o,

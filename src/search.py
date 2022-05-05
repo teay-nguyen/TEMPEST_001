@@ -8,14 +8,14 @@ from board0x88 import MovesStruct
 from transposition import NO_HASH_ENTRY, HASH_ALPHA, HASH_BETA, HASH_EXACT, Transposition
 
 # setup and define variables
-killer_moves =                  [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
-history_moves =    [[0 for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
-pv_table =                  [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
-pv_length =                                           [0 for _ in range(MAX_PLY)]
-ply = 0
+killer_moves:list =                  [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
+history_moves:list =    [[0 for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
+pv_table:list =                  [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
+pv_length:list =                                           [0 for _ in range(MAX_PLY)]
+ply:int = 0
 
 # initialize the table
-tt = Transposition()
+tt:Transposition = Transposition()
 tt.tt_setsize(0x100000)
 
 # "guess" the moves value and order them high up on the list if is a capture or is a killer move, if a move in the pv table is found, immediately return it as the best move
@@ -60,8 +60,7 @@ def quiescence(alpha, beta, depth, state, nodes):
     nodes += 1
 
     # search went too deep
-    if ply > MAX_PLY - 1:
-        return evaluate(state.board, state.side, state.pce_count, state.hash_key)
+    if ply > MAX_PLY - 1: return evaluate(state.board, state.side, state.pce_count, state.hash_key)
 
     # stand pat for the function
     score:int = evaluate(state.board, state.side, state.pce_count, state.hash_key)
@@ -86,6 +85,7 @@ def quiescence(alpha, beta, depth, state, nodes):
         enpassant_cpy:int = state.enpassant
         castle_cpy:int = state.castle
         king_square_cpy:list = deepcopy(state.king_square)
+        pce_count_cpy:list = deepcopy(state.pce_count)
         hashkey_cpy:int = state.hash_key
 
         # increment ply
@@ -106,6 +106,7 @@ def quiescence(alpha, beta, depth, state, nodes):
         state.enpassant = enpassant_cpy
         state.castle = castle_cpy
         state.king_square = deepcopy(king_square_cpy)
+        state.pce_count = deepcopy(pce_count_cpy)
         state.hash_key = hashkey_cpy
 
         # decrement ply
@@ -167,6 +168,7 @@ def search(alpha, beta, depth, state, nodes):
         enpassant_cpy:int = state.enpassant
         castle_cpy:int = state.castle
         king_square_cpy:list = deepcopy(state.king_square)
+        pce_count_cpy:list = deepcopy(state.pce_count)
         hashkey_cpy:int = state.hash_key
 
         ply += 1
@@ -188,6 +190,7 @@ def search(alpha, beta, depth, state, nodes):
         state.enpassant = enpassant_cpy
         state.castle = castle_cpy
         state.king_square = deepcopy(king_square_cpy)
+        state.pce_count = deepcopy(pce_count_cpy)
         state.hash_key = hashkey_cpy
 
         ply -= 1
