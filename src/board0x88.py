@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 # imports
-from copy import deepcopy
 from time import perf_counter
 from uuid import uuid1
 from defs import *
@@ -231,13 +230,13 @@ class BoardState:
         # quiet moves
         if capture_flag == ALL_MOVES:
             # copy stuff
-            board_cpy:list = deepcopy(self.board)
+            board_cpy:list = [_ for _ in self.board]
             side_cpy:int = self.side
             xside_cpy:int = self.xside
             enpassant_cpy:int = self.enpassant
             castle_cpy:int = self.castle
-            king_square_cpy:list = deepcopy(self.king_square)
-            pce_count_cpy:list = deepcopy(self.pce_count)
+            king_square_cpy:list = [_ for _ in self.king_square]
+            pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
 
             # get move source and the square it moves to
@@ -316,13 +315,13 @@ class BoardState:
 
             # take back move if king is under attack
             if self.is_square_attacked(self.king_square[self.xside], self.side):
-                self.board = deepcopy(board_cpy)
+                self.board = [_ for _ in board_cpy]
                 self.side = side_cpy
                 self.xside = xside_cpy
                 self.enpassant = enpassant_cpy
                 self.castle = castle_cpy
-                self.king_square = deepcopy(king_square_cpy)
-                self.pce_count = deepcopy(pce_count_cpy)
+                self.king_square = [_ for _ in king_square_cpy]
+                self.pce_count = [_ for _ in pce_count_cpy]
                 self.hash_key = hashkey_cpy
                 return 0 # illegal
             else: return 1 # legal
@@ -482,13 +481,13 @@ class BoardState:
         for mv_count in range(move_list.count):
 
             # copy board state
-            board_cpy:list = deepcopy(self.board)
+            board_cpy:list = [_ for _ in self.board]
             side_cpy:int = self.side
             xside_cpy:int = self.xside
             enpassant_cpy:int = self.enpassant
             castle_cpy:int = self.castle
-            king_square_cpy:list = deepcopy(self.king_square)
-            pce_count_cpy:list = deepcopy(self.pce_count)
+            king_square_cpy:list = [_ for _ in self.king_square]
+            pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
 
             # filter out the illegal moves
@@ -498,13 +497,13 @@ class BoardState:
             self.perft_driver(depth - 1)
 
             # restore position
-            self.board = deepcopy(board_cpy)
+            self.board = [_ for _ in board_cpy]
             self.side = side_cpy
             self.xside = xside_cpy
             self.enpassant = enpassant_cpy
             self.castle = castle_cpy
-            self.king_square = deepcopy(king_square_cpy)
-            self.pce_count = deepcopy(pce_count_cpy)
+            self.king_square = [_ for _ in king_square_cpy]
+            self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
 
     def perft_test(self, depth:int) -> None:
@@ -521,13 +520,13 @@ class BoardState:
 
         # loop over move list
         for mv_count in range(move_list.count):
-            board_cpy:list = deepcopy(self.board)
+            board_cpy:list = [_ for _ in self.board]
             side_cpy:int = self.side
             xside_cpy:int = self.xside
             enpassant_cpy:int = self.enpassant
             castle_cpy:int = self.castle
-            king_square_cpy:list = deepcopy(self.king_square)
-            pce_count_cpy:list = deepcopy(self.pce_count)
+            king_square_cpy:list = [_ for _ in self.king_square]
+            pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
 
             if not self.make_move(move_list.moves[mv_count].move, ALL_MOVES): continue
@@ -542,13 +541,13 @@ class BoardState:
             old_nodes:int = self.nodes - leaf_nodes
 
             # restore board state
-            self.board = deepcopy(board_cpy)
+            self.board = [_ for _ in board_cpy]
             self.side = side_cpy
             self.xside = xside_cpy
             self.enpassant = enpassant_cpy
             self.castle = castle_cpy
-            self.king_square = deepcopy(king_square_cpy)
-            self.pce_count = deepcopy(pce_count_cpy)
+            self.king_square = [_ for _ in king_square_cpy]
+            self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
 
             curr_elapsed:float = perf_counter() - start_time

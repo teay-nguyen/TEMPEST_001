@@ -45,7 +45,7 @@ def eval_pawn(board, sq, side) -> int:
             else: score += NOT_DOUBLED_BONUS
 
     # calculate the penalty based on doubled pawns and weak pawns
-    penalty = 14 * (flagIsWeak + flagIsDoubled)
+    penalty = 12 * (flagIsWeak + flagIsDoubled)
 
     # return the score deducting penalty
     return (score - penalty)
@@ -63,7 +63,7 @@ def get_game_phase_score(pceNum:list) -> int:
     return wp_scores + bp_scores
 
 # main driver
-def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
+def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
 
     # probe the table for any available entries
     tt_score:int = tt.tteval_probe(hashkey)
@@ -164,9 +164,9 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
 
     # determine the final score based on game phase
     # my nvim lsp keep throwing errors this things a nuisance, i need the exact float/value because better move ordering equals better playing strength
-    if game_phase == phases['midgame']: score = round((score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score) / OPENING_PHASE_SCORE), 2)
-    elif game_phase == phases['opening']: score = format(score_opening, '.2f')
-    elif game_phase == phases['endgame']: score = format(score_endgame, '.2f')
+    if game_phase == phases['midgame']: score = score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score) // OPENING_PHASE_SCORE
+    elif game_phase == phases['opening']: score = score_opening
+    elif game_phase == phases['endgame']: score = score_endgame
 
     # change the score based on stm, required on the negamax framework
     score = score if side else (score * -1)

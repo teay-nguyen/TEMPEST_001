@@ -1,29 +1,26 @@
 #!/usr/bin/env pypy3 -u
 # -*- coding: utf-8 -*-
 
-# imports
-from dataclasses import dataclass
-
 # constants
 NAME: str = "TEMPEST_001 0.296" # name of the chess engine
 ENGINE_VERSION: str = "v0.296 HashHobo [HashingTerry]" # commit version and author
 ENGINE_STATUS: str = "WIP [WORK IN PROGRESS]" # engine status
-BOARD_SQ_NUM: int = 128 # max number of squares in a 0x88 board
-GEN_STACK: int = 256 # max number of moves in 1 position
-PIECE_TYPES: int = 13 # number of piece types: from empty to black king
-CASTLE_VAL: int = 16 # max castle value
-IDS: int = 2
+BOARD_SQ_NUM: int = 0x80 # max number of squares in a 0x88 board
+GEN_STACK: int = 0x100 # max number of moves in 1 position
+PIECE_TYPES: int = 0xD # number of piece types: from empty to black king
+CASTLE_VAL: int = 0x10 # max castle value
+IDS: int = 0x2
 
 # capture flags (just give em random number)
-ALL_MOVES: int = 12874
-CAPTURE_MOVES: int = 23532
+ALL_MOVES: int = 0x000000000003123
+CAPTURE_MOVES: int = 0x0000000000015cc
 
 # state storing
 
-@dataclass
 class move_t:
-    move: int
-    score: int = 0
+    def __init__(self, move_):
+        self.move:int = move_
+        self.score:int = 0
 
 # mapping values to match coordinates or into strings
 squares: dict = {

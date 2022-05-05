@@ -8,20 +8,20 @@ from dataclasses import dataclass
 HASH_EXACT:int = 0
 HASH_ALPHA:int = 1
 HASH_BETA:int = 2
-NO_HASH_ENTRY:int = 1000000
+NO_HASH_ENTRY:int = 0xF4240
 
 # entries
-@dataclass
 class tt_entry:
-    hash_key:int = 0
-    depth:int = 0
-    flag:int = 0
-    score:int = 0
+    def __init__(self) -> None:
+        self.hash_key:int = 0
+        self.depth:int = 0
+        self.flag:int = 0
+        self.score:int = 0
 
-@dataclass
 class tteval_entry:
-    hash_key:int = 0
-    score:int = 0
+    def __init__(self) -> None:
+        self.hash_key:int = 0
+        self.score:int = 0
 
 # main driver
 class Transposition:
@@ -37,7 +37,7 @@ class Transposition:
         self.tt_size = size
         self.tt_table = [tt_entry() for _ in range(size)]
 
-    def tt_probe(self, depth, alpha, beta, hashkey):
+    def tt_probe(self, depth:int, alpha:int, beta:int, hashkey:int):
         # checks the table for any record of the position before actually parsing and calculating the position
         # this is the whole purpose of the transposition table
         # get entry from table
@@ -53,12 +53,12 @@ class Transposition:
         # there is no valid entry, return no hash value
         return NO_HASH_ENTRY
 
-    def tt_save(self, depth, score, flag, hashkey):
+    def tt_save(self, depth:int, score:int, flag:int, hashkey:int):
 
         # get entry from table
         entry = self.tt_table[hashkey % self.tt_size]
 
-        # if there is a better entry scrap this one
+        # if there is a entry with a deeper depth then don't update the entry
         if entry.hash_key == hashkey and entry.depth > depth: return
 
         # set the value
@@ -71,14 +71,14 @@ class Transposition:
         self.tteval_size = size
         self.tteval_table = [tteval_entry() for _ in range(size)]
 
-    def tteval_probe(self, hashkey):
+    def tteval_probe(self, hashkey:int):
         # a but more straightforward than other tt tables
         # just fetches the score and the hashkey
         entry = self.tteval_table[hashkey % self.tteval_size]
         if entry.hash_key == hashkey: return entry.score
         return NO_HASH_ENTRY
 
-    def tteval_save(self, score, hashkey):
+    def tteval_save(self, score:int, hashkey:int):
         # saves the score and the hashkey
         entry = self.tteval_table[hashkey % self.tteval_size]
         entry.hash_key = hashkey
