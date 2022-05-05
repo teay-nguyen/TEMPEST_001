@@ -15,10 +15,10 @@ KNIGHT_PAIR_BONUS: int = 8
 ROOK_PAIR_BONUS: int = 12
 
 # pawn bonuses
-SUPPORTED_BONUS: int = 19
-NOT_SUPPORTED_PENALTY: int = 15
-NOT_DOUBLED_BONUS: int = 17
-DOUBLED_PENALTY: int = 24
+SUPPORTED_BONUS: int = 21
+NOT_SUPPORTED_PENALTY: int = 16
+NOT_DOUBLED_BONUS: int = 21
+DOUBLED_PENALTY: int = 29
 
 # positional score [phase][piece][square]
 

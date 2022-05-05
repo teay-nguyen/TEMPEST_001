@@ -45,7 +45,7 @@ def eval_pawn(board, sq, side) -> int:
             else: score += NOT_DOUBLED_BONUS
 
     # calculate the penalty based on doubled pawns and weak pawns
-    penalty = 12 * (flagIsWeak + flagIsDoubled)
+    penalty = 21 * (flagIsWeak + flagIsDoubled)
 
     # return the score deducting penalty
     return (score - penalty)
