@@ -53,7 +53,7 @@ def sort_moves(board:list, move_list):
     #        if move_list.moves[current].score < move_list.moves[next].score:
     #            move_list.moves[current], move_list.moves[next] = move_list.moves[next], move_list.moves[current]
 
-    move_list.moves = sorted(move_list.moves, reverse=True, key=lambda x:x.score)
+    move_list.moves.sort(reverse = True, key = lambda i: i.score)
 
 # called when depth has reached 0, to check for any lingering captures left
 def quiescence(alpha, beta, depth, state, nodes):
