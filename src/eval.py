@@ -169,7 +169,7 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> int:
     elif game_phase == phases['endgame']: score = format(score_endgame, '.2f')
 
     # change the score based on stm, required on the negamax framework
-    if side == sides['black']: score = -score
+    score = score if side else (score * -1)
 
     # store the score in the tt table in case of encountering this position again
     tt.tteval_save(score, hashkey)

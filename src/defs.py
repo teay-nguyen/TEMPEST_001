@@ -113,3 +113,17 @@ knight_offsets: tuple = (33, 31, 18, 14, -33, -31, -18, -14)
 bishop_offsets: tuple = (15, 17, -15, -17)
 rook_offsets: tuple = (16, -16, 1, -1)
 king_offsets: tuple = (16, -16, 1, -1, 15, 17, -15, -17)
+
+# misc
+def print_move(move:int):
+    if get_move_piece(move):
+        print('{}{}{}'.format(
+                square_to_coords[get_move_source(move)],
+                square_to_coords[get_move_target(move)],
+                promoted_pieces[get_move_piece(move)],
+        ), end=' ')
+    else:
+        print('{}{}'.format(
+                square_to_coords[get_move_source(move)],
+                square_to_coords[get_move_target(move)],
+        ), end=' ')

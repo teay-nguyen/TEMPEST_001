@@ -56,7 +56,11 @@ def sort_moves(board:list, move_list):
     move_list.moves.sort(reverse = True, key = lambda i: i.score)
 
 # called when depth has reached 0, to check for any lingering captures left
-def quiescence(alpha, beta, depth, state, nodes):
+def quiescence(alpha:int, beta:int, depth:int, state, nodes:int):
+    # checks if values are correct
+    assert type(alpha) == int
+    assert type(beta) == int
+
     # increment nodes and make ply variable global
     global ply
 
@@ -70,7 +74,8 @@ def quiescence(alpha, beta, depth, state, nodes):
 
     # if higher or equal to beta then return beta, alpha acts as the max score so update it if needed
     # this is what people call a fail-hard beta cutoff
-    if score >= beta: return beta
+    print(score)
+    if int(score) >= int(beta): return beta
     alpha = max(alpha, score)
 
     # initalize move list, generate and sort moves
@@ -124,7 +129,7 @@ def quiescence(alpha, beta, depth, state, nodes):
     # node position fails low
     return alpha
 
-def search(alpha, beta, depth, state, nodes):
+def search(alpha:int, beta:int, depth:int, state, nodes:int):
     # make ply global and update pv length
     global ply
 
@@ -145,7 +150,7 @@ def search(alpha, beta, depth, state, nodes):
     if ply and score != NO_HASH_ENTRY and not pv_node: return score
 
     # if depth is 0 then activate quiescence search
-    if not depth: return quiescence(alpha, beta, depth, state, nodes)
+    if depth == 0: return quiescence(int(alpha), int(beta), depth, state, nodes)
 
     # search went too high
     if ply > MAX_PLY - 1: return evaluate(state.board, state.side, state.pce_count, state.hash_key)
@@ -226,3 +231,39 @@ def search(alpha, beta, depth, state, nodes):
     tt.tt_save(depth, alpha, hash_flag_, state.hash_key)
 
     return alpha
+
+def root_search(depth, state):
+    global killer_moves, history_moves, pv_table, pv_length
+    score:int = 0
+    nodes:int = 0
+
+    killer_moves =                  [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
+    history_moves =    [[0 for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
+    pv_table =                  [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
+    pv_length =                                           [0 for _ in range(MAX_PLY)]
+
+    alpha = -INFINITE
+    beta = INFINITE
+
+    for curr_depth in range(depth+1):
+        score = search(alpha, beta, depth, state, nodes)
+        if score <= alpha or score >= beta:
+            alpha = -INFINITE
+            beta = INFINITE
+            continue
+
+        alpha = score - 50
+        beta = score + 50
+
+        if pv_length[0]:
+            if score > -MATE_VALUE and score < -MATE_SCORE:
+                print(f'info score mate {-(score + MATE_VALUE) / 2 - 1} depth {curr_depth} nodes {nodes} pv ')
+            elif score > MATE_SCORE and score < MATE_VALUE:
+                print(f'info score mate {(MATE_VALUE - score) / 2 + 1} depth {curr_depth} nodes {nodes} pv ')
+            else: print(f'info score cp {score} depth {curr_depth} nodes {nodes} pv ')
+
+            for count in range(pv_length[0]):
+                print_move(pv_table[0][count])
+            print()
+
+    print(f'bestmove {pv_table[0][0]}')

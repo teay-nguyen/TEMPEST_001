@@ -5,6 +5,7 @@ import sys
 from board0x88 import BoardState
 from defs import *
 from time import perf_counter
+from search import root_search
 
 get_time_ms = lambda i:round(i * 1000)
 
@@ -19,6 +20,8 @@ if __name__ == '__main__':
     start_time: float = perf_counter()
     board.init_state(tricky_position)
     board.print_board()
+
+    root_search(3, board)
 
     # calc program runtime
     program_runtime: float = perf_counter() - start_time
