@@ -27,7 +27,7 @@ from defs import *
 from time import perf_counter
 from evaluation import evaluate
 
-get_time_ms = lambda i:round(i * 1000)
+get_time_ms = lambda i : round(i * 1000)
 
 if __name__ == '__main__':
     print(f'\n  [STARTING UP {NAME}]')

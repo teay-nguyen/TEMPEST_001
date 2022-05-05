@@ -30,13 +30,13 @@ from defs import *
 
     Found UUID module to be faster, this is unused for now
 
-    RKISS is TEMPEST_001's pseudo random number generator (PRNG) used to compute hash keys.
+    RKISS is TEMPEST_001's (secondary) pseudo random number generator (PRNG) used to compute hash keys.
     George Marsaglia invented the RNG-Kiss-family in the early 90's. This is a
     specific version that Heinz van Saanen derived from some public domain code
     by Bob Jenkins. Following the feature list, as tested by Heinz.
 
     - Quite platform independent
-    - Passes ALL dieharder tests! Here *nix sys-rand() e.g. fails miserably:-)
+    - Passes ALL dieharder tests! Here *nix sys-rand() e.g. fails miserably :-)
     - ~12 times faster than my *nix sys-rand()
     - ~4 times faster than SSE2-version of Mersenne twister
     - Average cycle length: ~2^126
