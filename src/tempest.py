@@ -23,8 +23,9 @@
 
 import sys
 from board0x88 import BoardState
-from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, start_position
+from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, start_position, tricky_position
 from time import perf_counter
+import evaluation
 
 get_time_ms = lambda i : round(i * 1000)
 
@@ -37,14 +38,14 @@ if __name__ == '__main__':
     # init board and parse FEN
     board: BoardState = BoardState()
     start_time: float = perf_counter()
-    board.init_state(start_position)
+    board.init_state(tricky_position)
     board.print_board()
 
     # call perft test
-    board.perft_test(5)
+    board.perft_test(3)
 
     # debugging evaluation function
-    # print(f'  [EVALUATION (HANDCRAFTED)]: {evaluate(board.board, board.side, board.pce_count, board.hash_key)}')
+    print(f'  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)}')
 
     # calc program runtime
     program_runtime: float = perf_counter() - start_time

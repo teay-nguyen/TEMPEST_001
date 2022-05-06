@@ -22,9 +22,8 @@
 # -*- coding: utf-8 -*-
 
 # imports
-from data import SUPPORTED_BONUS, NOT_SUPPORTED_PENALTY, DOUBLED_PENALTY, NOT_DOUBLED_BONUS,\
-                piece_val, phases, BISHOP_PAIR_BONUS, KNIGHT_PAIR_BONUS, ROOK_PAIR_BONUS,\
-                OPENING_PHASE_SCORE, ENDGAME_PHASE_SCORE, positional_score, mirror_board
+from data import SUPPORTED_BONUS, DOUBLED_PENALTY,piece_val, phases, BISHOP_PAIR_BONUS, KNIGHT_PAIR_BONUS, ROOK_PAIR_BONUS,\
+                 OPENING_PHASE_SCORE, ENDGAME_PHASE_SCORE, positional_score, mirror_board
 from defs import p, n, b, r, q, k, P, N, B, R, Q, K
 from transposition import Transposition, NO_HASH_ENTRY
 
@@ -35,42 +34,33 @@ tt.tteval_setsize(0x10F447)
 # predefined variables so code can be more readable
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
 
-def eval_pawn(board, sq, side) -> int:
+def eval_pawn(board, sq, side) -> float:
     # validate if piece is pawn on the given side or not
     if (board[sq] != P) if side else (board[sq] != p): return 0
 
     # define vars
     score:int = 0
-    flagIsWeak:int = 1
-    flagIsDoubled:int = 0
+
+    # increment these variables as we move up the board
+    increment_step_white:int = sq - 16
+    increment_step_black:int = sq + 16
 
     # calc pawn score based on doubled pawns and supported pawns
     if side:
         if (board[sq + 15] == P and 0 <= (sq + 15) <= 127) or (board[sq + 17] == P and 0 <= (sq + 17) <= 127):
-            flagIsWeak = 0
             score += SUPPORTED_BONUS
-        else: score -= NOT_SUPPORTED_PENALTY
-        if 0 <= (sq - 16) <= 127:
-            if board[sq - 16] == P:
-                flagIsDoubled = 1
-                score -= DOUBLED_PENALTY
-            else: score += NOT_DOUBLED_BONUS
+        while not (increment_step_white & 0x88) and 0 <= increment_step_white <= 127:
+            if board[increment_step_white] == P: score -= DOUBLED_PENALTY
+            increment_step_white -= 16
     else:
         if (board[sq - 15] == p and 0 <= (sq - 15) <= 127) or (board[sq - 17] == p and 0 <= (sq - 17) <= 127):
-            flagIsWeak = 0
             score += SUPPORTED_BONUS
-        else: score -= NOT_SUPPORTED_PENALTY
-        if 0 <= (sq + 16) <= 127:
-            if board[sq + 16] == p:
-                flagIsDoubled = 1
-                score -= DOUBLED_PENALTY
-            else: score += NOT_DOUBLED_BONUS
-
-    # calculate the penalty based on doubled pawns and weak pawns
-    penalty = 21 * (flagIsWeak + flagIsDoubled)
+        while not (increment_step_black & 0x88) and 0 <= increment_step_black <= 127:
+            if board[increment_step_black] == p: score -= DOUBLED_PENALTY
+            increment_step_black += 16
 
     # return the score deducting penalty
-    return (score - penalty)
+    return (score*2)/1.2
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:

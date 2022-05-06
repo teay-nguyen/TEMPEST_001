@@ -30,15 +30,13 @@ OPENING_PHASE_SCORE: int = 6192
 ENDGAME_PHASE_SCORE: int = 518
 
 # pair bonus
-BISHOP_PAIR_BONUS: int = 15
-KNIGHT_PAIR_BONUS: int = 8
-ROOK_PAIR_BONUS: int = 12
+BISHOP_PAIR_BONUS: int = 13
+KNIGHT_PAIR_BONUS: int = 5
+ROOK_PAIR_BONUS: int = 11
 
 # pawn bonuses
-SUPPORTED_BONUS: int = 21
-NOT_SUPPORTED_PENALTY: int = 16
-NOT_DOUBLED_BONUS: int = 21
-DOUBLED_PENALTY: int = 31
+SUPPORTED_BONUS: int = 11
+DOUBLED_PENALTY: int = 45
 
 # positional score [phase][piece][square]
 
@@ -170,12 +168,10 @@ mirror_board: tuple = (
 
 # piece value, 2d matrix because index opening phase and endgame phase
 piece_val: list = [             [0, 82, 337, 365, 477, 1025, 0, -82, -337, -365, -477, -1025, 0],
-                                [0, 94, 281, 297, 512,  936, 0, -94, -281, -297, -512,  -936, 0],
-                  ]
+                                [0, 94, 281, 297, 512,  936, 0, -94, -281, -297, -512,  -936, 0]]
 
 # self explanitory
 phases: dict = {'opening':0, 'endgame':1, 'midgame':2}
-
 
 
 #                        SEARCH                        #
