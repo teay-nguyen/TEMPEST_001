@@ -71,7 +71,6 @@ class RKISS:
 
 class Zobrist:
     def __init__(self) -> None:
-        # self.rk:RKISS = RKISS()
         self.piecesquare: list = [[self.rand64() for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
         self.side: int = self.rand64()
         self.castling: list = [self.rand64() for _ in range(CASTLE_VAL)]
@@ -611,10 +610,8 @@ class BoardState:
             self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
 
-            curr_elapsed:float = perf_counter() - start_time
-
-            if get_move_piece(move_list.moves[mv_count].move): print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}{promoted_pieces[get_move_piece(move_list.moves[mv_count].move)]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
-            else: print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}:   {old_nodes}   nps: {int(self.nodes//curr_elapsed)}')
+            if get_move_piece(move_list.moves[mv_count].move): print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}{promoted_pieces[get_move_piece(move_list.moves[mv_count].move)]}: {old_nodes}')
+            else: print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}: {old_nodes}')
 
         elapsed:float = perf_counter() - start_time
         print(f'\n  [SEARCH TIME]: {round(elapsed * 1000)} ms, {elapsed} sec')
