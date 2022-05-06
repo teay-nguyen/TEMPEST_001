@@ -22,7 +22,7 @@
 # -*- coding: utf-8 -*-
 
 # imports
-from defs import *
+from defs import squares, o
 
 #                        EVALUATION                        #
 # phase score
@@ -38,7 +38,7 @@ ROOK_PAIR_BONUS: int = 12
 SUPPORTED_BONUS: int = 21
 NOT_SUPPORTED_PENALTY: int = 16
 NOT_DOUBLED_BONUS: int = 21
-DOUBLED_PENALTY: int = 29
+DOUBLED_PENALTY: int = 31
 
 # positional score [phase][piece][square]
 

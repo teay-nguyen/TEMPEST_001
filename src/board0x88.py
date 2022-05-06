@@ -53,16 +53,15 @@ class RKISS:
         # call init to calculate random unsigned 64 bit numbers
         self.raninit()
 
-    def rotate(self, x:int, k:int):
+    def rotate(self, x:int, k:int) -> int:
         return (x << k) | (x >> (64 - k))
 
-    def raninit(self):
+    def raninit(self) -> None:
         self.a = 0xf1ea5eed
         self.b = self.c = self.d = 0xd4e12c77
-        for _ in range(73):
-            self.rand64()
+        for _ in range(73): self.rand64()
 
-    def rand64(self):
+    def rand64(self) -> int:
         e = self.a - self.rotate(self.b, 7)
         self.a = self.b ^ self.rotate(self.c, 13)
         self.b = self.c + self.rotate(self.d, 37)
@@ -78,7 +77,7 @@ class Zobrist:
         self.castling: list = [self.rand64() for _ in range(CASTLE_VAL)]
         self.ep: list = [self.rand64() for _ in range(BOARD_SQ_NUM)]
 
-    def rand64(self):
+    def rand64(self) -> int:
         return uuid1().int >> 64
 
 class MovesStruct:

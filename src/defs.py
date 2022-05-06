@@ -36,7 +36,6 @@ ALL_MOVES: int = 0x000000000003123
 CAPTURE_MOVES: int = 0x0000000000015cc
 
 # state storing
-
 class move_t:
     def __init__(self, move_):
         self.move:int = move_

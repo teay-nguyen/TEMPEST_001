@@ -22,8 +22,10 @@
 # -*- coding: utf-8 -*-
 
 # imports
-from data import *
-from defs import *
+from data import SUPPORTED_BONUS, NOT_SUPPORTED_PENALTY, DOUBLED_PENALTY, NOT_DOUBLED_BONUS,\
+                piece_val, phases, BISHOP_PAIR_BONUS, KNIGHT_PAIR_BONUS, ROOK_PAIR_BONUS,\
+                OPENING_PHASE_SCORE, ENDGAME_PHASE_SCORE, positional_score, mirror_board
+from defs import p, n, b, r, q, k, P, N, B, R, Q, K
 from transposition import Transposition, NO_HASH_ENTRY
 
 # initialize the transposition table
