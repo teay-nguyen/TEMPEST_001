@@ -98,12 +98,12 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
     game_phase:int = -1
 
     # specify game phase var based on game phase score
-    if game_phase_score >= OPENING_PHASE_SCORE: game_phase = phases['opening']
-    elif game_phase_score <= ENDGAME_PHASE_SCORE: game_phase = phases['endgame']
+    if game_phase_score > OPENING_PHASE_SCORE: game_phase = phases['opening']
+    elif game_phase_score < ENDGAME_PHASE_SCORE: game_phase = phases['endgame']
     else: game_phase = phases['midgame']
 
     # define score variables
-    score:int = 0; score_opening:int = 0; score_endgame:int = 0
+    score:float = 0; score_opening:float = 0; score_endgame:float = 0
 
     # pair bonuses
     if pceNum[B] > 1:
@@ -186,12 +186,14 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
 
     # determine the final score based on game phase
     # my nvim lsp keep throwing errors this things a nuisance, i need the exact float/value because better move ordering equals better playing strength
-    if game_phase == phases['midgame']: score = score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score) // OPENING_PHASE_SCORE
-    elif game_phase == phases['opening']: score = score_opening
-    elif game_phase == phases['endgame']: score = score_endgame
+    if game_phase == phases['midgame']:
+        try: score = (score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE
+        except: score = 0
+    elif game_phase == phases['opening']: score = float(score_opening)
+    elif game_phase == phases['endgame']: score = float(score_endgame)
 
     # change the score based on stm, required on the negamax framework
-    score = score if side else (score * -1)
+    score = score if side else -score
 
     # store the score in the tt table in case of encountering this position again
     tt.tteval_save(score, hashkey)

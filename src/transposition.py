@@ -38,7 +38,7 @@ class tt_entry:
 class tteval_entry:
     def __init__(self) -> None:
         self.hash_key:int = 0
-        self.score:int = 0
+        self.score:float = 0
 
 # main driver
 class Transposition:
@@ -95,7 +95,7 @@ class Transposition:
         if entry.hash_key == hashkey: return entry.score
         return NO_HASH_ENTRY
 
-    def tteval_save(self, score:int, hashkey:int):
+    def tteval_save(self, score:float, hashkey:int):
         # saves the score and the hashkey
         entry = self.tteval_table[hashkey % self.tteval_size]
         entry.hash_key = hashkey
