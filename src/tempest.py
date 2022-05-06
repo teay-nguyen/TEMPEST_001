@@ -23,7 +23,7 @@
 
 import sys
 from board0x88 import BoardState
-from defs import *
+from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, start_position
 from time import perf_counter
 from evaluation import evaluate
 
