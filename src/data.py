@@ -26,13 +26,7 @@ from defs import squares, o
 OPENING_PHASE_SCORE: int = 6192
 ENDGAME_PHASE_SCORE: int = 518
 
-# pair bonus
-BISHOP_PAIR_BONUS: int = 13
-KNIGHT_PAIR_BONUS: int = 5
-ROOK_PAIR_BONUS: int = 11
-
-# pawn bonuses
-SUPPORTED_BONUS: int = 11
+# pawn bonuses and penalties
 DOUBLED_PENALTY: int = 45
 
 # positional score [phase][piece][square]

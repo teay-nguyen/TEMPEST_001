@@ -19,7 +19,7 @@
 '''
 
 # imports
-from data import SUPPORTED_BONUS, DOUBLED_PENALTY,piece_val, phases, BISHOP_PAIR_BONUS, KNIGHT_PAIR_BONUS, ROOK_PAIR_BONUS,\
+from data import DOUBLED_PENALTY, piece_val, phases,\
                  OPENING_PHASE_SCORE, ENDGAME_PHASE_SCORE, positional_score, mirror_board
 from defs import p, n, b, r, q, k, P, N, B, R, Q, K
 from transposition import Transposition, NO_HASH_ENTRY
@@ -31,6 +31,7 @@ tt.tteval_setsize(0xCCCCC)
 # predefined variables so code can be more readable
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
 
+# evaluate pawn
 def eval_pawn(board, sq, side) -> float:
     # validate if piece is pawn on the given side or not
     if (board[sq] != P) if side else (board[sq] != p): return 0
@@ -44,20 +45,16 @@ def eval_pawn(board, sq, side) -> float:
 
     # calc pawn score based on doubled pawns and supported pawns
     if side:
-        if (board[sq + 15] == P and 0 <= (sq + 15) <= 127) or (board[sq + 17] == P and 0 <= (sq + 17) <= 127):
-            score += SUPPORTED_BONUS
         while not (increment_step_white & 0x88) and 0 <= increment_step_white <= 127:
             if board[increment_step_white] == P: score -= DOUBLED_PENALTY
             increment_step_white -= 16
     else:
-        if (board[sq - 15] == p and 0 <= (sq - 15) <= 127) or (board[sq - 17] == p and 0 <= (sq - 17) <= 127):
-            score += SUPPORTED_BONUS
         while not (increment_step_black & 0x88) and 0 <= increment_step_black <= 127:
             if board[increment_step_black] == p: score -= DOUBLED_PENALTY
             increment_step_black += 16
 
     # return the scaled score
-    return (score*2)/1.2
+    return (score*1.5)/1.2
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
@@ -71,8 +68,32 @@ def get_game_phase_score(pceNum:list) -> int:
     # return the total amount of material, minus the pawns
     return wp_scores + bp_scores
 
+def is_draw(pceNum:list) -> int:
+    if pceNum[P] == 0 and pceNum[p] == 0:
+        if pceNum[R] == 0 and pceNum[r] == 0 and pceNum[Q] == 0 and pceNum[q] == 0:
+            if pceNum[B] == 0 and pceNum[b] == 0:
+                if pceNum[N] < 3 and pceNum[n] < 3: return 1
+            elif pceNum[N] == 0 and pceNum[n] == 0:
+                if abs(pceNum[B] - pceNum[b]) < 2: return 1
+            elif (pceNum[N] < 3 and pceNum[B] == 0) or (pceNum[B] == 1 and pceNum[N] == 0):
+                if (pceNum[n] < 3 and pceNum[b] == 0) or (pceNum[b] == 1 and pceNum[n] == 0): return 1
+        elif pceNum[Q] == 0 and pceNum[q] == 0:
+            if pceNum[R] == 1 and pceNum[r] == 1:
+                if (pceNum[N] + pceNum[B]) < 2 and (pceNum[n] + pceNum[b]) < 2: return 1
+            elif pceNum[R] == 1 and pceNum[r] == 0:
+                if ((pceNum[N] + pceNum[B] == 0) and\
+                    (((pceNum[n] + pceNum[b]) == 1) or\
+                    ((pceNum[n] + pceNum[b]) == 2))): return 1
+            elif pceNum[r] == 1 and pceNum[R] == 0:
+                if ((pceNum[n] + pceNum[b] == 0) and\
+                    (((pceNum[N] + pceNum[B]) == 1) or\
+                    ((pceNum[N] + pceNum[B]) == 2))): return 1
+    return 0
+
 # main driver
 def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
+    # check if draw or not, if yes return 0
+    if is_draw(pceNum): return 0
 
     # probe the table for any available entries
     tt_score:int = tt.tteval_probe(hashkey)
@@ -91,31 +112,6 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
 
     # define score variables
     score:float = 0; score_opening:float = 0; score_endgame:float = 0
-
-    # pair bonuses
-    if pceNum[B] > 1:
-        score_opening += BISHOP_PAIR_BONUS
-        score_endgame += BISHOP_PAIR_BONUS
-
-    if pceNum[b] > 1:
-        score_opening -= BISHOP_PAIR_BONUS
-        score_endgame -= BISHOP_PAIR_BONUS
-
-    if pceNum[N] > 1:
-        score_opening += KNIGHT_PAIR_BONUS
-        score_endgame += KNIGHT_PAIR_BONUS
-
-    if pceNum[n] > 1:
-        score_opening -= KNIGHT_PAIR_BONUS
-        score_endgame -= KNIGHT_PAIR_BONUS
-
-    if pceNum[R] > 1:
-        score_opening += ROOK_PAIR_BONUS
-        score_endgame += ROOK_PAIR_BONUS
-
-    if pceNum[r] > 1:
-        score_opening -= ROOK_PAIR_BONUS
-        score_endgame -= ROOK_PAIR_BONUS
 
     # tedious stuff right here
     for sq in range(len(board)):
