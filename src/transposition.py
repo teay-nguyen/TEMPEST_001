@@ -48,7 +48,7 @@ class Transposition:
         self.tteval_size:int = 0
 
     def tt_setsize(self, size:int = 0xCCCCC):
-        print(f'Hash Table size set to {size}')
+        print(f'Hash Table size set to {size} total entries')
         self.tt_size = size
         self.tt_table = [tt_entry() for _ in range(size)]
 
@@ -61,9 +61,10 @@ class Transposition:
         # return score based on flag
         if entry.hash_key == hashkey:
             if entry.depth >= depth:
-                if entry.flag == HASH_EXACT: return entry.score
-                elif entry.flag == HASH_ALPHA and entry.score <= alpha: return alpha
-                elif entry.flag == HASH_BETA and entry.score >= beta: return beta
+                score = entry.score
+                if entry.flag == HASH_EXACT: return score
+                elif entry.flag == HASH_ALPHA and score <= alpha: return alpha
+                elif entry.flag == HASH_BETA and score >= beta: return beta
 
         # there is no valid entry, return no hash value
         return NO_HASH_ENTRY
@@ -83,7 +84,7 @@ class Transposition:
         entry.depth = depth
 
     def tteval_setsize(self, size:int = 0xCCCCC):
-        print(f'Hash Table size set to {size}')
+        print(f'Hash Table size set to {size} total entries')
         self.tteval_size = size
         self.tteval_table = [tteval_entry() for _ in range(size)]
 
@@ -91,7 +92,8 @@ class Transposition:
         # a but more straightforward than other tt tables
         # just fetches the score and the hashkey
         entry = self.tteval_table[hashkey % self.tteval_size]
-        if entry.hash_key == hashkey: return entry.score
+        score = entry.score
+        if entry.hash_key == hashkey: return score
         return NO_HASH_ENTRY
 
     def tteval_save(self, score:float, hashkey:int):

@@ -33,13 +33,11 @@ from defs import *
     by Bob Jenkins. Following the feature list, as tested by Heinz.
 
     - Quite platform independent
-    - Passes ALL dieharder tests! Here *nix sys-rand() e.g. fails miserably :-)
-    - ~12 times faster than my *nix sys-rand()
     - ~4 times faster than SSE2-version of Mersenne twister
     - Average cycle length: ~2^126
     - 64 bit seed
     - Return doubles with a full 53 bit mantissa
-    - Thread safe
+    - Thread safe (if Python removes the GIL that is)
 
 '''
 
