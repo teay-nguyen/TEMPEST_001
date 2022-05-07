@@ -606,7 +606,7 @@ class BoardState:
             else: print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}: {old_nodes}')
 
         elapsed:float = perf_counter() - start_time
-        print(f'\n  [SEARCH TIME]: {round(elapsed * 1000)} ms, {elapsed} sec')
+        print(f'\n  [SEARCH TIME]: {round(elapsed * 1000)} ms')
         print(f'  [DEPTH SEARCHED]: {depth} ply')
         print(f'  [TOTAL NODES]: {self.nodes} nodes')
         print(f'  [NPS]: {int(self.nodes//elapsed)} nps\n')

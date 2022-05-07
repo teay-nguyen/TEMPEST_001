@@ -40,4 +40,4 @@ if __name__ == '__main__':
     program_runtime: float = perf_counter() - start_time
 
     # print program runtime
-    print(f'\n  [PROGRAM FINISHED IN {get_time_ms(program_runtime)} ms, {program_runtime} sec]')
+    print(f'\n[PROGRAM FINISHED IN {get_time_ms(program_runtime)} ms]')
