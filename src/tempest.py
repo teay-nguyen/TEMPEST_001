@@ -40,7 +40,8 @@ if __name__ == '__main__':
     board.init_state(defs.preset_positions['start_position'])
     board.print_board()
 
-    print(f'  [EVALUATION (HANDCRAFTED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
+    print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
+    print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')
 
     # init start time
     start_time:float = perf_counter()
