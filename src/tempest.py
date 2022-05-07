@@ -26,6 +26,7 @@ from board0x88 import BoardState
 from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, preset_positions
 from time import perf_counter
 import evaluation
+import search
 
 get_time_ms = lambda i : round(i * 1000)
 
@@ -36,13 +37,14 @@ if __name__ == '__main__':
     print(f'  [ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
 
     # init board and parse FEN
-    board: BoardState = BoardState()
-    start_time: float = perf_counter()
-    board.init_state(preset_positions['tricky_position'])
+    searcher:search._standard = search._standard()
+    board:BoardState = BoardState()
+    start_time:float = perf_counter()
+    board.init_state(preset_positions['start_position'])
     board.print_board()
 
-    # call perft test
-    board.perft_test(3)
+    # perft test
+    board.perft_test(depth=4)
 
     # debugging evaluation function
     print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)}')

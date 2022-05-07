@@ -167,10 +167,8 @@ class BoardState:
                 empty = 0
             fen_string = f'{fen_string}/'
         fen_string = fen_string[:-1]
-
         if self.side: fen_string = f'{fen_string} w '
         else: fen_string = f'{fen_string} b '
-
         return fen_string
 
     def parse_fen(self, fen:str) -> None:
@@ -385,7 +383,7 @@ class BoardState:
         elif capture_flag == CAPTURE_MOVES:
             if get_move_capture(move): self.make_move(move, ALL_MOVES)
             else: return 0 # move is not a capture
-        return 0 # shouldn't reach here
+        return 0 # returns 0 if flag is not equal to either set flags
 
     def add_move(self, move_list: MovesStruct, move: int) -> None:
         move_list.moves[move_list.count].move = move
@@ -476,8 +474,7 @@ class BoardState:
                             if not (to_sq & 0x88):
                                 if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
                                     (not piece or (piece >= 1 and piece <= 6)):
-                                    if piece:
-                                        self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                    if piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
                 if (self.board[sq] == K) if self.side else (self.board[sq] == k):
@@ -488,8 +485,7 @@ class BoardState:
                             if not (to_sq & 0x88):
                                 if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
                                     (not piece or (piece >= 1 and piece <= 6)):
-                                    if piece:
-                                        self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                    if piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
                                     else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
                 if ((self.board[sq] == B) or (self.board[sq] == Q)) if self.side\
@@ -563,7 +559,7 @@ class BoardState:
             self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
 
-    def perft_test(self, depth:int) -> None:
+    def perft_test(self, depth:int = 1) -> None:
         print('\n  [PERFT TEST GENERATING MOVES]\n')
 
         # define move list
@@ -615,10 +611,6 @@ class BoardState:
         print(f'  [DEPTH SEARCHED]: {depth} ply')
         print(f'  [TOTAL NODES]: {self.nodes} nodes')
         print(f'  [NPS]: {int(self.nodes//elapsed)} nps\n')
-
-    def test_suite(self) -> None:
-        for depth in range(4):
-            self.perft_test(depth)
 
     def print_board(self) -> None:
         print('\n----------------------------------\n')
