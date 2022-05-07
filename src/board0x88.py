@@ -298,7 +298,7 @@ class BoardState:
             # get move source and the square it moves to
             from_square:int = get_move_source(move)
             to_square:int = get_move_target(move)
-            promoted_piece:int = get_move_piece(move)
+            promoted_piece:int = get_move_promoted(move)
             enpass:int = get_move_enpassant(move)
             double_push:int = get_move_pawn(move)
             castling:int = get_move_castling(move)
@@ -604,7 +604,7 @@ class BoardState:
             self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
 
-            if get_move_piece(move_list.moves[mv_count].move): print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}{promoted_pieces[get_move_piece(move_list.moves[mv_count].move)]}: {old_nodes}')
+            if get_move_promoted(move_list.moves[mv_count].move): print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}{promoted_pieces[get_move_promoted(move_list.moves[mv_count].move)]}: {old_nodes}')
             else: print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}: {old_nodes}')
 
         elapsed:float = perf_counter() - start_time
@@ -646,7 +646,7 @@ def print_move_list(move_list, mode:str):
         move:int = move_list.moves[idx].move
         if move is None: continue
         formated_move:str = f'{square_to_coords[get_move_source(move)]}{square_to_coords[get_move_target(move)]}'
-        promotion_move:str = promoted_pieces[get_move_piece(move)] if get_move_piece(move) else ' '
+        promotion_move:str = promoted_pieces[get_move_promoted(move)] if get_move_promoted(move) else ' '
         joined_str:str = f'{formated_move}{promotion_move}'
         if mode == 'full':
             print('{}  {}         {}        {}        {}'.format(

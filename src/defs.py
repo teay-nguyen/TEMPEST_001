@@ -100,7 +100,7 @@ encode_move = lambda source, target, piece, capture, pawn, enpassant, castling: 
 # only used on moves applied with encode_move
 get_move_source = lambda move: move & 0x7f
 get_move_target = lambda move: (move >> 7) & 0x7f
-get_move_piece = lambda move: (move >> 14) & 0xf
+get_move_promoted = lambda move: (move >> 14) & 0xf
 get_move_capture = lambda move: (move >> 18) & 0x1
 get_move_pawn = lambda move: (move >> 19) & 0x1
 get_move_enpassant = lambda move: (move >> 20) & 0x1
@@ -134,11 +134,11 @@ king_offsets: tuple = (16, -16, 1, -1, 15, 17, -15, -17)
 
 # misc
 def print_move(move:int):
-    if get_move_piece(move):
+    if get_move_promoted(move):
         print('{}{}{}'.format(
                 square_to_coords[get_move_source(move)],
                 square_to_coords[get_move_target(move)],
-                promoted_pieces[get_move_piece(move)],
+                promoted_pieces[get_move_promoted(move)],
         ), end=' ')
     else:
         print('{}{}'.format(
