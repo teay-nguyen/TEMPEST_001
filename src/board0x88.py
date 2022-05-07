@@ -621,7 +621,7 @@ class BoardState:
             self.perft_test(depth)
 
     def print_board(self) -> None:
-        print('\n________________________________\n\n')
+        print('\n----------------------------------\n')
         for rank in range(8):
             for file in range(16):
                 square:int = rank * 16 + file
@@ -631,7 +631,7 @@ class BoardState:
                     print(ascii_pieces[self.board[square]], end=' ')
             print()
         print('\n         a b c d e f g h\n')
-        print('________________________________\n')
+        print('----------------------------------\n')
         print(f'  [SIDE TO MOVE]: {"white" if self.side else "black"} | {self.side}')
         print('  [CURRENT CASTLING RIGHTS]: {}{}{}{} | {}'.format(
                 'K' if (self.castle & castling_vals['K']) else '-',

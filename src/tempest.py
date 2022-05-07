@@ -45,7 +45,7 @@ if __name__ == '__main__':
     board.perft_test(3)
 
     # debugging evaluation function
-    print(f'  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)}')
+    print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)}')
 
     # calc program runtime
     program_runtime: float = perf_counter() - start_time

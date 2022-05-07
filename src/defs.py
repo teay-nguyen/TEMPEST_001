@@ -20,7 +20,7 @@
 
 # constants
 NAME: str = "TEMPEST_001" # name of the chess engine
-ENGINE_VERSION: str = "v0.296 HashHobo [HashingTerry]" # commit version and author
+ENGINE_VERSION: str = "v0.296 HashHobo [Terry Nguyen]" # commit version and author
 ENGINE_STATUS: str = "WIP [WORK IN PROGRESS]" # engine status
 BOARD_SQ_NUM: int = 0x80 # max number of squares in a 0x88 board
 GEN_STACK: int = 0x100 # max number of moves in 1 position
@@ -29,8 +29,8 @@ CASTLE_VAL: int = 0x10 # max castle value
 IDS: int = 0x2
 
 # capture flags (just give em random number)
-ALL_MOVES: int = 0x000000000003123
-CAPTURE_MOVES: int = 0x0000000000015cc
+ALL_MOVES: int = 0x15ff
+CAPTURE_MOVES: int = 0x15cc
 
 # state storing
 class move_t:

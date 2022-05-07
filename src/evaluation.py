@@ -174,7 +174,9 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
     # determine the final score based on game phase
     # my nvim lsp keep throwing errors this things a nuisance, i need the exact float/value because better move ordering equals better playing strength
     if game_phase == phases['midgame']:
-        try: score = (score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE
+        try:
+            score = (score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE
+            score = round(score, 2)
         except: score = 0
     elif game_phase == phases['opening']: score = round(float(score_opening), 2)
     elif game_phase == phases['endgame']: score = round(float(score_endgame), 2)
