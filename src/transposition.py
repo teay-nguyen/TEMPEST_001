@@ -18,9 +18,6 @@
 
 '''
 
-#!/usr/bin/env pypy3 -u
-# -*- coding: utf-8 -*-
-
 # variables
 HASH_EXACT:int = 0
 HASH_ALPHA:int = 1

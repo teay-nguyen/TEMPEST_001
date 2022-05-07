@@ -18,9 +18,6 @@
 
 '''
 
-#!/usr/bin/env pypy3 -u
-# -*- coding: utf-8 -*-
-
 # imports
 from time import perf_counter
 from uuid import uuid1

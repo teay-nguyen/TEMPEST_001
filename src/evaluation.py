@@ -18,9 +18,6 @@
 
 '''
 
-#!/usr/bin/env pypy3 -u
-# -*- coding: utf-8 -*-
-
 # imports
 from data import SUPPORTED_BONUS, DOUBLED_PENALTY,piece_val, phases, BISHOP_PAIR_BONUS, KNIGHT_PAIR_BONUS, ROOK_PAIR_BONUS,\
                  OPENING_PHASE_SCORE, ENDGAME_PHASE_SCORE, positional_score, mirror_board

@@ -18,11 +18,8 @@
 
 '''
 
-#!/usr/bin/env pypy3 -u
-# -*- coding: utf-8 -*-
-
 # constants
-NAME: str = "TEMPEST_001 0.296" # name of the chess engine
+NAME: str = "TEMPEST_001" # name of the chess engine
 ENGINE_VERSION: str = "v0.296 HashHobo [HashingTerry]" # commit version and author
 ENGINE_STATUS: str = "WIP [WORK IN PROGRESS]" # engine status
 BOARD_SQ_NUM: int = 0x80 # max number of squares in a 0x88 board
@@ -123,6 +120,11 @@ castling_vals: dict = { 'K':1, 'Q':2, 'k':4, 'q':8 }
 start_position: str = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 empty_board: str = '8/8/8/8/8/8/8/8 w - - 0 1'
 tricky_position: str = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - '
+preset_positions:dict = {
+    'start_position':start_position,
+    'empty_board': empty_board,
+    'tricky_position': tricky_position,
+}
 
 # piece movement offsets
 knight_offsets: tuple = (33, 31, 18, 14, -33, -31, -18, -14)

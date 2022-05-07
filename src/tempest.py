@@ -1,3 +1,6 @@
+#!/usr/bin/env pypy3
+# -*- coding: utf-8 -*-
+
 '''
 
     TEMPEST_001, a didactic chess engine written in Python
@@ -18,12 +21,9 @@
 
 '''
 
-#!/usr/bin/env pypy3 -u
-# -*- coding: utf-8 -*-
-
 import sys
 from board0x88 import BoardState
-from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, start_position, tricky_position
+from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, preset_positions
 from time import perf_counter
 import evaluation
 
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     # init board and parse FEN
     board: BoardState = BoardState()
     start_time: float = perf_counter()
-    board.init_state(tricky_position)
+    board.init_state(preset_positions['tricky_position'])
     board.print_board()
 
     # call perft test
