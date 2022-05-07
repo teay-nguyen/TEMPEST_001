@@ -26,7 +26,7 @@ from transposition import Transposition, NO_HASH_ENTRY
 
 # initialize the transposition table
 tt = Transposition()
-tt.tteval_setsize(0x10F447)
+tt.tteval_setsize(0xCCCCC)
 
 # predefined variables so code can be more readable
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5

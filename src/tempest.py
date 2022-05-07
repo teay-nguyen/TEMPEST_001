@@ -22,32 +22,19 @@
 '''
 
 import sys
-from board0x88 import BoardState
-from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, preset_positions
+from defs import NAME, ENGINE_VERSION, ENGINE_STATUS
 from time import perf_counter
-import evaluation
-import search
 
 get_time_ms = lambda i : round(i * 1000)
 
 if __name__ == '__main__':
-    print(f'\n  [STARTING UP {NAME}]')
-    print(f'  [RUNNING ON]: {sys.version}')
-    print(f'  [ENGINE VERSION]: {ENGINE_VERSION}')
-    print(f'  [ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
+    print(f'\n[STARTING UP {NAME}]')
+    print(f'[RUNNING ON]: {sys.version}')
+    print(f'[ENGINE VERSION]: {ENGINE_VERSION}')
+    print(f'[ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
 
-    # init board and parse FEN
-    searcher:search._standard = search._standard()
-    board:BoardState = BoardState()
+    # init start time
     start_time:float = perf_counter()
-    board.init_state(preset_positions['start_position'])
-    board.print_board()
-
-    # perft test
-    board.perft_test(depth=4)
-
-    # debugging evaluation function
-    print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)}')
 
     # calc program runtime
     program_runtime: float = perf_counter() - start_time
