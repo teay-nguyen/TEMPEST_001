@@ -37,7 +37,7 @@ if __name__ == '__main__':
     print(f'[ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
 
     board = board0x88.BoardState()
-    board.init_state('8/2kb4/8/5N2/4KB2/8/8/8 w - - 0 1')
+    board.init_state(defs.preset_positions['start_position'])
     board.print_board()
 
     print(f'  [EVALUATION (HANDCRAFTED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
