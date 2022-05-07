@@ -228,11 +228,12 @@ class BoardState:
         else: self.enpassant = squares['OFFBOARD']
 
 
+    def in_check(self, side:int) -> int:
+        return self.is_square_attacked(self.king_square[side], side ^ 1)
 
-
-    def is_square_attacked(self, square:int, side:int) -> int:
+    def is_square_attacked(self, square:int, oppside:int) -> int:
         # pawn attacks
-        if side:
+        if oppside:
             if not (square + 17) & 0x88 and self.board[square + 17] == P: return 1
             if not (square + 15) & 0x88 and self.board[square + 15] == P: return 1
         else:
@@ -245,7 +246,7 @@ class BoardState:
             if 0 <= target_sq <= 127:
                 target_piece:int = self.board[target_sq]
                 if not (target_sq & 0x88):
-                    if (target_piece == N) if side else (target_piece == n): return 1
+                    if (target_piece == N) if oppside else (target_piece == n): return 1
 
         # king attacks
         for i in range(8):
@@ -253,7 +254,7 @@ class BoardState:
             if 0 <= target_sq <= 127:
                 target_piece:int = self.board[target_sq]
                 if not (target_sq & 0x88):
-                    if (target_piece == K) if side else (target_piece == k): return 1
+                    if (target_piece == K) if oppside else (target_piece == k): return 1
 
         # bishop attacks
         for i in range(4):
@@ -261,7 +262,7 @@ class BoardState:
             while not (target_sq & 0x88):
                 if 0 <= target_sq <= 127:
                     target_piece:int = self.board[target_sq]
-                    if (target_piece == B or target_piece == Q) if side else (target_piece == b or target_piece == q): return 1
+                    if (target_piece == B or target_piece == Q) if oppside else (target_piece == b or target_piece == q): return 1
                     if target_piece: break
                     target_sq += bishop_offsets[i]
 
@@ -271,7 +272,7 @@ class BoardState:
             while not (target_sq & 0x88):
                 if 0 <= target_sq <= 127:
                     target_piece:int = self.board[target_sq]
-                    if (target_piece == R or target_piece == Q) if side else (target_piece == r or target_piece == q): return 1
+                    if (target_piece == R or target_piece == Q) if oppside else (target_piece == r or target_piece == q): return 1
                     if target_piece: break
                     target_sq += rook_offsets[i]
         return 0
