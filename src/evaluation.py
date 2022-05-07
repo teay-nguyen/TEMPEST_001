@@ -59,7 +59,7 @@ def eval_pawn(board, sq, side) -> float:
             if board[increment_step_black] == p: score -= DOUBLED_PENALTY
             increment_step_black += 16
 
-    # return the score deducting penalty
+    # return the scaled score
     return (score*2)/1.2
 
 # score to determine the game phase
@@ -179,8 +179,8 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
     if game_phase == phases['midgame']:
         try: score = (score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE
         except: score = 0
-    elif game_phase == phases['opening']: score = float(score_opening)
-    elif game_phase == phases['endgame']: score = float(score_endgame)
+    elif game_phase == phases['opening']: score = round(float(score_opening), 2)
+    elif game_phase == phases['endgame']: score = round(float(score_endgame), 2)
 
     # change the score based on stm, required on the negamax framework
     score = score if side else -score
