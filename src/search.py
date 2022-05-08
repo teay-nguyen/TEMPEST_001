@@ -25,7 +25,7 @@ from defs import IDS, BSQUARES, PIECE_TYPES, get_move_source, get_move_target,\
 from board0x88 import MovesStruct
 from evaluation import evaluate
 from time import perf_counter
-from transposition import Transposition
+from transposition import Transposition, NO_HASH_ENTRY, HASH_ALPHA, HASH_BETA, HASH_EXACT
 
 # define prerequisite variables
 mvv_lva:list = [
@@ -61,7 +61,7 @@ get_ms = lambda t:round(t * 1000)
 
 class _standard:
     def __init__(self) -> None:
-        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(25), 'timeset':0}
+        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(9), 'timeset':0}
 
         self.killer_moves = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
@@ -72,7 +72,7 @@ class _standard:
         self.nodes = 0
 
     def _reset_timecontrol(self) -> None:
-        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(25), 'timeset':0}
+        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(9), 'timeset':0}
 
     def _start_timecontrol(self) -> None:
         self.timing_util['starttime'] = get_ms(perf_counter())
@@ -108,7 +108,7 @@ class _standard:
         move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
     def _root(self, depth:int, pos) -> None:
-        self._clear
+        self._clear()
         self._reset_timecontrol()
         self._start_timecontrol()
 
@@ -118,7 +118,7 @@ class _standard:
         print()
         for c_d in range(1, depth+1):
             score = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
-            print(f'info score cp {score} depth {c_d} nodes {self.nodes} pv:')
+            print(f' info score cp {score} depth {c_d} nodes {self.nodes} pv:\n', end='  ')
             for _m in range(self.pv_length[0]):
                 print_move(self.pv_table[0][_m])
             print('\n')
@@ -190,6 +190,10 @@ class _standard:
     def _alphabeta(self, alpha:int, beta:int, depth:int, pos) -> int:
 
         legal_:int = 0
+        pv_node:int = beta - alpha > 1
+        hash_flag:int = HASH_ALPHA
+        score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
+        if self.ply and score != NO_HASH_ENTRY and not pv_node: return score
         if not depth: return self._quiesce(alpha, beta, pos)
         self.nodes += 1
 
@@ -239,12 +243,15 @@ class _standard:
             if self.timing_util['abort']: return 0
 
             if score >= beta:
-                self.killer_moves[1][self.ply] = self.killer_moves[0][self.ply]
-                self.killer_moves[0][self.ply] = move_list.moves[c].move
+                tt.tt_save(depth, beta, HASH_BETA, pos.hash_key)
+                if not get_move_capture(move_list.moves[c].move):
+                    self.killer_moves[1][self.ply] = self.killer_moves[0][self.ply]
+                    self.killer_moves[0][self.ply] = move_list.moves[c].move
                 return beta
             if score > alpha:
+                hash_flag = HASH_EXACT
                 alpha = score
-                self.history_moves[pos.board[get_move_source(move_list.moves[c].move)]][get_move_target(move_list.moves[c].move)] += depth
+                if not get_move_capture(move_list.moves[c].move): self.history_moves[pos.board[get_move_source(move_list.moves[c].move)]][get_move_target(move_list.moves[c].move)] += depth
                 self.pv_table[self.ply][self.ply] = move_list.moves[c].move
                 for _i in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][_i] = self.pv_table[self.ply+1][_i]
                 self.pv_length[self.ply] = self.pv_length[self.ply+1]
@@ -253,4 +260,5 @@ class _standard:
             if in_check: return -49000 + self.ply
             else: return 0
 
+        tt.tt_save(depth, alpha, hash_flag, pos.hash_key)
         return alpha
