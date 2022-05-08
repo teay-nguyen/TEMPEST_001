@@ -91,9 +91,7 @@ class _standard:
         self.pv_length = [0 for _ in range(MAX_PLY)]
 
     def _checkup(self) -> None:
-        if self.timing_util['timeset'] and (get_ms(perf_counter()) > self.timing_util['stoptime']):
-            print('time limit exceeded!')
-            self.timing_util['abort'] = 1
+        if self.timing_util['timeset'] and (get_ms(perf_counter()) > self.timing_util['stoptime']): self.timing_util['abort'] = 1
 
     def _score(self, board:list, move:int) -> int:
         if self.pv_table[0][self.ply] == move: return 20000
@@ -109,7 +107,7 @@ class _standard:
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
         move_list.moves.sort(reverse=True, key=lambda x : x.score)
 
-    def _root(self, depth:int, pos) -> None:
+    def _root(self, pos, depth:int = 5) -> None:
         self._clear()
         self._reset_timecontrol()
         self._start_timecontrol()
@@ -152,8 +150,6 @@ class _standard:
         move_list = MovesStruct()
         pos.gen_moves(move_list)
         self._sort(pos.board, move_list)
-
-        score = NEG_INF
 
         for c in range(move_list.count):
             board_cpy:list = [_ for _ in pos.board]

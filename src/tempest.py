@@ -43,8 +43,7 @@ if __name__ == '__main__':
     board.init_state(preset_positions['start_position'])
     board.print_board()
 
-    for _ in range(20):
-        searcher._root(5, board)
+    board.perft_test(5)
 
     # print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
     # print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')
