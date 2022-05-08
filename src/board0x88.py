@@ -81,7 +81,8 @@ class MovesStruct:
 
 class BoardState:
     def __init__(self) -> None:
-        self.zobrist = Zobrist()
+        self.zobrist: Zobrist = Zobrist()
+        self.fifty: int = 0
         self.hash_key: int = 0
         self.nodes: int = 0
         self.parsed_fen: str = ''
@@ -115,11 +116,12 @@ class BoardState:
         if not self.side: self.hash_key ^= self.zobrist.side
 
     def init_state(self, fen:str) -> None:
-        self.pce_count = [0 for _ in range(PIECE_TYPES)]
-        self.hash_key = 0
-        self.nodes = 0
-        self.parsed_fen = ''
-        self.king_square = [squares['e8'], squares['e1']]
+        self.fifty: int = 0
+        self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
+        self.hash_key: int = 0
+        self.nodes: int = 0
+        self.parsed_fen: str = ''
+        self.king_square: list = [squares['e8'], squares['e1']]
         self.side: int = -1
         self.xside: int = -1
         self.castle: int = 15
@@ -205,17 +207,15 @@ class BoardState:
         elif fen_segments[1] == 'b':
             self.side = sides['black']
             self.xside = sides['white']
-        else:
-            self.side = -1
-            self.xside = -1
+        else: self.side = -1; self.xside = -1
 
         # castle rights parsing
-        for sym in fen_segments[2]:
-            if sym == '-': break
-            elif sym == 'K': self.castle |= castling_vals['K']
-            elif sym == 'Q': self.castle |= castling_vals['Q']
-            elif sym == 'k': self.castle |= castling_vals['k']
-            elif sym == 'q': self.castle |= castling_vals['q']
+        if fen_segments[2] != '-':
+            for sym in fen_segments[2]:
+                if sym == 'K': self.castle |= castling_vals['K']
+                elif sym == 'Q': self.castle |= castling_vals['Q']
+                elif sym == 'k': self.castle |= castling_vals['k']
+                elif sym == 'q': self.castle |= castling_vals['q']
 
         # load enpassant square
         fen_ep:str = fen_segments[3]
@@ -292,6 +292,7 @@ class BoardState:
             king_square_cpy:list = [_ for _ in self.king_square]
             pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
+            fifty_cpy:int = self.fifty
 
             # get move source and the square it moves to
             from_square:int = get_move_source(move)
@@ -309,10 +310,14 @@ class BoardState:
             self.hash_key ^= self.zobrist.piecesquare[piece_moved][from_square]
             self.hash_key ^= self.zobrist.piecesquare[piece_moved][to_square]
 
+            self.fifty += 1
+
             # adjusting board state
             if captured_piece:
                 self.hash_key ^= self.zobrist.piecesquare[captured_piece][to_square]
                 self.pce_count[captured_piece] -= 1
+                self.fifty = 0
+            elif self.board[to_square] == P or self.board[to_square] == p: self.fifty = 0
             if promoted_piece:
                 self.pce_count[self.board[to_square]] -= 1
                 self.board[to_square] = promoted_piece
@@ -377,6 +382,7 @@ class BoardState:
                 self.king_square = [_ for _ in king_square_cpy]
                 self.pce_count = [_ for _ in pce_count_cpy]
                 self.hash_key = hashkey_cpy
+                self.fifty = fifty_cpy
                 return 0 # illegal
             else: return 1 # legal
         elif capture_flag == CAPTURE_MOVES:
@@ -541,6 +547,7 @@ class BoardState:
             king_square_cpy:list = [_ for _ in self.king_square]
             pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
+            fifty_cpy:int = self.fifty
 
             # filter out the illegal moves
             if not self.make_move(move_list.moves[mv_count].move, ALL_MOVES): continue
@@ -557,6 +564,7 @@ class BoardState:
             self.king_square = [_ for _ in king_square_cpy]
             self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
+            self.fifty = fifty_cpy
 
     def perft_test(self, depth:int = 1) -> None:
         print('\n  [PERFT TEST GENERATING MOVES]\n')
@@ -580,6 +588,7 @@ class BoardState:
             king_square_cpy:list = [_ for _ in self.king_square]
             pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
+            fifty_cpy:int = self.fifty
 
             if not self.make_move(move_list.moves[mv_count].move, ALL_MOVES): continue
 
@@ -601,6 +610,7 @@ class BoardState:
             self.king_square = [_ for _ in king_square_cpy]
             self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
+            self.fifty = fifty_cpy
 
             if get_move_promoted(move_list.moves[mv_count].move): print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}{promoted_pieces[get_move_promoted(move_list.moves[mv_count].move)]}: {old_nodes}')
             else: print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}: {old_nodes}')

@@ -47,8 +47,8 @@ mvv_lva:list = [
 
 ]
 
-POS_INF = 9999999
-NEG_INF = -9999999
+POS_INF = 999999
+NEG_INF = -999999
 MATE_VAL = 49000
 MAX_PLY = 64
 
@@ -141,9 +141,9 @@ class _standard:
         self.pv_length[self.ply] = self.ply
 
         if self.ply > (MAX_PLY-1):
-            return round(evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key))
+            return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
 
-        threshold = round(evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key))
+        threshold = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
         if threshold >= beta: return beta
         alpha = max(threshold, alpha)
 
@@ -202,15 +202,20 @@ class _standard:
         hash_flag:int = HASH_ALPHA
         score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
         if self.ply and score != NO_HASH_ENTRY and not pv_node: return score
+        if self.ply and pos.fifty >= 100: return 0
         if depth <= 0: return self._quiesce(alpha, beta, pos)
         self.nodes += 1
+
+        if alpha < -MATE_VAL: alpha = -MATE_VAL
+        if beta > MATE_VAL - 1: beta = MATE_VAL - 1
+        if alpha >= beta: return alpha
 
         if (self.nodes & 2047) == 0:
             self._checkup()
             if self.timing_util['abort']: return 0
 
         if self.ply > MAX_PLY-1:
-            return round(evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key))
+            return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
 
         self.pv_length[self.ply] = self.ply
         in_check:int = pos.in_check(pos.side)

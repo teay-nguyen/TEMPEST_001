@@ -32,8 +32,8 @@ CASTLE_VAL: int = 0x10 # max castle value
 IDS: int = 0x2
 
 # capture flags (just give em random number)
-ALL_MOVES: int = 1
-CAPTURE_MOVES: int = 2
+ALL_MOVES: int = 0x1
+CAPTURE_MOVES: int = 0x2
 
 # state storing
 class move_t:
@@ -66,7 +66,7 @@ square_to_coords: tuple = (
 )
 
 # piece encoding
-e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0x00, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD
 ascii_pieces: str = ".PNBRQKpnbrqko"
 unicode_pieces: str = ".♙♘♗♖♕♔♙♞♝♜♛♚" # only used with CPython
 
@@ -114,6 +114,10 @@ get_row = lambda sq: sq >> 4
 get_col = lambda sq: sq & 7
 same_row = lambda sq1, sq2: get_row(sq1) == get_row(sq2)
 same_col = lambda sq1, sq2: get_col(sq1) == get_col(sq2)
+
+sq_8x8_to_0x88 = lambda sq8x8: sq8x8 + (sq8x8 & ~7)
+sq_0x88_to_0x8 = lambda sq0x88: (sq0x88 + (sq0x88 & 7)) >> 1
+diff0x88 = lambda A, B: 0x77 + A - B
 
 # initial values
 sides: dict = { 'black':0, 'white':1 }

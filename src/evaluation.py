@@ -32,7 +32,7 @@ tt.tteval_setsize(0xCCCCC)
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
 
 # evaluate pawn
-def eval_pawn(board, sq, side) -> float:
+def eval_pawn(board, sq, side) -> int:
     # validate if piece is pawn on the given side or not
     if (board[sq] != P) if side else (board[sq] != p): return 0
 
@@ -54,7 +54,7 @@ def eval_pawn(board, sq, side) -> float:
             increment_step_black += 16
 
     # return the scaled score
-    return (score*1.5)/1.2
+    return score
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
@@ -91,7 +91,7 @@ def is_draw(pceNum:list) -> int:
     return 0
 
 # main driver
-def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
+def evaluate(board: list, side: int, pceNum: list, hashkey: int, fifty: int) -> int:
     # check if draw or not, if yes return 0
     if is_draw(pceNum): return 0
 
@@ -111,7 +111,7 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
     else: game_phase = phases['midgame']
 
     # define score variables
-    score:float = 0; score_opening:float = 0; score_endgame:float = 0
+    score:int = 0; score_opening:int = 0; score_endgame:int = 0
 
     # tedious stuff right here
     for sq in range(len(board)):
@@ -170,15 +170,16 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int) -> float:
     # determine the final score based on game phase
     # my nvim lsp keep throwing errors this things a nuisance, i need the exact float/value because better move ordering equals better playing strength
     if game_phase == phases['midgame']:
-        try:
-            score = (score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) / OPENING_PHASE_SCORE
-            score = round(score, 2)
+        try: score = (score_opening * game_phase_score + score_endgame * (OPENING_PHASE_SCORE - game_phase_score)) // OPENING_PHASE_SCORE
         except: score = 0
-    elif game_phase == phases['opening']: score = round(float(score_opening), 2)
-    elif game_phase == phases['endgame']: score = round(float(score_endgame), 2)
+    elif game_phase == phases['opening']: score = score_opening
+    elif game_phase == phases['endgame']: score = score_endgame
+
+    # change evaluation based on fifty move rule
+    score = (score * (100 - fifty) // 100) << 0
 
     # change the score based on stm, required on the negamax framework
-    score = score if side else -score
+    score = score if side else (score * -1)
 
     # store the score in the tt table in case of encountering this position again
     tt.tteval_save(score, hashkey)
