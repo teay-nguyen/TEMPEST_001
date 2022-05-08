@@ -200,6 +200,7 @@ class _standard:
         legal_:int = 0
         pv_node:int = beta - alpha > 1
         hash_flag:int = HASH_ALPHA
+        b_search_pv:int = 1
         score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
         if self.ply and score != NO_HASH_ENTRY and not pv_node: return score
         if self.ply and pos.fifty >= 100: return 0
@@ -243,7 +244,11 @@ class _standard:
 
             legal_ += 1
 
-            score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
+            if b_search_pv:
+                score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
+            else:
+                score = -self._alphabeta(-alpha-1, -alpha, depth - 1, pos)
+                if score > alpha and score < beta: score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
 
             pos.board = [_ for _ in board_cpy]
             pos.side = side_cpy

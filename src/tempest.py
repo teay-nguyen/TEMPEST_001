@@ -40,8 +40,10 @@ if __name__ == '__main__':
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state('4k3/1R6/7R/8/8/8/8/4K3 w - - 0 1')
+    board.init_state(preset_positions['start_position'])
     board.print_board()
+
+    searcher._root(board)
 
     # print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
     # print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')
