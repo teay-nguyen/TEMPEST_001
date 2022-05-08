@@ -89,7 +89,7 @@ class BoardState:
         self.king_square: list = [squares['e8'], squares['e1']]
         self.side: int = -1
         self.xside: int = -1
-        self.castle: int = 15
+        self.castle: int = 0
         self.enpassant: int = squares['OFFBOARD']
         self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
         self.board: list = [
@@ -116,16 +116,7 @@ class BoardState:
         if not self.side: self.hash_key ^= self.zobrist.side
 
     def init_state(self, fen:str) -> None:
-        self.fifty: int = 0
-        self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
-        self.hash_key: int = 0
-        self.nodes: int = 0
-        self.parsed_fen: str = ''
-        self.king_square: list = [squares['e8'], squares['e1']]
-        self.side: int = -1
-        self.xside: int = -1
-        self.castle: int = 15
-        self.enpassant: int = squares['OFFBOARD']
+        self.clear_board()
         self.parse_fen(fen)
         self.gen_hashkey()
 
@@ -137,14 +128,15 @@ class BoardState:
                 if not (square & 0x88):
                     self.board[square] = e
 
-        self.pce_count = [0 for _ in range(PIECE_TYPES)]
-        self.hash_key = 0
-        self.nodes = 0
-        self.parsed_fen = ''
-        self.king_square = [squares['e8'], squares['e1']]
+        self.fifty: int = 0
+        self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
+        self.hash_key: int = 0
+        self.nodes: int = 0
+        self.parsed_fen: str = ''
+        self.king_square: list = [squares['e8'], squares['e1']]
         self.side: int = -1
         self.xside: int = -1
-        self.castle: int = 15
+        self.castle: int = 0
         self.enpassant: int = squares['OFFBOARD']
 
     def generate_fen(self) -> str:
