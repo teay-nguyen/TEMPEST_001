@@ -163,14 +163,3 @@ piece_val: list = [             [0, 82, 337, 365, 477, 1025, 0, -82, -337, -365,
 
 # self explanitory
 phases: dict = {'opening':0, 'endgame':1, 'midgame':2}
-
-
-#                        SEARCH                        #
-
-# define values
-INFINITE:int = 50000
-MATE_VALUE:int = 49000
-MATE_SCORE:int = 48000
-
-# max ply to search at
-MAX_PLY: int = 64

@@ -22,11 +22,11 @@
 '''
 
 import sys
-from defs import NAME, ENGINE_VERSION, ENGINE_STATUS
+from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, BASELINE_ELO, preset_positions
 from time import perf_counter
 import evaluation
 import board0x88
-import defs
+import search
 
 get_time_ms = lambda i : round(i * 1000)
 
@@ -35,10 +35,14 @@ if __name__ == '__main__':
     print(f'[RUNNING ON]: {sys.version}')
     print(f'[ENGINE VERSION]: {ENGINE_VERSION}')
     print(f'[ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
+    print(f'[BASELINE ELO]: {BASELINE_ELO}')
 
+    searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state(defs.preset_positions['start_position'])
+    board.init_state(preset_positions['start_position'])
     board.print_board()
+
+    searcher._root(8, board)
 
     print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
     print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')

@@ -66,10 +66,10 @@ class RKISS:
 
 class Zobrist:
     def __init__(self) -> None:
-        self.piecesquare: list = [[self.rand64() for _ in range(BOARD_SQ_NUM)] for _ in range(PIECE_TYPES)]
+        self.piecesquare: list = [[self.rand64() for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
         self.side: int = self.rand64()
         self.castling: list = [self.rand64() for _ in range(CASTLE_VAL)]
-        self.ep: list = [self.rand64() for _ in range(BOARD_SQ_NUM)]
+        self.ep: list = [self.rand64() for _ in range(BSQUARES)]
 
     def rand64(self) -> int:
         return uuid1().int >> 64
@@ -390,7 +390,7 @@ class BoardState:
 
     def gen_moves(self, move_list: MovesStruct) -> None:
         move_list.count = 0
-        for sq in range(BOARD_SQ_NUM):
+        for sq in range(BSQUARES):
             if not (sq & 0x88):
                 if self.side:
                     if self.board[sq] == P:
@@ -468,7 +468,7 @@ class BoardState:
                 if (self.board[sq] == N) if self.side else (self.board[sq] == n):
                     for i in range(8):
                         to_sq:int = sq + knight_offsets[i]
-                        if 0 <= to_sq < BOARD_SQ_NUM:
+                        if 0 <= to_sq < BSQUARES:
                             piece:int = self.board[to_sq]
                             if not (to_sq & 0x88):
                                 if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
@@ -479,7 +479,7 @@ class BoardState:
                 if (self.board[sq] == K) if self.side else (self.board[sq] == k):
                     for i in range(8):
                         to_sq:int = sq + king_offsets[i]
-                        if 0 <= to_sq < BOARD_SQ_NUM:
+                        if 0 <= to_sq < BSQUARES:
                             piece:int = self.board[to_sq]
                             if not (to_sq & 0x88):
                                 if (not piece or (piece >= 7 and piece <= 12)) if self.side else\

@@ -18,11 +18,14 @@
 
 '''
 
-# constants
+# constants (engine)
 NAME: str = "TEMPEST_001" # name of the chess engine
 ENGINE_VERSION: str = "v0.4 HashHobo [Terry Nguyen]" # commit version and author
 ENGINE_STATUS: str = "WIP [WORK IN PROGRESS]" # engine status
-BOARD_SQ_NUM: int = 0x80 # max number of squares in a 0x88 board
+BSQUARES: int = 0x80 # max number of squares in a 0x88 board
+BASELINE_ELO: int = 1200
+
+# constants (board 0x88)
 GEN_STACK: int = 0x100 # max number of moves in 1 position
 PIECE_TYPES: int = 0xD # number of piece types: from empty to black king
 CASTLE_VAL: int = 0x10 # max castle value
@@ -138,10 +141,8 @@ def print_move(move:int):
         print('{}{}{}'.format(
                 square_to_coords[get_move_source(move)],
                 square_to_coords[get_move_target(move)],
-                promoted_pieces[get_move_promoted(move)],
-        ), end=' ')
+                promoted_pieces[get_move_promoted(move)]), end=' ')
     else:
         print('{}{}'.format(
                 square_to_coords[get_move_source(move)],
-                square_to_coords[get_move_target(move)],
-        ), end=' ')
+                square_to_coords[get_move_target(move)]), end=' ')

@@ -47,8 +47,11 @@ class Transposition:
         self.tt_size:int = 0
         self.tteval_size:int = 0
 
+    def prnt_stats(self):
+        print(f'Search Hash Table size set to {self.tt_size} total entries')
+        print(f'Evaluation Hash Table size set to {self.tteval_size} total entries')
+
     def tt_setsize(self, size:int = 0xCCCCC):
-        print(f'Hash Table size set to {size} total entries')
         self.tt_size = size
         self.tt_table = [tt_entry() for _ in range(size)]
 
@@ -84,7 +87,6 @@ class Transposition:
         entry.depth = depth
 
     def tteval_setsize(self, size:int = 0xCCCCC):
-        print(f'Hash Table size set to {size} total entries')
         self.tteval_size = size
         self.tteval_table = [tteval_entry() for _ in range(size)]
 
