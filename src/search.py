@@ -90,7 +90,8 @@ class _standard:
         self.pv_length = [0 for _ in range(MAX_PLY)]
 
     def _checkup(self) -> None:
-        if self.timing_util['timeset'] and (get_ms(perf_counter()) >= self.timing_util['stoptime']):
+        if self.timing_util['timeset'] and (get_ms(perf_counter()) > self.timing_util['stoptime']):
+            print('time limit exceeded!')
             self.timing_util['abort'] = 1
 
     def _score(self, board:list, move:int) -> int:
@@ -105,7 +106,7 @@ class _standard:
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
-        move_list.moves.sort(reverse=True, key=lambda x:x.score)
+        move_list.moves.sort(reverse=True, key=lambda x : x.score)
 
     def _root(self, depth:int, pos) -> None:
         self._clear()
@@ -118,11 +119,11 @@ class _standard:
         print()
         for c_d in range(1, depth+1):
             score = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
-            print(f' info score cp {score} depth {c_d} nodes {self.nodes} pv:\n', end='  ')
-            for _m in range(self.pv_length[0]):
-                print_move(self.pv_table[0][_m])
+            print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv:\n', end='  ')
+            for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
             print('\n')
 
+        print('', end='  ')
         print_move(self.pv_table[0][0])
         print('is the best move\n')
 

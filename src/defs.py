@@ -32,8 +32,8 @@ CASTLE_VAL: int = 0x10 # max castle value
 IDS: int = 0x2
 
 # capture flags (just give em random number)
-ALL_MOVES: int = 0x15ff
-CAPTURE_MOVES: int = 0x15cc
+ALL_MOVES: int = 1
+CAPTURE_MOVES: int = 2
 
 # state storing
 class move_t:
