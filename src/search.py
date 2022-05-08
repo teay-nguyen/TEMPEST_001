@@ -49,6 +49,7 @@ mvv_lva:list = [
 
 POS_INF = 9999999
 NEG_INF = -9999999
+MATE_VAL = 49000
 MAX_PLY = 64
 
 tt = Transposition()
@@ -119,9 +120,10 @@ class _standard:
         print()
         for c_d in range(1, depth+1):
             score = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
-            print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv:\n', end='  ')
+            if self.timing_util['abort']: break
+            print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
-            print('\n')
+            print()
 
         print('', end='  ')
         print_move(self.pv_table[0][0])
@@ -131,6 +133,7 @@ class _standard:
         pos.print_board()
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
+        assert beta > alpha
         self.nodes += 1
 
         if (self.nodes & 2047) == 0:
@@ -139,6 +142,9 @@ class _standard:
 
         self.pv_length[self.ply] = self.ply
 
+        if self.ply > (MAX_PLY-1):
+            return round(evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key))
+
         threshold = round(evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key))
         if threshold >= beta: return beta
         alpha = max(threshold, alpha)
@@ -146,6 +152,8 @@ class _standard:
         move_list = MovesStruct()
         pos.gen_moves(move_list)
         self._sort(pos.board, move_list)
+
+        score = NEG_INF
 
         for c in range(move_list.count):
             board_cpy:list = [_ for _ in pos.board]
@@ -190,17 +198,23 @@ class _standard:
 
     def _alphabeta(self, alpha:int, beta:int, depth:int, pos) -> int:
 
+        assert depth >= 0
+        assert beta > alpha
+
         legal_:int = 0
         pv_node:int = beta - alpha > 1
         hash_flag:int = HASH_ALPHA
         score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
         if self.ply and score != NO_HASH_ENTRY and not pv_node: return score
-        if not depth: return self._quiesce(alpha, beta, pos)
+        if depth <= 0: return self._quiesce(alpha, beta, pos)
         self.nodes += 1
 
         if (self.nodes & 2047) == 0:
             self._checkup()
             if self.timing_util['abort']: return 0
+
+        if self.ply > MAX_PLY-1:
+            return round(evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key))
 
         self.pv_length[self.ply] = self.ply
         in_check:int = pos.in_check(pos.side)
@@ -258,7 +272,7 @@ class _standard:
                 self.pv_length[self.ply] = self.pv_length[self.ply+1]
 
         if not legal_:
-            if in_check: return -49000 + self.ply
+            if in_check: return -MATE_VAL + self.ply
             else: return 0
 
         tt.tt_save(depth, alpha, hash_flag, pos.hash_key)
