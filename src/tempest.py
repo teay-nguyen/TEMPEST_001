@@ -24,13 +24,14 @@
 import sys
 from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, BASELINE_ELO, preset_positions
 from time import perf_counter
-import evaluation
 import board0x88
 import search
 
 get_time_ms = lambda i : round(i * 1000)
 
 if __name__ == '__main__':
+    # init start time
+    start_time:float = perf_counter()
     print(f'\n[STARTING UP {NAME}]')
     print(f'[RUNNING ON]: {sys.version}')
     print(f'[ENGINE VERSION]: {ENGINE_VERSION}')
@@ -42,13 +43,12 @@ if __name__ == '__main__':
     board.init_state(preset_positions['start_position'])
     board.print_board()
 
-    searcher._root(8, board)
+    for _ in range(20):
+        searcher._root(5, board)
 
-    print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
-    print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')
-
-    # init start time
-    start_time:float = perf_counter()
+    # print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
+    # print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')
+    # print(f'  [PIECE LIST]: {board.pce_count}')
 
     # calc program runtime
     program_runtime: float = perf_counter() - start_time

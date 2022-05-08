@@ -107,12 +107,13 @@ class _standard:
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
         move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
-    def _root(self, depth:int, pos) -> int:
+    def _root(self, depth:int, pos) -> None:
         self._clear
         self._reset_timecontrol()
         self._start_timecontrol()
 
         score:int = 0
+        self.nodes:int = 0
 
         print()
         for c_d in range(1, depth+1):
@@ -125,7 +126,8 @@ class _standard:
         print_move(self.pv_table[0][0])
         print('is the best move\n')
 
-        return self.pv_table[0][0]
+        pos.make_move(self.pv_table[0][0], ALL_MOVES)
+        pos.print_board()
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
         self.nodes += 1
@@ -133,6 +135,8 @@ class _standard:
         if (self.nodes & 2047) == 0:
             self._checkup()
             if self.timing_util['abort']: return 0
+
+        self.pv_length[self.ply] = self.ply
 
         threshold = round(evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key))
         if threshold >= beta: return beta
@@ -173,20 +177,27 @@ class _standard:
 
             if self.timing_util['abort']: return 0
 
-            if score >= beta: return beta
-            alpha = max(score, alpha)
+            if score > alpha:
+                if score >= beta:
+                    return beta
+                alpha = score
+                self.pv_table[self.ply][self.ply] = move_list.moves[c].move
+                for j in range(self.ply+1, self.pv_length[self.ply+1]):
+                    self.pv_table[self.ply][j] = self.pv_table[self.ply+1][j]
+                self.pv_length[self.ply] = self.pv_length[self.ply+1]
         return alpha
 
     def _alphabeta(self, alpha:int, beta:int, depth:int, pos) -> int:
+
+        legal_:int = 0
+        if not depth: return self._quiesce(alpha, beta, pos)
+        self.nodes += 1
+
         if (self.nodes & 2047) == 0:
             self._checkup()
             if self.timing_util['abort']: return 0
 
-        legal_:int = 0
         self.pv_length[self.ply] = self.ply
-        if not depth: return self._quiesce(alpha, beta, pos)
-        self.nodes += 1
-
         in_check:int = pos.in_check(pos.side)
         if in_check: depth += 1
 
