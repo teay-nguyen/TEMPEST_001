@@ -50,7 +50,8 @@ mvv_lva:list = [
 POS_INF = 99999
 NEG_INF = -99999
 MATE_VAL = 49000
-MAX_PLY = 64
+MAX_PLY = 60
+OPTIMAL_DEPTH = 5
 
 tt = Transposition()
 tt.tt_setsize(0xCCCCC)
@@ -62,7 +63,7 @@ get_ms = lambda t:round(t * 1000)
 
 class _standard():
     def __init__(self) -> None:
-        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(9), 'timeset':0}
+        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(7), 'timeset':0}
 
         self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
@@ -74,7 +75,7 @@ class _standard():
         self.enabled:int = 1
 
     def _reset_timecontrol(self) -> None:
-        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(9), 'timeset':0}
+        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(7), 'timeset':0}
 
     def _start_timecontrol(self) -> None:
         self.timing_util['starttime'] = get_ms(perf_counter())
@@ -92,7 +93,9 @@ class _standard():
         self.pv_length = [0 for _ in range(MAX_PLY)]
 
     def _checkup(self) -> None:
-        if self.timing_util['timeset'] and (get_ms(perf_counter()) > self.timing_util['stoptime']): self.timing_util['abort'] = 1
+        if self.timing_util['timeset'] and (get_ms(perf_counter()) >= self.timing_util['stoptime']):
+            self.timing_util['abort'] = 1
+            print('  time limit exceeded!')
 
     def _score(self, board:list, move:int) -> int:
         if self.pv_table[0][self.ply] == move: return 20000
@@ -108,7 +111,7 @@ class _standard():
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
         move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
-    def _root(self, pos, depth:int = 5) -> None:
+    def _root(self, pos, depth:int = OPTIMAL_DEPTH) -> int:
         self._clear()
         self._reset_timecontrol()
         self._start_timecontrol()
@@ -116,29 +119,28 @@ class _standard():
         score:int = 0
         self.nodes:int = 0
 
-        if not self.enabled: return
+        if not self.enabled: return 0
 
         print()
         for c_d in range(1, depth+1):
             score = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
-            if score <= -MATE_VAL or score >= MATE_VAL-1:
-                print('  mate found or is getting mated!')
-                self.enabled = 0
-                break
-
             if self.timing_util['abort']: break
             print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
+            if score <= -MATE_VAL+MAX_PLY or score >= MATE_VAL-MAX_PLY:
+                print('MATE FOUND!')
+                self.enabled = 0
+                break
             print()
 
-        print('', end='  ')
-        if self.pv_table[0][0]: print_move(self.pv_table[0][0])
-        else: print('n/a', end=' ')
-        print('is the best move\n')
-
-        if self.pv_table[0][0]: pos.make_move(self.pv_table[0][0], ALL_MOVES)
-        else: print('  no move found!')
+        print('\n', end='  ')
+        if self.pv_table[0][0]:
+            pos.make_move(self.pv_table[0][0], ALL_MOVES)
+            print_move(self.pv_table[0][0], 'is the best move\n')
+        else: print('no move available in pv table')
         pos.print_board()
+
+        return 1
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
         assert beta > alpha
@@ -199,6 +201,9 @@ class _standard():
                 if score >= beta:
                     return beta
                 alpha = score
+                self.pv_table[self.ply][self.ply] = move_list.moves[c].move
+                for j in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][j] = self.pv_table[self.ply+1][j]
+                self.pv_length[self.ply] = self.pv_length[self.ply+1]
         return alpha
 
     def _alphabeta(self, alpha:int, beta:int, depth:int, pos) -> int:
@@ -252,7 +257,7 @@ class _standard():
                 self.ply -= 1
                 continue
 
-            legal_ += 1
+            legal_ = 1
 
             if b_search_pv:
                 score = -self._alphabeta(-beta, -alpha, depth - 1, pos)

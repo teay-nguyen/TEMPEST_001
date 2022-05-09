@@ -27,7 +27,13 @@ OPENING_PHASE_SCORE: int = 6192
 ENDGAME_PHASE_SCORE: int = 518
 
 # pawn bonuses and penalties
-DOUBLED_PENALTY: int = 39
+DOUBLED_PENALTY: int = 10
+ISOLATED_PENALTY: int = 20
+BACKWARDS_PENALTY: int = 8
+PASSED_BONUS: int = 20
+ROOK_SEMI_OPEN_FILE_BONUS: int = 10
+ROOK_OPEN_FILE_BONUS: int = 15
+ROOK_ON_SEVENTH_BONUS: int = 20
 
 # positional score [phase][piece][square]
 

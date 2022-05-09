@@ -23,7 +23,7 @@ NAME: str = "TEMPEST_001" # name of the chess engine
 ENGINE_VERSION: str = "v0.4 HashHobo [Terry Nguyen]" # commit version and author
 ENGINE_STATUS: str = "WIP [WORK IN PROGRESS]" # engine status
 BSQUARES: int = 0x80 # max number of squares in a 0x88 board
-BASELINE_ELO: int = 1200
+BASELINE_ELO: int = 900
 
 # constants (board 0x88)
 GEN_STACK: int = 0x100 # max number of moves in 1 position
@@ -140,13 +140,17 @@ rook_offsets: tuple = (16, -16, 1, -1)
 king_offsets: tuple = (16, -16, 1, -1, 15, 17, -15, -17)
 
 # misc
-def print_move(move:int):
+def print_move(move:int, *args):
     if get_move_promoted(move):
         print('{}{}{}'.format(
                 square_to_coords[get_move_source(move)],
                 square_to_coords[get_move_target(move)],
                 promoted_pieces[get_move_promoted(move)]), end=' ')
+
+        for _s in args: print(_s, end=' ')
     else:
         print('{}{}'.format(
                 square_to_coords[get_move_source(move)],
                 square_to_coords[get_move_target(move)]), end=' ')
+
+        for _s in args: print(_s, end=' ')

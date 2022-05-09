@@ -32,29 +32,27 @@ tt.tteval_setsize(0xCCCCC)
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
 
 # evaluate pawn
-def eval_pawn(board, sq, side) -> int:
-    # validate if piece is pawn on the given side or not
-    if (board[sq] != P) if side else (board[sq] != p): return 0
+def eval_white_pawn(board, sq) -> int:
+    s:int = 0
 
-    # define vars
-    score:int = 0
+    increment_step:int = sq + 16 # going backwards
 
-    # increment these variables as we move up the board
-    increment_step_white:int = sq - 16
-    increment_step_black:int = sq + 16
+    while not (increment_step & 0x88) and 0 <= increment_step <= 127:
+        if board[increment_step] == P: s -= DOUBLED_PENALTY
+        increment_step += 16
 
-    # calc pawn score based on doubled pawns and supported pawns
-    if side:
-        while not (increment_step_white & 0x88) and 0 <= increment_step_white <= 127:
-            if board[increment_step_white] == P: score -= DOUBLED_PENALTY
-            increment_step_white -= 16
-    else:
-        while not (increment_step_black & 0x88) and 0 <= increment_step_black <= 127:
-            if board[increment_step_black] == p: score -= DOUBLED_PENALTY
-            increment_step_black += 16
+    return s
 
-    # return the scaled score
-    return score
+def eval_black_pawn(board, sq) -> int:
+    s:int = 0
+
+    increment_step:int = sq - 16 # going backwards
+
+    while not (increment_step & 0x88) and 0 <= increment_step <= 127:
+        if board[increment_step] == p: s -= DOUBLED_PENALTY
+        increment_step -= 16
+
+    return s
 
 # score to determine the game phase
 def get_game_phase_score(pceNum:list) -> int:
@@ -128,7 +126,7 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int, fifty: int) -> 
             if piece == P:
                 score_opening += positional_score[phases['opening']][PAWN][sq]
                 score_endgame += positional_score[phases['endgame']][PAWN][sq]
-                pawn_eval = eval_pawn(board, sq, 1)
+                pawn_eval:int = eval_white_pawn(board, sq)
                 score_opening += pawn_eval
                 score_endgame += pawn_eval
             elif piece == N:
@@ -149,7 +147,7 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int, fifty: int) -> 
             elif piece == p:
                 score_opening -= positional_score[phases['opening']][PAWN][mirror_board[sq]]
                 score_endgame -= positional_score[phases['endgame']][PAWN][mirror_board[sq]]
-                pawn_eval = eval_pawn(board, sq, 0)
+                pawn_eval:int = eval_black_pawn(board, sq)
                 score_opening -= pawn_eval
                 score_endgame -= pawn_eval
             elif piece == n:
