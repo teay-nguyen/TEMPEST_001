@@ -47,8 +47,8 @@ mvv_lva:list = [
 
 ]
 
-POS_INF = 999999
-NEG_INF = -999999
+POS_INF = 99999
+NEG_INF = -99999
 MATE_VAL = 49000
 MAX_PLY = 64
 
@@ -60,7 +60,7 @@ get_ms = lambda t:round(t * 1000)
 # standard searcher for TEMPEST_001, utilizing alphabeta
 # other search methods like MTD(f) or NegaScout are to be explored later
 
-class _standard:
+class _standard():
     def __init__(self) -> None:
         self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(9), 'timeset':0}
 
@@ -105,7 +105,7 @@ class _standard:
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
-        move_list.moves.sort(reverse=True, key=lambda x : x.score)
+        move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
     def _root(self, pos, depth:int = 5) -> None:
         self._clear()
@@ -118,16 +118,19 @@ class _standard:
         print()
         for c_d in range(1, depth+1):
             score = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
+            if score <= -MATE_VAL or score >= MATE_VAL-1: print('  mate found!'); break
             if self.timing_util['abort']: break
             print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
             print()
 
         print('', end='  ')
-        print_move(self.pv_table[0][0])
+        if self.pv_table[0][0]: print_move(self.pv_table[0][0])
+        else: print('n/a', end=' ')
         print('is the best move\n')
 
-        pos.make_move(self.pv_table[0][0], ALL_MOVES)
+        if self.pv_table[0][0]: pos.make_move(self.pv_table[0][0], ALL_MOVES)
+        else: print('  no move found!')
         pos.print_board()
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
@@ -140,12 +143,13 @@ class _standard:
 
         self.pv_length[self.ply] = self.ply
 
-        if self.ply > (MAX_PLY-1):
-            return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
+        if self.ply > (MAX_PLY-1): return beta
 
         threshold = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
-        if threshold >= beta: return beta
-        alpha = max(threshold, alpha)
+        if threshold > alpha:
+            if threshold >= beta:
+                return threshold
+            alpha = threshold
 
         move_list = MovesStruct()
         pos.gen_moves(move_list)
@@ -160,6 +164,7 @@ class _standard:
             king_square_cpy:list = [_ for _ in pos.king_square]
             pce_count_cpy:list = [_ for _ in pos.pce_count]
             hashkey_cpy:int = pos.hash_key
+            fifty_cpy:int = pos.fifty
 
             self.ply += 1
 
@@ -177,6 +182,7 @@ class _standard:
             pos.king_square = [_ for _ in king_square_cpy]
             pos.pce_count = [_ for _ in pce_count_cpy]
             pos.hash_key = hashkey_cpy
+            pos.fifty = fifty_cpy
 
             self.ply -= 1
 
@@ -186,10 +192,6 @@ class _standard:
                 if score >= beta:
                     return beta
                 alpha = score
-                self.pv_table[self.ply][self.ply] = move_list.moves[c].move
-                for j in range(self.ply+1, self.pv_length[self.ply+1]):
-                    self.pv_table[self.ply][j] = self.pv_table[self.ply+1][j]
-                self.pv_length[self.ply] = self.pv_length[self.ply+1]
         return alpha
 
     def _alphabeta(self, alpha:int, beta:int, depth:int, pos) -> int:
@@ -201,22 +203,22 @@ class _standard:
         pv_node:int = beta - alpha > 1
         hash_flag:int = HASH_ALPHA
         b_search_pv:int = 1
-        score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
-        if self.ply and score != NO_HASH_ENTRY and not pv_node: return score
         if self.ply and pos.fifty >= 100: return 0
         if depth <= 0: return self._quiesce(alpha, beta, pos)
         self.nodes += 1
-
-        if alpha < -MATE_VAL: alpha = -MATE_VAL
-        if beta > MATE_VAL - 1: beta = MATE_VAL - 1
-        if alpha >= beta: return alpha
 
         if (self.nodes & 2047) == 0:
             self._checkup()
             if self.timing_util['abort']: return 0
 
-        if self.ply > MAX_PLY-1:
-            return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
+        if self.ply > MAX_PLY-1: return beta
+
+        alpha = max(alpha, -MATE_VAL+self.ply-1)
+        beta = min(beta, MATE_VAL-self.ply)
+        if alpha >= beta: return alpha
+
+        score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
+        if self.ply and score != NO_HASH_ENTRY and not pv_node: return score
 
         self.pv_length[self.ply] = self.ply
         in_check:int = pos.in_check(pos.side)
@@ -235,6 +237,7 @@ class _standard:
             king_square_cpy:list = [_ for _ in pos.king_square]
             pce_count_cpy:list = [_ for _ in pos.pce_count]
             hashkey_cpy:int = pos.hash_key
+            fifty_cpy:int = pos.fifty
 
             self.ply += 1
 
@@ -258,6 +261,7 @@ class _standard:
             pos.king_square = [_ for _ in king_square_cpy]
             pos.pce_count = [_ for _ in pce_count_cpy]
             pos.hash_key = hashkey_cpy
+            pos.fifty = fifty_cpy
 
             self.ply -= 1
 

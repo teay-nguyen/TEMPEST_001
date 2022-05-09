@@ -32,18 +32,18 @@ get_time_ms = lambda i : round(i * 1000)
 if __name__ == '__main__':
     # init start time
     start_time:float = perf_counter()
-    print(f'\n[STARTING UP {NAME}]')
-    print(f'[RUNNING ON]: {sys.version}')
-    print(f'[ENGINE VERSION]: {ENGINE_VERSION}')
-    print(f'[ENGINE DEVELOPMENT STATUS]: {ENGINE_STATUS}')
-    print(f'[BASELINE ELO]: {BASELINE_ELO}')
+    print(f'\nSTARTING UP {NAME}')
+    print(f'RUNNING ON: {sys.version}')
+    print(f'ENGINE VERSION: {ENGINE_VERSION}')
+    print(f'ENGINE DEVELOPMENT STATUS: {ENGINE_STATUS}')
+    print(f'BASELINE ELO: {BASELINE_ELO}')
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state(preset_positions['start_position'])
+    board.init_state(preset_positions['tricky_position'])
     board.print_board()
 
-    searcher._root(board)
+    for _ in range(10): searcher._root(board, depth=4)
 
     # print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
     # print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')
@@ -53,4 +53,4 @@ if __name__ == '__main__':
     program_runtime: float = perf_counter() - start_time
 
     # print program runtime
-    print(f'\n[PROGRAM FINISHED IN {get_time_ms(program_runtime)} ms]')
+    print(f'\nPROGRAM FINISHED IN {get_time_ms(program_runtime)} ms')

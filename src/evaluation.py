@@ -68,6 +68,7 @@ def get_game_phase_score(pceNum:list) -> int:
     # return the total amount of material, minus the pawns
     return wp_scores + bp_scores
 
+# determine if the game is drawn based on material count
 def is_draw(pceNum:list) -> int:
     if pceNum[P] == 0 and pceNum[p] == 0:
         if pceNum[R] == 0 and pceNum[r] == 0 and pceNum[Q] == 0 and pceNum[q] == 0:
