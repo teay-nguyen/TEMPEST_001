@@ -62,15 +62,16 @@ get_ms = lambda t:round(t * 1000)
 
 class _standard():
     def __init__(self) -> None:
-        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(9), 'timeset':0}
+        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(9), 'timeset':0}
 
-        self.killer_moves = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
-        self.history_moves = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
-        self.pv_table = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
-        self.pv_length = [0 for _ in range(MAX_PLY)]
+        self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
+        self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
+        self.pv_table:list = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
+        self.pv_length:list = [0 for _ in range(MAX_PLY)]
 
-        self.ply = 0
-        self.nodes = 0
+        self.ply:int = 0
+        self.nodes:int = 0
+        self.enabled:int = 1
 
     def _reset_timecontrol(self) -> None:
         self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(9), 'timeset':0}
@@ -115,10 +116,16 @@ class _standard():
         score:int = 0
         self.nodes:int = 0
 
+        if not self.enabled: return
+
         print()
         for c_d in range(1, depth+1):
             score = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
-            if score <= -MATE_VAL or score >= MATE_VAL-1: print('  mate found!'); break
+            if score <= -MATE_VAL or score >= MATE_VAL-1:
+                print('  mate found or is getting mated!')
+                self.enabled = 0
+                break
+
             if self.timing_util['abort']: break
             print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])

@@ -40,10 +40,10 @@ if __name__ == '__main__':
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state(preset_positions['tricky_position'])
+    board.init_state('3kb3/3p4/7R/8/8/8/8/R3K3 w - - 0 1')
     board.print_board()
 
-    for _ in range(10): searcher._root(board, depth=4)
+    for _ in range(40): searcher._root(board, depth=4)
 
     # print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
     # print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')
