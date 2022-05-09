@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state('3kb3/3p4/7R/8/8/8/8/R3K3 w - - 0 1')
+    board.init_state(preset_positions['start_position'])
     board.print_board()
 
     for _ in range(40): searcher._root(board, depth=4)
