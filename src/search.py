@@ -134,9 +134,10 @@ class _standard():
 
         print()
         for c_d in range(1, depth + 1):
-            score = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
+            score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
+            elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
             if self.timing_util['abort']: break
-            print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv', end=' ')
+            print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
             if score == -MATE_VAL: self.enabled = 0; break
             if score <= -MATE_VAL + MAX_PLY or score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!'); break
