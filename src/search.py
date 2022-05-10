@@ -160,7 +160,7 @@ class _standard():
 
         self.pv_length[self.ply] = self.ply
 
-        if self.ply > (MAX_PLY-1): return beta
+        if self.ply > MAX_PLY - 1: return beta
 
         threshold = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
         if threshold > alpha:
@@ -231,10 +231,10 @@ class _standard():
             self._checkup()
             if self.timing_util['abort']: return 0
 
-        if self.ply > MAX_PLY-1: return beta
+        if self.ply > MAX_PLY - 1: return beta
 
-        alpha = max(alpha, -MATE_VAL+self.ply-1)
-        beta = min(beta, MATE_VAL-self.ply)
+        alpha = max(alpha, -MATE_VAL + self.ply - 1)
+        beta = min(beta, MATE_VAL - self.ply)
         if alpha >= beta: return alpha
 
         score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
