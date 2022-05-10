@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state('3k4/8/8/8/1R4R1/3K4/8/8 w - - 0 1')
+    board.init_state('3kb3/8/8/8/1R4R1/3K4/8/8 w - - 0 1')
     board.print_board()
 
     while 1:

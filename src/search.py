@@ -52,7 +52,7 @@ NEG_INF:int = -99999
 MATE_VAL:int = 49000
 MAX_PLY:int = 60
 OPTIMAL_DEPTH:int = 5
-TIME_LIMIT_FOR_SEARCH:int = 20
+TIME_LIMIT_FOR_SEARCH:int = 15
 
 tt = Transposition()
 tt.tt_setsize(0xCCCCC)
@@ -76,37 +76,41 @@ class _standard():
         self.enabled:int = 1
 
     def _reset_timecontrol(self) -> None:
-        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(TIME_LIMIT_FOR_SEARCH), 'timeset':0}
+        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(TIME_LIMIT_FOR_SEARCH), 'timeset':0}
 
     def _start_timecontrol(self) -> None:
         self.timing_util['starttime'] = get_ms(perf_counter())
         self.timing_util['stoptime'] = self.timing_util['starttime'] + self.timing_util['limit']
         self.timing_util['timeset'] = 1
-
-    def _clear(self) -> None:
-        self.nodes = 0
-        self.ply = 0
         self.timing_util['abort'] = 0
 
+    def _clear_search_tables(self) -> None:
         self.killer_moves = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
         self.pv_table = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
         self.pv_length = [0 for _ in range(MAX_PLY)]
 
+    def _clear(self) -> None:
+        self.nodes = 0
+        self.ply = 0
+        self.timing_util['abort'] = 0
+        self._reset_timecontrol()
+        self._clear_search_tables()
+
     def _checkup(self) -> None:
         curr_time:int = get_ms(perf_counter())
-        if self.timing_util['timeset'] and (curr_time >= self.timing_util['stoptime']):
+        if self.timing_util['timeset'] and (curr_time > self.timing_util['stoptime']):
             self.timing_util['abort'] = 1
-            print(f'  time limit exceeded! {curr_time} ms')
+            print(f'  time limit exceeded! {curr_time - self.timing_util["starttime"]} ms')
 
     def _score(self, board:list, move:int) -> int:
         if self.pv_table[0][self.ply] == move: return 20000
         score:int = mvv_lva[board[get_move_source(move)]][board[get_move_target(move)]]
         if get_move_capture(move): score += 10000
         else:
-            if self.killer_moves[0][self.ply] == move: return 9000
-            elif self.killer_moves[1][self.ply] == move: return 8000
-            else: return self.history_moves[board[get_move_source(move)]][get_move_target(move)] + 7000
+            if self.killer_moves[0][self.ply] == move: score = 9000
+            elif self.killer_moves[1][self.ply] == move: score = 8000
+            else: score = self.history_moves[board[get_move_source(move)]][get_move_target(move)] + 7000
         return score
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
@@ -115,7 +119,6 @@ class _standard():
 
     def _root(self, pos, depth:int = OPTIMAL_DEPTH) -> int:
         self._clear()
-        self._reset_timecontrol()
         self._start_timecontrol()
 
         score:int = 0
@@ -130,15 +133,12 @@ class _standard():
             print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
             if score == -MATE_VAL: self.enabled = 0; break
-            if score <= -MATE_VAL + MAX_PLY or score >= MATE_VAL - MAX_PLY:
-                print('     MATE FOUND!')
-                break
+            if score <= -MATE_VAL + MAX_PLY or score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!'); break
             print()
-
         print('\n', end='  ')
         if self.pv_table[0][0]:
-            pos.make_move(self.pv_table[0][0], ALL_MOVES)
             print_move(self.pv_table[0][0], 'is the best move in the pv table!\n')
+            pos.make_move(self.pv_table[0][0], ALL_MOVES)
             pos.print_board()
         else: print('\n  no move available in pv table!')
         return 1
