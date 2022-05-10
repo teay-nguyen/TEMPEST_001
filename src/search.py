@@ -47,8 +47,8 @@ mvv_lva:list = [
 
 ]
 
-POS_INF:int = 99999
-NEG_INF:int = -99999
+POS_INF:int = 999999
+NEG_INF:int = -999999
 MATE_VAL:int = 49000
 MAX_PLY:int = 60
 OPTIMAL_DEPTH:int = 5
@@ -65,6 +65,7 @@ get_ms = lambda t:round(t * 1000)
 class _standard():
     def __init__(self) -> None:
         self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(TIME_LIMIT_FOR_SEARCH), 'timeset':0}
+        self._search_limitations:dict = {'inf_time_search':0}
 
         self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
@@ -74,6 +75,10 @@ class _standard():
         self.ply:int = 0
         self.nodes:int = 0
         self.enabled:int = 1
+
+    def _determine_search_limitations(self):
+        if self._search_limitations['inf_time_search']: self.timing_util['limit'] = get_ms(POS_INF)
+        else: self.timing_util['limit'] = get_ms(TIME_LIMIT_FOR_SEARCH)
 
     def _reset_timecontrol(self) -> None:
         self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(TIME_LIMIT_FOR_SEARCH), 'timeset':0}
@@ -96,6 +101,7 @@ class _standard():
         self.timing_util['abort'] = 0
         self._reset_timecontrol()
         self._clear_search_tables()
+        self._determine_search_limitations()
 
     def _checkup(self) -> None:
         curr_time:int = get_ms(perf_counter())
@@ -264,7 +270,7 @@ class _standard():
                 score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
             else:
                 score = -self._alphabeta(-alpha-1, -alpha, depth - 1, pos)
-                if score > alpha and score < beta: score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
+                if alpha < score < beta: score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
 
             pos.board = [_ for _ in board_cpy]
             pos.side = side_cpy

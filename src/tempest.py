@@ -40,11 +40,11 @@ if __name__ == '__main__':
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state('3kb3/8/8/8/1R4R1/3K4/8/8 w - - 0 1')
+    board.init_state('3k4/3p4/8/8/1R1R2R1/3K4/8/8 w - - 0 1')
     board.print_board()
 
     while 1:
-        if not searcher._root(board, depth=6): break
+        if not searcher._root(board, 4): break
 
     # print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
     # print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')
