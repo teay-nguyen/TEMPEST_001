@@ -136,6 +136,7 @@ class _standard():
         for c_d in range(1, depth + 1):
             score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
             elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
+            if elapsed == 0: elapsed = 1
             if self.timing_util['abort']: break
             print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
@@ -144,7 +145,8 @@ class _standard():
             print()
         print('\n', end='  ')
         if self.pv_table[0][0]:
-            print_move(self.pv_table[0][0], 'is the best move in the pv table!\n')
+            print('bestmove', end=' ')
+            print_move(self.pv_table[0][0], '\n')
             pos.make_move(self.pv_table[0][0], ALL_MOVES)
             pos.print_board()
         else: print('\n  no move available in pv table!')
