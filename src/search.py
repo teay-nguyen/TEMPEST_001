@@ -47,11 +47,12 @@ mvv_lva:list = [
 
 ]
 
-POS_INF = 99999
-NEG_INF = -99999
-MATE_VAL = 49000
-MAX_PLY = 60
-OPTIMAL_DEPTH = 5
+POS_INF:int = 99999
+NEG_INF:int = -99999
+MATE_VAL:int = 49000
+MAX_PLY:int = 60
+OPTIMAL_DEPTH:int = 5
+TIME_LIMIT_FOR_SEARCH:int = 20
 
 tt = Transposition()
 tt.tt_setsize(0xCCCCC)
@@ -63,7 +64,7 @@ get_ms = lambda t:round(t * 1000)
 
 class _standard():
     def __init__(self) -> None:
-        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(6), 'timeset':0}
+        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(TIME_LIMIT_FOR_SEARCH), 'timeset':0}
 
         self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
@@ -75,7 +76,7 @@ class _standard():
         self.enabled:int = 1
 
     def _reset_timecontrol(self) -> None:
-        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(6), 'timeset':0}
+        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(TIME_LIMIT_FOR_SEARCH), 'timeset':0}
 
     def _start_timecontrol(self) -> None:
         self.timing_util['starttime'] = get_ms(perf_counter())
@@ -123,13 +124,13 @@ class _standard():
         if not self.enabled: return 0
 
         print()
-        for c_d in range(1, depth+1):
+        for c_d in range(1, depth + 1):
             score = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
             if self.timing_util['abort']: break
             print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
             if score == -MATE_VAL: self.enabled = 0; break
-            if score <= -MATE_VAL+MAX_PLY or score >= MATE_VAL-MAX_PLY:
+            if score <= -MATE_VAL + MAX_PLY or score >= MATE_VAL - MAX_PLY:
                 print('     MATE FOUND!')
                 break
             print()
@@ -137,9 +138,9 @@ class _standard():
         print('\n', end='  ')
         if self.pv_table[0][0]:
             pos.make_move(self.pv_table[0][0], ALL_MOVES)
-            print_move(self.pv_table[0][0], 'is the best move\n')
+            print_move(self.pv_table[0][0], 'is the best move in the pv table!\n')
             pos.print_board()
-        else: print('\n  no move available in pv table')
+        else: print('\n  no move available in pv table!')
         return 1
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
