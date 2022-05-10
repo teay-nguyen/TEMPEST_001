@@ -203,7 +203,7 @@ class _standard():
                     return beta
                 alpha = score
                 self.pv_table[self.ply][self.ply] = move_list.moves[c].move
-                for j in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][j] = self.pv_table[self.ply+1][j]
+                for _i in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][_i] = self.pv_table[self.ply+1][_i]
                 self.pv_length[self.ply] = self.pv_length[self.ply+1]
         return alpha
 
