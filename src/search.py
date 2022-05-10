@@ -63,7 +63,7 @@ get_ms = lambda t:round(t * 1000)
 
 class _standard():
     def __init__(self) -> None:
-        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(7), 'timeset':0}
+        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(6), 'timeset':0}
 
         self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
@@ -75,7 +75,7 @@ class _standard():
         self.enabled:int = 1
 
     def _reset_timecontrol(self) -> None:
-        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(7), 'timeset':0}
+        self.timing_util = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(6), 'timeset':0}
 
     def _start_timecontrol(self) -> None:
         self.timing_util['starttime'] = get_ms(perf_counter())
@@ -93,9 +93,10 @@ class _standard():
         self.pv_length = [0 for _ in range(MAX_PLY)]
 
     def _checkup(self) -> None:
-        if self.timing_util['timeset'] and (get_ms(perf_counter()) >= self.timing_util['stoptime']):
+        curr_time:int = get_ms(perf_counter())
+        if self.timing_util['timeset'] and (curr_time >= self.timing_util['stoptime']):
             self.timing_util['abort'] = 1
-            print('  time limit exceeded!')
+            print(f'  time limit exceeded! {curr_time} ms')
 
     def _score(self, board:list, move:int) -> int:
         if self.pv_table[0][self.ply] == move: return 20000
@@ -127,9 +128,9 @@ class _standard():
             if self.timing_util['abort']: break
             print(f'  info score cp {score} depth {c_d} nodes {self.nodes} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
+            if score == -MATE_VAL: self.enabled = 0; break
             if score <= -MATE_VAL+MAX_PLY or score >= MATE_VAL-MAX_PLY:
-                print('MATE FOUND!')
-                self.enabled = 0
+                print('     MATE FOUND!')
                 break
             print()
 
@@ -137,9 +138,8 @@ class _standard():
         if self.pv_table[0][0]:
             pos.make_move(self.pv_table[0][0], ALL_MOVES)
             print_move(self.pv_table[0][0], 'is the best move\n')
-        else: print('no move available in pv table')
-        pos.print_board()
-
+            pos.print_board()
+        else: print('\n  no move available in pv table')
         return 1
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
