@@ -147,6 +147,7 @@ class _standard():
 
         alpha:int = NEG_INF
         beta:int = POS_INF
+        absolute_draw:int = 1
 
         print()
         for c_d in range(1, self._search_depth_from_input + 1):
@@ -161,6 +162,10 @@ class _standard():
                 elif score <= -MATE_VAL + MAX_PLY: print('     GETTING MATED!\n', end=''); break
                 elif score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!\n', end=''); break
                 else: print()
+                for _v in range(len(pos.pce_count)):
+                    if not _v or _v == 6 or _v == 12: continue
+                    if pos.pce_count[_v]: absolute_draw = 0
+                if absolute_draw: self.enabled = 0; print('\n  GAME DRAWN!'); break
             else:
                 print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed}     IS MATED! | GAMEOVER!', end=' ')
                 self.enabled = 0; break

@@ -675,6 +675,7 @@ class BoardState:
         if self.enpassant != squares['OFFBOARD']: print(f'  [ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]} | {self.enpassant}')
         else: print(f'  [ENPASSANT TARGET SQUARE]: NONE | {self.enpassant}')
         print(f'  [KING SQUARE]: {square_to_coords[self.king_square[self.side]]} | {self.king_square[self.side]}')
+        print(f'  [PIECE COUNT]: {self.pce_count}')
         print(f'  [PARSED FEN]: {self.parsed_fen}')
 
 def print_move_list(move_list, mode:str):
