@@ -20,7 +20,7 @@
 
 # imports
 from defs import IDS, BSQUARES, PIECE_TYPES, get_move_source, get_move_target,\
-                get_move_capture, ALL_MOVES, CAPTURE_MOVES, print_move
+                get_move_capture, ALL_MOVES, CAPTURE_MOVES, print_move, squares
 
 from board0x88 import MovesStruct
 from evaluation import evaluate
@@ -52,8 +52,7 @@ NEG_INF:int = int(-1e7)
 MATE_VAL:int = 49000
 MAX_PLY:int = 60
 OPTIMAL_DEPTH:int = 5
-TIME_LIMIT_FOR_SEARCH:int = 15
-SEARCH_WINDOW:int = 50
+TIME_LIMIT_FOR_SEARCH:int = 25
 
 tt = Transposition()
 tt.tt_setsize(0xCCCCC)
@@ -129,7 +128,7 @@ class _standard():
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
         for c in range(move_list.count):
-            if move_list.moves[c].move == self.pv_table[0][0] and move_list.moves[c].move: move_list.moves[c].score = 30000
+            if move_list.moves[c].move == self.pv_table[0][0] and move_list.moves[c].move: move_list.moves[c].score = 300000
             else: move_list.moves[c].score = self._score(board, move_list.moves[c].move)
         move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
@@ -273,6 +272,43 @@ class _standard():
         self.pv_length[self.ply] = self.ply
         in_check:int = pos.in_check(pos.side)
         if in_check: depth += 1
+
+        if depth >= 3 and (not in_check) and self.ply:
+            board_cpy:list = [_ for _ in pos.board]
+            side_cpy:int = pos.side
+            xside_cpy:int = pos.xside
+            enpassant_cpy:int = pos.enpassant
+            castle_cpy:int = pos.castle
+            king_square_cpy:list = [_ for _ in pos.king_square]
+            pce_count_cpy:list = [_ for _ in pos.pce_count]
+            hashkey_cpy:int = pos.hash_key
+            fifty_cpy:int = pos.fifty
+
+            self.ply += 1
+
+            if pos.enpassant != squares['OFFBOARD']: pos.hash_key ^= pos.zobrist.ep[pos.enpassant]
+            pos.enpassant = squares['OFFBOARD']
+
+            pos.side ^= 1
+            pos.xside ^= 1
+            pos.hash_key ^= pos.zobrist.side
+
+            score:int = -self._alphabeta(-beta, -beta + 1, depth - 3, pos)
+
+            self.ply -= 1
+
+            pos.board = [_ for _ in board_cpy]
+            pos.side = side_cpy
+            pos.xside = xside_cpy
+            pos.enpassant = enpassant_cpy
+            pos.castle = castle_cpy
+            pos.king_square = [_ for _ in king_square_cpy]
+            pos.pce_count = [_ for _ in pce_count_cpy]
+            pos.hash_key = hashkey_cpy
+            pos.fifty = fifty_cpy
+
+            if self.timing_util['abort']: return 0
+            if score >= beta and abs(score) < MATE_VAL: return beta
 
         move_list:MovesStruct = MovesStruct()
         pos.gen_moves(move_list)
