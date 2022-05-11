@@ -64,8 +64,10 @@ get_ms = lambda t:round(t * 1000)
 
 class _standard():
     def __init__(self) -> None:
-        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(TIME_LIMIT_FOR_SEARCH), 'timeset':0}
         self._search_limitations:dict = {'inf_time_search':0}
+        self._search_depth_from_input:int = 0
+        self._search_time_allocation_from_input:int = 0
+        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(self._search_time_allocation_from_input), 'timeset':0}
 
         self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
@@ -78,10 +80,12 @@ class _standard():
 
     def _determine_search_limitations(self):
         if self._search_limitations['inf_time_search']: self.timing_util['limit'] = get_ms(POS_INF)
-        else: self.timing_util['limit'] = get_ms(TIME_LIMIT_FOR_SEARCH)
+        else:
+            if not self._search_time_allocation_from_input: self.timing_util['limit'] = get_ms(TIME_LIMIT_FOR_SEARCH)
+            else: self.timing_util['limit'] = get_ms(self._search_time_allocation_from_input)
 
     def _reset_timecontrol(self) -> None:
-        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(TIME_LIMIT_FOR_SEARCH), 'timeset':0}
+        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(self._search_time_allocation_from_input), 'timeset':0}
 
     def _start_timecontrol(self) -> None:
         self.timing_util['starttime'] = get_ms(perf_counter())
@@ -99,13 +103,14 @@ class _standard():
         self.nodes = 0
         self.ply = 0
         self.timing_util['abort'] = 0
+        self._search_depth_from_input = 0
+        self._search_time_allocation_from_input = 0
         self._reset_timecontrol()
         self._clear_search_tables()
-        self._determine_search_limitations()
 
     def _checkup(self) -> None:
         curr_time:int = get_ms(perf_counter())
-        if self.timing_util['timeset'] and (curr_time > self.timing_util['stoptime']):
+        if self.timing_util['timeset'] and (curr_time >= self.timing_util['stoptime']):
             self.timing_util['abort'] = 1
             print(f'  time limit exceeded! {curr_time - self.timing_util["starttime"]} ms')
 
@@ -123,25 +128,28 @@ class _standard():
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
         move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
-    def _root(self, pos, depth:int = OPTIMAL_DEPTH) -> int:
+    def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH) -> int:
         self._clear()
-        self._start_timecontrol()
 
         score:int = 0
         self.nodes:int = 0
+        self._search_depth_from_input:int = depth
+        self._search_time_allocation_from_input:int = _timeAllocated
+        self._determine_search_limitations()
+        self._start_timecontrol()
 
         if not self.enabled: return 0
 
         print()
-        for c_d in range(1, depth + 1):
+        for c_d in range(1, self._search_depth_from_input + 1):
             score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
             elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
-            if elapsed == 0: elapsed = 1
+            if not elapsed: elapsed = 1
             if self.timing_util['abort']: break
             print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed} pv', end=' ')
             for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
-            if score == -MATE_VAL: self.enabled = 0; break
-            if score <= -MATE_VAL + MAX_PLY or score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!'); break
+            if score == -MATE_VAL: self.enabled = 0; print('     IS MATED! / GAMEOVER!'); break
+            elif score <= -MATE_VAL + MAX_PLY or score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!'); break
             print()
         print('\n', end='  ')
         if self.pv_table[0][0]:
@@ -149,14 +157,14 @@ class _standard():
             print_move(self.pv_table[0][0], '\n')
             pos.make_move(self.pv_table[0][0], ALL_MOVES)
             pos.print_board()
-        else: print('\n  no move available in pv table!')
+        else: print('\n  bestmove n/a')
         return 1
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
         assert beta > alpha
         self.nodes += 1
 
-        if (self.nodes & 2047) == 0:
+        if not (self.nodes & 1023):
             self._checkup()
             if self.timing_util['abort']: return 0
 
@@ -229,7 +237,7 @@ class _standard():
         if depth <= 0: return self._quiesce(alpha, beta, pos)
         self.nodes += 1
 
-        if (self.nodes & 2047) == 0:
+        if not (self.nodes & 1023):
             self._checkup()
             if self.timing_util['abort']: return 0
 
