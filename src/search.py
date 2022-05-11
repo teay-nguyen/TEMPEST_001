@@ -47,12 +47,13 @@ mvv_lva:list = [
 
 ]
 
-POS_INF:int = 999999
-NEG_INF:int = -999999
+POS_INF:int = int(1e7)
+NEG_INF:int = int(-1e7)
 MATE_VAL:int = 49000
 MAX_PLY:int = 60
 OPTIMAL_DEPTH:int = 5
 TIME_LIMIT_FOR_SEARCH:int = 15
+SEARCH_WINDOW:int = 50
 
 tt = Transposition()
 tt.tt_setsize(0xCCCCC)
@@ -76,6 +77,7 @@ class _standard():
 
         self.ply:int = 0
         self.nodes:int = 0
+        self.tb_hits:int = 0
         self.enabled:int = 1
 
     def _determine_search_limitations(self):
@@ -102,6 +104,7 @@ class _standard():
     def _clear(self) -> None:
         self.nodes = 0
         self.ply = 0
+        self.tb_hits = 0
         self.timing_util['abort'] = 0
         self._search_depth_from_input = 0
         self._search_time_allocation_from_input = 0
@@ -125,7 +128,9 @@ class _standard():
         return score
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
-        for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
+        for c in range(move_list.count):
+            if move_list.moves[c].move == self.pv_table[0][0] and move_list.moves[c].move: move_list.moves[c].score = 30000
+            else: move_list.moves[c].score = self._score(board, move_list.moves[c].move)
         move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
     def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH) -> int:
@@ -140,17 +145,25 @@ class _standard():
 
         if not self.enabled: return 0
 
+        alpha:int = NEG_INF
+        beta:int = POS_INF
+
         print()
         for c_d in range(1, self._search_depth_from_input + 1):
-            score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
+            score:int = self._alphabeta(alpha, beta, c_d, pos)
             elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
             if not elapsed: elapsed = 1
             if self.timing_util['abort']: break
-            print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed} pv', end=' ')
-            for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
-            if score == -MATE_VAL: self.enabled = 0; print('     IS MATED! / GAMEOVER!'); break
-            elif score <= -MATE_VAL + MAX_PLY or score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!'); break
-            print()
+            if self.pv_length[0]:
+                print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
+                for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
+                if score == -MATE_VAL: self.enabled = 0; print('     IS MATED! | GAMEOVER!\n', end=''); break
+                elif score <= -MATE_VAL + MAX_PLY: print('     GETTING MATED!\n', end=''); break
+                elif score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!\n', end=''); break
+                else: print()
+            else:
+                print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed}     IS MATED! | GAMEOVER!', end=' ')
+                self.enabled = 0; break
         print('\n', end='  ')
         if self.pv_table[0][0]:
             print('bestmove', end=' ')
@@ -248,7 +261,9 @@ class _standard():
         if alpha >= beta: return alpha
 
         score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
-        if self.ply and score != NO_HASH_ENTRY and not pv_node: return score
+        if self.ply and score != NO_HASH_ENTRY and not pv_node:
+            self.tb_hits += 1
+            return score
 
         self.pv_length[self.ply] = self.ply
         in_check:int = pos.in_check(pos.side)
