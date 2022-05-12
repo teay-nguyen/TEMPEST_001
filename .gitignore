@@ -131,3 +131,4 @@ dmypy.json
 # Others
 nnue-probe/
 nnprobe-windows-cpu/
+bitboards_testing/
