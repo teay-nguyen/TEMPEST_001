@@ -5,7 +5,8 @@
 // shorten unsigned long long into U64
 #define u64 unsigned long long
 
-// board squares
+// enums
+enum { black, white };
 enum {
     a8, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
@@ -36,24 +37,43 @@ void print_bitboard(u64 bitboard) {
   printf("     Bitboard: %llud\n\n", bitboard);
 }
 
-int main()
-{
+const u64 not_a_file = 18374403900871474942ULL;
+const u64 not_h_file = 9187201950435737471ULL;
+const u64 not_hg_file = 4557430888798830399ULL;
+const u64 not_ab_file = 18229723555195321596ULL;
+
+u64 pawn_attacks[2][64];
+
+u64 mask_pawn_attacks(int side, int square) {
+  u64 attacks = 0ULL;
+  u64 bitboard = 0ULL;
+
+  set_bit(bitboard, square);
+
+  if (side) {
+    if ((bitboard >> 7) & not_a_file) attacks |= (bitboard >> 7);
+    if ((bitboard >> 9) & not_h_file) attacks |= (bitboard >> 9);
+  } else {
+    if ((bitboard << 7) & not_h_file) attacks |= (bitboard << 7);
+    if ((bitboard << 9) & not_a_file) attacks |= (bitboard << 9);
+  }
+
+  return attacks;
+}
+
+void init_leapers_attack() {
+  for (int square = 0; square < 64; square++) {
+    pawn_attacks[white][square] = mask_pawn_attacks(white, square);
+    pawn_attacks[black][square] = mask_pawn_attacks(black, square);
+  }
+}
+
+int main() {
     // define bitboard
-    u64 bitboard = 0ULL;
-    
-    // setting some bits
-    set_bit(bitboard, e4);
-    set_bit(bitboard, c3);
-    set_bit(bitboard, f2);
-    
-    // print bitboard
-    print_bitboard(bitboard);
-    
-    // reset bit
-    pop_bit(bitboard, e4);
-    
-    // print bitboard
-    print_bitboard(bitboard);
-    
+    init_leapers_attack();
+
+    for (int square = 0; square < 64; square++)
+        print_bitboard(pawn_attacks[black][square]);
+
     return 0;
 }
