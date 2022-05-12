@@ -38,6 +38,6 @@ For major changes, please open an issue first to discuss what you would like to 
 
 # TODO
 
-- Implement Search Routine, with Transposition Tables
+- Implement fully functional Search Routine, with Transposition Tables
 - Improve pawn evaluation and overall evaluation of pieces
 - Optimize move generation

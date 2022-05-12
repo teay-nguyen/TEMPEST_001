@@ -6,7 +6,7 @@
                                                   by
                                                HashHobo
                                           [LANGUAGE: PYTHON3]
-    - Basic 0x88 Board Representation
+    - Basic Mailbox 0x88 Board Representation
     - Zobrist Hashing using UUID module
     - Rudimentary Piece value, Piece Square Table and Pawn evaluation
     - Transposition Table: Hash Table for board positions and evaluations
