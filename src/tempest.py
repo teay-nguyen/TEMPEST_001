@@ -41,11 +41,11 @@ if __name__ == '__main__':
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state(preset_positions['start_position'])
+    board.init_state(preset_positions['tricky_position'])
     board.print_board()
 
     # call perft test
-    board.perft_test(4)
+    board.perft_test(depth=4)
 
     #while 1:
     #    if not searcher._root(board, depth = 6): break

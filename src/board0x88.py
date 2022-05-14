@@ -478,22 +478,20 @@ class BoardState:
                                 self.add_move(move_list, encode_move(sq, to_sq, N, 0, 0, 0, 0))
                             else:
                                 self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
-                                if sq >= a2 and sq <= h2 and not self.board[sq - 32]:
-                                    self.add_move(move_list, encode_move(sq, sq - 32, 0, 0, 1, 0, 0))
-                        for i in range(4):
-                            pawn_offset:int = bishop_offsets[i]
-                            if pawn_offset < 0:
-                                to_sq:int = sq + pawn_offset
-                                if not (to_sq & 0x88):
-                                    if (sq >= a7 and sq <= h7) and\
-                                        (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
-                                        self.add_move(move_list, encode_move(sq, to_sq, Q, 1, 0, 0, 0))
-                                        self.add_move(move_list, encode_move(sq, to_sq, R, 1, 0, 0, 0))
-                                        self.add_move(move_list, encode_move(sq, to_sq, B, 1, 0, 0, 0))
-                                        self.add_move(move_list, encode_move(sq, to_sq, N, 1, 0, 0, 0))
-                                    else:
-                                        if self.board[to_sq] >= 7 and self.board[to_sq] <= 12: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                        if to_sq == self.enpassant: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
+                                if sq >= a2 and sq <= h2 and not self.board[sq - 32]: self.add_move(move_list, encode_move(sq, sq - 32, 0, 0, 1, 0, 0))
+                        for i in range(2):
+                            pawn_offset:int = bishop_offsets[i+2]
+                            to_sq:int = sq + pawn_offset
+                            if not (to_sq & 0x88):
+                                if (sq >= a7 and sq <= h7) and\
+                                    (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
+                                    self.add_move(move_list, encode_move(sq, to_sq, Q, 1, 0, 0, 0))
+                                    self.add_move(move_list, encode_move(sq, to_sq, R, 1, 0, 0, 0))
+                                    self.add_move(move_list, encode_move(sq, to_sq, B, 1, 0, 0, 0))
+                                    self.add_move(move_list, encode_move(sq, to_sq, N, 1, 0, 0, 0))
+                                else:
+                                    if self.board[to_sq] >= 7 and self.board[to_sq] <= 12: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                    if to_sq == self.enpassant: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == K:
                         if self.castle & castling_vals['K']:
                             if not self.board[f1] and not self.board[g1]:
@@ -516,20 +514,19 @@ class BoardState:
                                 self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
                                 if sq >= a7 and sq <= h7 and not self.board[sq + 32]:
                                     self.add_move(move_list, encode_move(sq, sq + 32, 0, 0, 1, 0, 0))
-                        for i in range(4):
+                        for i in range(2):
                             pawn_offset:int = bishop_offsets[i]
-                            if pawn_offset > 0:
-                                to_sq = sq + pawn_offset
-                                if not (to_sq & 0x88):
-                                    if (sq >= a2 and sq <= h2) and\
-                                        (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
-                                        self.add_move(move_list, encode_move(sq, to_sq, q, 1, 0, 0, 0))
-                                        self.add_move(move_list, encode_move(sq, to_sq, r, 1, 0, 0, 0))
-                                        self.add_move(move_list, encode_move(sq, to_sq, b, 1, 0, 0, 0))
-                                        self.add_move(move_list, encode_move(sq, to_sq, n, 1, 0, 0, 0))
-                                    else:
-                                        if self.board[to_sq] >= 1 and self.board[to_sq] <= 6: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                        if to_sq == self.enpassant: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
+                            to_sq = sq + pawn_offset
+                            if not (to_sq & 0x88):
+                                if (sq >= a2 and sq <= h2) and\
+                                    (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
+                                    self.add_move(move_list, encode_move(sq, to_sq, q, 1, 0, 0, 0))
+                                    self.add_move(move_list, encode_move(sq, to_sq, r, 1, 0, 0, 0))
+                                    self.add_move(move_list, encode_move(sq, to_sq, b, 1, 0, 0, 0))
+                                    self.add_move(move_list, encode_move(sq, to_sq, n, 1, 0, 0, 0))
+                                else:
+                                    if self.board[to_sq] >= 1 and self.board[to_sq] <= 6: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                    if to_sq == self.enpassant: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == k:
                         if self.castle & castling_vals['k']:
                             if not self.board[f8] and not self.board[g8]:
@@ -543,38 +540,35 @@ class BoardState:
                 if (self.board[sq] == N) if self.side else (self.board[sq] == n):
                     for i in range(8):
                         to_sq:int = sq + knight_offsets[i]
-                        if 0 <= to_sq < BSQUARES:
+                        if not (to_sq & 0x88):
                             piece:int = self.board[to_sq]
-                            if not (to_sq & 0x88):
-                                if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
-                                    (not piece or (piece >= 1 and piece <= 6)):
-                                    if piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                    else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
+                            if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
+                                (not piece or (piece >= 1 and piece <= 6)):
+                                if piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
                 if (self.board[sq] == K) if self.side else (self.board[sq] == k):
                     for i in range(8):
                         to_sq:int = sq + king_offsets[i]
-                        if 0 <= to_sq < BSQUARES:
+                        if not (to_sq & 0x88):
                             piece:int = self.board[to_sq]
-                            if not (to_sq & 0x88):
-                                if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
-                                    (not piece or (piece >= 1 and piece <= 6)):
-                                    if piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                    else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
+                            if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
+                                (not piece or (piece >= 1 and piece <= 6)):
+                                if piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                else: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
 
                 if ((self.board[sq] == B) or (self.board[sq] == Q)) if self.side\
                     else ((self.board[sq] == b) or (self.board[sq] == q)):
                     for i in range(4):
                         to_sq:int = sq + bishop_offsets[i]
                         while not (to_sq & 0x88):
-                            if 0 <= to_sq <= 127:
-                                piece:int = self.board[to_sq]
-                                if (1 <= piece <= 6) if self.side else (7 <= piece <= 12): break
-                                if (7 <= piece <= 12) if self.side else (1 <= piece <= 6):
-                                    self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                    break
-                                if not piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
-                                to_sq += bishop_offsets[i]
+                            piece:int = self.board[to_sq]
+                            if (1 <= piece <= 6) if self.side else (7 <= piece <= 12): break
+                            if (7 <= piece <= 12) if self.side else (1 <= piece <= 6):
+                                self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                break
+                            if not piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
+                            to_sq += bishop_offsets[i]
 
 
                 if ((self.board[sq] == R) or (self.board[sq] == Q)) if self.side\
@@ -582,14 +576,13 @@ class BoardState:
                     for i in range(4):
                         to_sq:int = sq + rook_offsets[i]
                         while not (to_sq & 0x88):
-                            if 0 <= to_sq <= 127:
-                                piece:int = self.board[to_sq]
-                                if (1 <= piece <= 6) if self.side else (7 <= piece <= 12): break
-                                if (7 <= piece <= 12) if self.side else (1 <= piece <= 6):
-                                    self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
-                                    break
-                                if not piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
-                                to_sq += rook_offsets[i]
+                            piece:int = self.board[to_sq]
+                            if (1 <= piece <= 6) if self.side else (7 <= piece <= 12): break
+                            if (7 <= piece <= 12) if self.side else (1 <= piece <= 6):
+                                self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 0, 0))
+                                break
+                            if not piece: self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
+                            to_sq += rook_offsets[i]
 
 
     def perft_driver(self, depth:int) -> None:
