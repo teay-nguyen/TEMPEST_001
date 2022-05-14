@@ -21,6 +21,7 @@
 
 '''
 
+print('IMPORTING SCRIPTS...')
 import sys
 from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, BASELINE_ELO, preset_positions
 from time import perf_counter
@@ -43,7 +44,8 @@ if __name__ == '__main__':
     board.init_state(preset_positions['start_position'])
     board.print_board()
 
-    board.perft_test(5)
+    # call perft test
+    board.perft_test(4)
 
     #while 1:
     #    if not searcher._root(board, depth = 6): break

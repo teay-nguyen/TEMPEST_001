@@ -41,3 +41,4 @@ For major changes, please open an issue first to discuss what you would like to 
 - Implement fully functional Search Routine, with Transposition Tables
 - Improve pawn evaluation and overall evaluation of pieces
 - Optimize move generation
+- Migrate from copy-make to a make-undo structure

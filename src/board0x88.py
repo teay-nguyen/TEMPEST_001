@@ -20,12 +20,12 @@
 
 # imports
 from time import perf_counter
-from uuid import uuid1
 from defs import *
 
 '''
 
-    Found UUID module to be faster, this is unused for now
+    NOTE: Found UUID module to be faster, this is unused for now
+    NOTE: Algorithm taken from Stockfish Chess Engine, translated into Python
 
     RKISS is TEMPEST_001's (secondary) pseudo random number generator (PRNG) used to compute hash keys.
     George Marsaglia invented the RNG-Kiss-family in the early 90's. This is a
@@ -40,6 +40,15 @@ from defs import *
     - Thread safe (if Python removes the GIL that is)
 
 '''
+
+a8 = 0;    b8 = 1;    c8 = 2;   d8 = 3;   e8 = 4;   f8 = 5;   g8 = 6;   h8 = 7;
+a7 = 16;   b7 = 17;   c7 = 18;  d7 = 19;  e7 = 20;  f7 = 21;  g7 = 22;  h7 = 23;
+a6 = 32;   b6 = 33;   c6 = 34;  d6 = 35;  e6 = 36;  f6 = 37;  g6 = 39;  h6 = 40;
+a5 = 48;   b5 = 49;   c5 = 50;  d5 = 51;  e5 = 52;  f5 = 53;  g5 = 54;  h5 = 55;
+a4 = 64;   b4 = 65;   c4 = 66;  d4 = 67;  e4 = 68;  f4 = 69;  g4 = 70;  h4 = 71;
+a3 = 80;   b3 = 81;   c3 = 82;  d3 = 83;  e3 = 84;  f3 = 85;  g3 = 86;  h3 = 87;
+a2 = 96;   b2 = 97;   c2 = 98;  d2 = 99;  e2 = 100; f2 = 101; g2 = 102; h2 = 103;
+a1 = 112;  b1 = 113;  c1 = 114; d1 = 115; e1 = 116; f1 = 117; g1 = 118; h1 = 119; offboard = 120
 
 class RKISS:
     def __init__(self):
@@ -64,19 +73,47 @@ class RKISS:
         self.d = e + self.a
         return self.d
 
+'''
+    Method of generating random keys by BBC (BitBoard Chess) by CMK
+
+    - Given a random seed, the algorithm turns it into a random 32 bit number
+    - Does some magic bit manipulation and a random 64 bit number pops out
+'''
+
+class CMK_Rand:
+    def __init__(self):
+        self.seed = 1804289383
+
+    def rand32(self):
+        number:int = self.seed
+        number ^= number << 13
+        number ^= number >> 17
+        number ^= number << 5
+        self.seed = number
+        return number
+
+    def rand64(self):
+        n1:int = self.rand32() & 0xFFFF
+        n2:int = self.rand32() & 0xFFFF
+        n3:int = self.rand32() & 0xFFFF
+        n4:int = self.rand32() & 0xFFFF
+        return n1 | (n2 << 16) | (n3 << 32) | (n4 << 48)
+
 class Zobrist:
     def __init__(self) -> None:
+        self.secondary_generator = CMK_Rand()
         self.piecesquare: list = [[self.rand64() for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
         self.side: int = self.rand64()
         self.castling: list = [self.rand64() for _ in range(CASTLE_VAL)]
         self.ep: list = [self.rand64() for _ in range(BSQUARES)]
 
     def rand64(self) -> int:
-        return uuid1().int >> 64
+        return self.secondary_generator.rand64()
+        # return uuid1().int >> 64
 
 class MovesStruct:
     def __init__(self) -> None:
-        self.moves:list = [move_t(-1) for _ in range(GEN_STACK)]
+        self.moves:list = [move_t() for _ in range(GEN_STACK)]
         self.count:int = 0
 
 class BoardState:
@@ -86,11 +123,12 @@ class BoardState:
         self.hash_key: int = 0
         self.nodes: int = 0
         self.parsed_fen: str = ''
-        self.king_square: list = [squares['e8'], squares['e1']]
+        self.king_square: list = [e8, e1]
         self.side: int = -1
         self.xside: int = -1
         self.castle: int = 0
-        self.enpassant: int = squares['OFFBOARD']
+        self.enpassant: int = offboard
+        self.pce_pos: list = [[0 for _ in range(MAX_PCE_EACH_TYPE)] for _ in range(PIECE_TYPES)]
         self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
         self.board: list = [
             r, n, b, q, k, b, n, r,  o, o, o, o, o, o, o, o,
@@ -111,7 +149,7 @@ class BoardState:
                 piece:int = self.board[sq]
                 if piece: self.hash_key ^= self.zobrist.piecesquare[piece][sq]
 
-        if self.enpassant != squares['OFFBOARD']: self.hash_key ^= self.zobrist.ep[self.enpassant]
+        if self.enpassant != offboard: self.hash_key ^= self.zobrist.ep[self.enpassant]
         self.hash_key ^= self.zobrist.castling[self.castle]
         if not self.side: self.hash_key ^= self.zobrist.side
 
@@ -129,15 +167,16 @@ class BoardState:
                     self.board[square] = e
 
         self.fifty: int = 0
+        self.pce_pos: list = [[0 for _ in range(10)] for _ in range(PIECE_TYPES)]
         self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
         self.hash_key: int = 0
         self.nodes: int = 0
         self.parsed_fen: str = ''
-        self.king_square: list = [squares['e8'], squares['e1']]
+        self.king_square: list = [e8, e1]
         self.side: int = -1
         self.xside: int = -1
         self.castle: int = 0
-        self.enpassant: int = squares['OFFBOARD']
+        self.enpassant: int = offboard
 
     def generate_fen(self) -> str:
         fen_string: str = ''
@@ -186,6 +225,7 @@ class BoardState:
                     square:int = rank * 16 + file
                     if not (square & 0x88):
                         if 1 <= char_pieces[sym] <= 12:
+                            self.pce_pos[char_pieces[sym]][self.pce_count[char_pieces[sym]]] = square
                             self.pce_count[char_pieces[sym]] += 1
                             if sym == 'K': self.king_square[sides['white']] = square
                             elif sym == 'k': self.king_square[sides['black']] = square
@@ -215,7 +255,7 @@ class BoardState:
             file:int = ord(fen_ep[0]) - ord('a')
             rank:int = 8 - (ord(fen_ep[1]) - ord('0'))
             self.enpassant = rank * 16 + file
-        else: self.enpassant = squares['OFFBOARD']
+        else: self.enpassant = offboard
 
 
     def in_check(self, side:int) -> int:
@@ -359,33 +399,33 @@ class BoardState:
                 self.board[to_square + 16 if self.side else to_square - 16] = e
                 if self.side: self.hash_key ^= self.zobrist.piecesquare[p][to_square + 16]
                 else: self.hash_key ^= self.zobrist.piecesquare[P][to_square - 16]
-            if self.enpassant != squares['OFFBOARD']: self.hash_key ^= self.zobrist.ep[self.enpassant]
-            self.enpassant = squares['OFFBOARD']
+            if self.enpassant != offboard: self.hash_key ^= self.zobrist.ep[self.enpassant]
+            self.enpassant = offboard
             if double_push:
                 self.enpassant = to_square + 16 if self.side else to_square - 16
                 if self.side: self.hash_key ^= self.zobrist.ep[to_square + 16]
                 else: self.hash_key ^= self.zobrist.ep[to_square - 16]
             if castling:
-                if to_square == squares['g1']:
-                    self.board[squares['f1']] = self.board[squares['h1']]
-                    self.board[squares['h1']] = e
-                    self.hash_key ^= self.zobrist.piecesquare[R][squares['h1']]
-                    self.hash_key ^= self.zobrist.piecesquare[R][squares['f1']]
-                elif to_square == squares['c1']:
-                    self.board[squares['d1']] = self.board[squares['a1']]
-                    self.board[squares['a1']] = e
-                    self.hash_key ^= self.zobrist.piecesquare[R][squares['a1']]
-                    self.hash_key ^= self.zobrist.piecesquare[R][squares['d1']]
-                elif to_square == squares['g8']:
-                    self.board[squares['f8']] = self.board[squares['h8']]
-                    self.board[squares['h8']] = e
-                    self.hash_key ^= self.zobrist.piecesquare[r][squares['h8']]
-                    self.hash_key ^= self.zobrist.piecesquare[r][squares['f8']]
-                elif to_square == squares['c8']:
-                    self.board[squares['d8']] = self.board[squares['a8']]
-                    self.board[squares['a8']] = e
-                    self.hash_key ^= self.zobrist.piecesquare[r][squares['a8']]
-                    self.hash_key ^= self.zobrist.piecesquare[r][squares['d1']]
+                if to_square == g1:
+                    self.board[f1] = self.board[h1]
+                    self.board[h1] = e
+                    self.hash_key ^= self.zobrist.piecesquare[R][h1]
+                    self.hash_key ^= self.zobrist.piecesquare[R][f1]
+                elif to_square == c1:
+                    self.board[d1] = self.board[a1]
+                    self.board[a1] = e
+                    self.hash_key ^= self.zobrist.piecesquare[R][a1]
+                    self.hash_key ^= self.zobrist.piecesquare[R][d1]
+                elif to_square == g8:
+                    self.board[f8] = self.board[h8]
+                    self.board[h8] = e
+                    self.hash_key ^= self.zobrist.piecesquare[r][h8]
+                    self.hash_key ^= self.zobrist.piecesquare[r][f8]
+                elif to_square == c8:
+                    self.board[d8] = self.board[a8]
+                    self.board[a8] = e
+                    self.hash_key ^= self.zobrist.piecesquare[r][a8]
+                    self.hash_key ^= self.zobrist.piecesquare[r][d8]
 
             # update king square
             if self.board[to_square] == K or self.board[to_square] == k: self.king_square[self.side] = to_square
@@ -431,21 +471,21 @@ class BoardState:
                     if self.board[sq] == P:
                         to_sq:int = sq - 16
                         if not (to_sq & 0x88) and not self.board[to_sq]:
-                            if sq >= squares['a7'] and sq <= squares['h7']:
+                            if sq >= a7 and sq <= h7:
                                 self.add_move(move_list, encode_move(sq, to_sq, Q, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, R, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, B, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, N, 0, 0, 0, 0))
                             else:
                                 self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
-                                if sq >= squares['a2'] and sq <= squares['h2'] and not self.board[sq - 32]:
+                                if sq >= a2 and sq <= h2 and not self.board[sq - 32]:
                                     self.add_move(move_list, encode_move(sq, sq - 32, 0, 0, 1, 0, 0))
                         for i in range(4):
                             pawn_offset:int = bishop_offsets[i]
                             if pawn_offset < 0:
                                 to_sq:int = sq + pawn_offset
                                 if not (to_sq & 0x88):
-                                    if (sq >= squares['a7'] and sq <= squares['h7']) and\
+                                    if (sq >= a7 and sq <= h7) and\
                                         (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
                                         self.add_move(move_list, encode_move(sq, to_sq, Q, 1, 0, 0, 0))
                                         self.add_move(move_list, encode_move(sq, to_sq, R, 1, 0, 0, 0))
@@ -456,32 +496,32 @@ class BoardState:
                                         if to_sq == self.enpassant: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == K:
                         if self.castle & castling_vals['K']:
-                            if not self.board[squares['f1']] and not self.board[squares['g1']]:
-                                if not self.is_square_attacked(squares['e1'], sides['black']) and not self.is_square_attacked(squares['f1'], sides['black']):
-                                    self.add_move(move_list, encode_move(squares['e1'], squares['g1'], 0, 0, 0, 0, 1))
+                            if not self.board[f1] and not self.board[g1]:
+                                if not self.is_square_attacked(e1, sides['black']) and not self.is_square_attacked(f1, sides['black']):
+                                    self.add_move(move_list, encode_move(e1, g1, 0, 0, 0, 0, 1))
                         if self.castle & castling_vals['Q']:
-                            if not self.board[squares['d1']] and not self.board[squares['b1']] and not self.board[squares['c1']]:
-                                if not self.is_square_attacked(squares['e1'], sides['black']) and not self.is_square_attacked(squares['d1'], sides['black']):
-                                    self.add_move(move_list, encode_move(squares['e1'], squares['c1'], 0, 0, 0, 0, 1))
+                            if not self.board[d1] and not self.board[b1] and not self.board[c1]:
+                                if not self.is_square_attacked(e1, sides['black']) and not self.is_square_attacked(d1, sides['black']):
+                                    self.add_move(move_list, encode_move(e1, c1, 0, 0, 0, 0, 1))
                 else:
                     if self.board[sq] == p:
                         to_sq:int = sq + 16
                         if not (to_sq & 0x88) and not self.board[to_sq]:
-                            if sq >= squares['a2'] and sq <= squares['h2']:
+                            if sq >= a2 and sq <= h2:
                                 self.add_move(move_list, encode_move(sq, to_sq, q, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, r, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, b, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, n, 0, 0, 0, 0))
                             else:
                                 self.add_move(move_list, encode_move(sq, to_sq, 0, 0, 0, 0, 0))
-                                if sq >= squares['a7'] and sq <= squares['h7'] and not self.board[sq + 32]:
+                                if sq >= a7 and sq <= h7 and not self.board[sq + 32]:
                                     self.add_move(move_list, encode_move(sq, sq + 32, 0, 0, 1, 0, 0))
                         for i in range(4):
                             pawn_offset:int = bishop_offsets[i]
                             if pawn_offset > 0:
                                 to_sq = sq + pawn_offset
                                 if not (to_sq & 0x88):
-                                    if (sq >= squares['a2'] and sq <= squares['h2']) and\
+                                    if (sq >= a2 and sq <= h2) and\
                                         (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
                                         self.add_move(move_list, encode_move(sq, to_sq, q, 1, 0, 0, 0))
                                         self.add_move(move_list, encode_move(sq, to_sq, r, 1, 0, 0, 0))
@@ -492,13 +532,13 @@ class BoardState:
                                         if to_sq == self.enpassant: self.add_move(move_list, encode_move(sq, to_sq, 0, 1, 0, 1, 0))
                     if self.board[sq] == k:
                         if self.castle & castling_vals['k']:
-                            if not self.board[squares['f8']] and not self.board[squares['g8']]:
-                                if not self.is_square_attacked(squares['e8'], sides['white']) and not self.is_square_attacked(squares['f8'], sides['white']):
-                                    self.add_move(move_list, encode_move(squares['e8'], squares['g8'], 0, 0, 0, 0, 1))
+                            if not self.board[f8] and not self.board[g8]:
+                                if not self.is_square_attacked(e8, sides['white']) and not self.is_square_attacked(f8, sides['white']):
+                                    self.add_move(move_list, encode_move(e8, g8, 0, 0, 0, 0, 1))
                         if self.castle & castling_vals['q']:
-                            if not self.board[squares['d8']] and not self.board[squares['b8']] and not self.board[squares['c8']]:
-                                if not self.is_square_attacked(squares['e8'], sides['white']) and not self.is_square_attacked(squares['d8'], sides['white']):
-                                    self.add_move(move_list, encode_move(squares['e8'], squares['c8'], 0, 0, 0, 0, 1))
+                            if not self.board[d8] and not self.board[b8] and not self.board[c8]:
+                                if not self.is_square_attacked(e8, sides['white']) and not self.is_square_attacked(d8, sides['white']):
+                                    self.add_move(move_list, encode_move(e8, c8, 0, 0, 0, 0, 1))
 
                 if (self.board[sq] == N) if self.side else (self.board[sq] == n):
                     for i in range(8):
@@ -670,9 +710,10 @@ class BoardState:
                 'q' if (self.castle & castling_vals['q']) else '-',
                 self.castle,
             ))
-        if self.enpassant != squares['OFFBOARD']: print(f'  [ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]} | {self.enpassant}')
+        if self.enpassant != offboard: print(f'  [ENPASSANT TARGET SQUARE]: {square_to_coords[self.enpassant]} | {self.enpassant}')
         else: print(f'  [ENPASSANT TARGET SQUARE]: NONE | {self.enpassant}')
         print(f'  [KING SQUARE]: {square_to_coords[self.king_square[self.side]]} | {self.king_square[self.side]}')
+        print(f'  [PIECE LIST]: {self.pce_pos}')
         print(f'  [PIECE COUNT]: {self.pce_count}')
         print(f'  [PARSED FEN]: {self.parsed_fen}')
 

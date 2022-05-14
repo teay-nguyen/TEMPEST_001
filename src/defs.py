@@ -30,6 +30,7 @@ GEN_STACK: int = 0x100 # max number of moves in 1 position
 PIECE_TYPES: int = 0xD # number of piece types: from empty to black king
 CASTLE_VAL: int = 0x10 # max castle value
 IDS: int = 0x2
+MAX_PCE_EACH_TYPE: int = 10
 
 # capture flags (just give em random number)
 ALL_MOVES: int = 0x1
@@ -37,8 +38,8 @@ CAPTURE_MOVES: int = 0x2
 
 # state storing
 class move_t:
-    def __init__(self, move_):
-        self.move:int = move_
+    def __init__(self):
+        self.move:int = -1
         self.score:int = 0
 
 # mapping values to match coordinates or into strings
