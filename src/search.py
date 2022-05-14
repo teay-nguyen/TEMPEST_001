@@ -246,13 +246,14 @@ class _standard():
         assert depth >= 0
         assert beta > alpha
 
+        self.nodes += 1
+
         legal_:int = 0
         pv_node:int = beta - alpha > 1
         hash_flag:int = HASH_ALPHA
         b_search_pv:int = 1
         if self.ply and pos.fifty >= 100: return 0
         if depth <= 0: return self._quiesce(alpha, beta, pos)
-        self.nodes += 1
 
         if not (self.nodes & 1023):
             self._checkup()

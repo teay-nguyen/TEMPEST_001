@@ -21,15 +21,20 @@
 
 '''
 
+# notify that it is importing scripts
 print('IMPORTING SCRIPTS...')
+
+# imports
 import sys
 from defs import NAME, ENGINE_VERSION, ENGINE_STATUS, BASELINE_ELO, preset_positions
 from time import perf_counter
 import board0x88
 import search
 
+# convert seconds to ms
 get_time_ms = lambda i : round(i * 1000)
 
+# main driver
 if __name__ == '__main__':
     # init start time
     start_time:float = perf_counter()
@@ -41,11 +46,11 @@ if __name__ == '__main__':
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state(preset_positions['tricky_position'])
+    board.init_state(preset_positions['start_position'])
     board.print_board()
 
     # call perft test
-    board.perft_test(depth=4)
+    board.perft_test(depth=5)
 
     #while 1:
     #    if not searcher._root(board, depth = 6): break

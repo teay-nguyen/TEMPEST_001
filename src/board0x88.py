@@ -63,7 +63,7 @@ class RKISS:
     def raninit(self) -> None:
         self.a = 0xf1ea5eed
         self.b = self.c = self.d = 0xd4e12c77
-        for _ in range(73): self.rand64()
+        for _ in range(20): self.rand64()
 
     def rand64(self) -> int:
         e = self.a - self.rotate(self.b, 7)
@@ -259,7 +259,7 @@ class BoardState:
 
 
     def in_check(self, side:int) -> int:
-        return self.is_square_attacked(self.king_square[side], side ^ 1)
+        return self.sq_attacked_optimized(self.king_square[side], side ^ 1)
 
     def is_square_attacked(self, square:int, oppside:int) -> int:
         # pawn attacks
@@ -273,38 +273,34 @@ class BoardState:
         # knight attacks
         for i in range(8):
             target_sq:int = square + knight_offsets[i]
-            if 0 <= target_sq <= 127:
+            if not (target_sq & 0x88):
                 target_piece:int = self.board[target_sq]
-                if not (target_sq & 0x88):
-                    if (target_piece == N) if oppside else (target_piece == n): return 1
+                if (target_piece == N) if oppside else (target_piece == n): return 1
 
         # king attacks
         for i in range(8):
             target_sq:int = square + king_offsets[i]
-            if 0 <= target_sq <= 127:
+            if not (target_sq & 0x88):
                 target_piece:int = self.board[target_sq]
-                if not (target_sq & 0x88):
-                    if (target_piece == K) if oppside else (target_piece == k): return 1
+                if (target_piece == K) if oppside else (target_piece == k): return 1
 
         # bishop attacks
         for i in range(4):
             target_sq:int = square + bishop_offsets[i]
             while not (target_sq & 0x88):
-                if 0 <= target_sq <= 127:
-                    target_piece:int = self.board[target_sq]
-                    if (target_piece == B or target_piece == Q) if oppside else (target_piece == b or target_piece == q): return 1
-                    if target_piece: break
-                    target_sq += bishop_offsets[i]
+                target_piece:int = self.board[target_sq]
+                if (target_piece == B or target_piece == Q) if oppside else (target_piece == b or target_piece == q): return 1
+                if target_piece: break
+                target_sq += bishop_offsets[i]
 
         # rook attacks
         for i in range(4):
             target_sq:int = square + rook_offsets[i]
             while not (target_sq & 0x88):
-                if 0 <= target_sq <= 127:
-                    target_piece:int = self.board[target_sq]
-                    if (target_piece == R or target_piece == Q) if oppside else (target_piece == r or target_piece == q): return 1
-                    if target_piece: break
-                    target_sq += rook_offsets[i]
+                target_piece:int = self.board[target_sq]
+                if (target_piece == R or target_piece == Q) if oppside else (target_piece == r or target_piece == q): return 1
+                if target_piece: break
+                target_sq += rook_offsets[i]
         return 0
 
     def sq_attacked_optimized(self, sq:int, oppside:int) -> int:
@@ -339,10 +335,9 @@ class BoardState:
 
         for i in range(8):
             target_sq:int = sq + knight_offsets[i]
-            if 0 <= target_sq <= 127:
+            if not (target_sq & 0x88):
                 target_piece:int = self.board[target_sq]
-                if not (target_sq & 0x88):
-                    if (target_piece == N) if oppside else (target_piece == n): return 1
+                if (target_piece == N) if oppside else (target_piece == n): return 1
         return 0
 
     def make_move(self, move:int, capture_flag:int) -> int: # bound to return a int, in replacement for bool
@@ -495,11 +490,11 @@ class BoardState:
                     if self.board[sq] == K:
                         if self.castle & castling_vals['K']:
                             if not self.board[f1] and not self.board[g1]:
-                                if not self.is_square_attacked(e1, sides['black']) and not self.is_square_attacked(f1, sides['black']):
+                                if not self.sq_attacked_optimized(e1, sides['black']) and not self.sq_attacked_optimized(f1, sides['black']):
                                     self.add_move(move_list, encode_move(e1, g1, 0, 0, 0, 0, 1))
                         if self.castle & castling_vals['Q']:
                             if not self.board[d1] and not self.board[b1] and not self.board[c1]:
-                                if not self.is_square_attacked(e1, sides['black']) and not self.is_square_attacked(d1, sides['black']):
+                                if not self.sq_attacked_optimized(e1, sides['black']) and not self.sq_attacked_optimized(d1, sides['black']):
                                     self.add_move(move_list, encode_move(e1, c1, 0, 0, 0, 0, 1))
                 else:
                     if self.board[sq] == p:
@@ -530,11 +525,11 @@ class BoardState:
                     if self.board[sq] == k:
                         if self.castle & castling_vals['k']:
                             if not self.board[f8] and not self.board[g8]:
-                                if not self.is_square_attacked(e8, sides['white']) and not self.is_square_attacked(f8, sides['white']):
+                                if not self.sq_attacked_optimized(e8, sides['white']) and not self.sq_attacked_optimized(f8, sides['white']):
                                     self.add_move(move_list, encode_move(e8, g8, 0, 0, 0, 0, 1))
                         if self.castle & castling_vals['q']:
                             if not self.board[d8] and not self.board[b8] and not self.board[c8]:
-                                if not self.is_square_attacked(e8, sides['white']) and not self.is_square_attacked(d8, sides['white']):
+                                if not self.sq_attacked_optimized(e8, sides['white']) and not self.sq_attacked_optimized(d8, sides['white']):
                                     self.add_move(move_list, encode_move(e8, c8, 0, 0, 0, 0, 1))
 
                 if (self.board[sq] == N) if self.side else (self.board[sq] == n):
