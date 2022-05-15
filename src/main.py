@@ -23,3 +23,10 @@
 
 # notify that it is importing scripts
 print('IMPORTING SCRIPTS...')
+
+# imports
+from uci import uci_prompt
+
+# main driver
+if __name__ == '__main__':
+    uci_prompt()

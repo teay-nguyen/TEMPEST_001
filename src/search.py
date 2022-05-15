@@ -274,6 +274,11 @@ class _standard():
         in_check:int = pos.in_check(pos.side)
         if in_check: depth += 1
 
+        static_eval:int = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
+        if depth < 3 and not pv_node and not in_check and abs(beta - 1) > NEG_INF + 100:
+            eval_margin:int = 120 * depth
+            if static_eval - eval_margin >= beta: return static_eval - eval_margin
+
         if depth >= 3 and (not in_check) and self.ply:
             board_cpy:list = [_ for _ in pos.board]
             side_cpy:int = pos.side
