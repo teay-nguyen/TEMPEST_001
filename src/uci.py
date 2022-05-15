@@ -19,6 +19,7 @@
 '''
 
 # imports
+import __future__
 import search
 import board0x88
 import evaluation
@@ -58,10 +59,7 @@ def uci_prompt():
         try: _input:str = input()
         except: exit()
         if _input == '': continue
-        if _input == 'uci':
-            print('id name TEMPEST_001')
-            print('id author Terry Nguyen')
-            print('uciok')
+        if _input == 'uci': print('id name TEMPEST_001'); print('id author Terry Nguyen'); print('uciok');
         elif _input == 'isready': print('readyok'); continue
         elif _input == 'ucinewgame': board.init_state(preset_positions['start_position'])
         elif _input[:23] == 'position startpos moves':
@@ -77,4 +75,5 @@ def uci_prompt():
         elif _input[:8] == 'go depth': search_depth:int = int(_input[9:]); searcher._root(board, depth=search_depth)
         elif _input == 'go': searcher._root(board, depth=6)
         elif _input == 'd': board.print_board()
+        elif _input == 'eval': board.print_board(); print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key, board.fifty)}')
         elif _input == 'quit': break
