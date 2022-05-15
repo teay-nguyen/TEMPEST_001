@@ -38,6 +38,11 @@ MAX_FILES: int = 16
 ALL_MOVES: int = 0x85F4
 CAPTURE_MOVES: int = 0x760B
 
+# search
+FULL_DEPTH_MOVES:int = 4
+REDUCTION_LIMIT:int = 3
+R_LIMIT:int = 2
+
 # state storing
 class move_t:
     def __init__(self):

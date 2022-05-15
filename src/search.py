@@ -20,8 +20,9 @@
 
 # imports
 from defs import IDS, BSQUARES, PIECE_TYPES, get_move_source,\
-                get_move_target, get_move_capture, ALL_MOVES,\
-                CAPTURE_MOVES, print_move, squares, K, k
+                get_move_target, get_move_capture, get_move_promoted, ALL_MOVES,\
+                CAPTURE_MOVES, print_move, squares, K, k, FULL_DEPTH_MOVES, REDUCTION_LIMIT,\
+                R_LIMIT
 
 from board0x88 import MovesStruct
 from evaluation import evaluate
@@ -53,7 +54,7 @@ NEG_INF:int = int(-1e8)
 MATE_VAL:int = 50000
 MAX_PLY:int = 64
 OPTIMAL_DEPTH:int = 5
-TIME_LIMIT_FOR_SEARCH:int = 25
+TIME_LIMIT_FOR_SEARCH:int = 30
 
 tt = Transposition()
 tt.tt_setsize(0xCCCCC)
@@ -247,12 +248,14 @@ class _standard():
         assert beta > alpha
 
         self.nodes += 1
+        self.pv_length[self.ply] = self.ply
 
         legal_:int = 0
         pv_node:int = beta - alpha > 1
         hash_flag:int = HASH_ALPHA
-        b_search_pv:int = 1
         if self.ply and pos.fifty >= 100: return 0
+        score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
+        if self.ply and score != NO_HASH_ENTRY and not pv_node: self.tb_hits += 1; return score
         if depth <= 0: return self._quiesce(alpha, beta, pos)
 
         if not (self.nodes & 2047):
@@ -267,12 +270,6 @@ class _standard():
             beta = min(beta, MATE_VAL - self.ply)
             if alpha >= beta: return alpha
 
-        score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
-        if self.ply and score != NO_HASH_ENTRY and not pv_node:
-            self.tb_hits += 1
-            return score
-
-        self.pv_length[self.ply] = self.ply
         in_check:int = pos.in_check(pos.side)
         if in_check: depth += 1
 
@@ -281,7 +278,7 @@ class _standard():
             eval_margin:int = 120 * depth
             if static_eval - eval_margin >= beta: return static_eval - eval_margin
 
-        if depth >= 3 and (not in_check) and self.ply:
+        if depth >= 3 and not in_check and self.ply:
             board_cpy:list = [_ for _ in pos.board]
             side_cpy:int = pos.side
             xside_cpy:int = pos.xside
@@ -303,7 +300,7 @@ class _standard():
             pos.xside ^= 1
             pos.hash_key ^= pos.zobrist.side
 
-            score:int = -self._alphabeta(-beta, -beta + 1, depth - 3, pos)
+            score:int = -self._alphabeta(-beta, -beta + 1, depth - 1 - R_LIMIT, pos)
 
             self.ply -= 1
 
@@ -333,6 +330,7 @@ class _standard():
                     new_score:int = self._quiesce(alpha, beta, pos)
                     if new_score < beta: return new_score if new_score > score else score
 
+        moves_searched:int = 0
         move_list:MovesStruct = MovesStruct()
         pos.gen_moves(move_list)
         self._sort(pos.board, move_list)
@@ -357,11 +355,19 @@ class _standard():
 
             legal_ = 1
 
-            if b_search_pv:
-                score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
+            if not moves_searched: score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
             else:
-                score = -self._alphabeta(-alpha-1, -alpha, depth - 1, pos)
-                if alpha < score < beta: score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
+                if  (
+                    moves_searched >= FULL_DEPTH_MOVES and\
+                    depth >= REDUCTION_LIMIT and\
+                    not in_check and\
+                    not get_move_capture(move_list.moves[c].move) and\
+                    not get_move_promoted(move_list.moves[c].move)
+                    ): score:int = -self._alphabeta(-alpha - 1, -alpha, depth - 2, pos)
+                score:int = alpha + 1
+                if score > alpha:
+                    score:int = -self._alphabeta(-alpha - 1, -alpha, depth - 1, pos)
+                    if alpha < score < beta: score:int = -self._alphabeta(-beta, -alpha, depth - 1, pos)
 
             pos.board = [_ for _ in board_cpy]
             pos.side = side_cpy
@@ -377,6 +383,7 @@ class _standard():
             self.ply -= 1
 
             if self.timing_util['abort']: return 0
+            moves_searched += 1
 
             if score > alpha:
                 hash_flag = HASH_EXACT
