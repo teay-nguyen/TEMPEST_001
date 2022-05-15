@@ -119,13 +119,12 @@ class _standard():
 
     def _score(self, board:list, move:int) -> int:
         if self.pv_table[0][self.ply] == move: return 20000
-        score:int = 0
-        if get_move_capture(move): score = 10000 + mvv_lva[board[get_move_source(move)]][board[get_move_target(move)]]
+        if get_move_capture(move): return 10000 + mvv_lva[board[get_move_source(move)]][board[get_move_target(move)]]
         else:
             if self.killer_moves[0][self.ply] == move: return 9000
             elif self.killer_moves[1][self.ply] == move: return 8000
             else: return self.history_moves[board[get_move_source(move)]][get_move_target(move)] + 7000
-        return score
+        return 0
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
@@ -180,7 +179,7 @@ class _standard():
         assert beta > alpha
         self.nodes += 1
 
-        if not (self.nodes & 1023):
+        if not (self.nodes & 2047):
             self._checkup()
             if self.timing_util['abort']: return 0
 
@@ -254,7 +253,7 @@ class _standard():
         if self.ply and pos.fifty >= 100: return 0
         if depth <= 0: return self._quiesce(alpha, beta, pos)
 
-        if not (self.nodes & 1023):
+        if not (self.nodes & 2047):
             self._checkup()
             if self.timing_util['abort']: return 0
 
