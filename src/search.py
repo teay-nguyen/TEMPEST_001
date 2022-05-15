@@ -124,7 +124,7 @@ class _standard():
             if self.killer_moves[0][self.ply] == move: return 9000
             elif self.killer_moves[1][self.ply] == move: return 8000
             else: return self.history_moves[board[get_move_source(move)]][get_move_target(move)] + 7000
-        return 0
+        return 0 # unreachable
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
@@ -146,7 +146,7 @@ class _standard():
         beta:int = POS_INF
         absolute_draw:int = 1
 
-        print()
+        print('', end='\n')
         for c_d in range(1, self._search_depth_from_input + 1):
             score:int = self._alphabeta(alpha, beta, c_d, pos)
             elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
@@ -158,7 +158,7 @@ class _standard():
                 if score <= -MATE_VAL: self.enabled = 0; print('     IS MATED! | GAMEOVER!\n', end=''); break
                 elif score <= -MATE_VAL + MAX_PLY: print('     GETTING MATED!\n', end=''); break
                 elif score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!\n', end=''); break
-                else: print()
+                else: print('', end='\n')
                 for _v in range(len(pos.pce_count)):
                     if not _v or _v == K or _v == k: continue
                     if pos.pce_count[_v]: absolute_draw = 0
@@ -207,6 +207,7 @@ class _standard():
             pce_count_cpy:list = [_ for _ in pos.pce_count]
             hashkey_cpy:int = pos.hash_key
             fifty_cpy:int = pos.fifty
+            reps_cpy:list = [_ for _ in pos.reps]
 
             self.ply += 1
 
@@ -225,6 +226,7 @@ class _standard():
             pos.pce_count = [_ for _ in pce_count_cpy]
             pos.hash_key = hashkey_cpy
             pos.fifty = fifty_cpy
+            pos.reps = [_ for _ in reps_cpy]
 
             self.ply -= 1
 
@@ -289,6 +291,7 @@ class _standard():
             pce_count_cpy:list = [_ for _ in pos.pce_count]
             hashkey_cpy:int = pos.hash_key
             fifty_cpy:int = pos.fifty
+            reps_cpy:list = [_ for _ in pos.reps]
 
             self.ply += 1
 
@@ -312,6 +315,7 @@ class _standard():
             pos.pce_count = [_ for _ in pce_count_cpy]
             pos.hash_key = hashkey_cpy
             pos.fifty = fifty_cpy
+            pos.reps = [_ for _ in reps_cpy]
 
             if self.timing_util['abort']: return 0
             if score >= beta and abs(score) < MATE_VAL: return beta
@@ -330,6 +334,7 @@ class _standard():
             pce_count_cpy:list = [_ for _ in pos.pce_count]
             hashkey_cpy:int = pos.hash_key
             fifty_cpy:int = pos.fifty
+            reps_cpy:list = [_ for _ in pos.reps]
 
             self.ply += 1
 
@@ -354,6 +359,7 @@ class _standard():
             pos.pce_count = [_ for _ in pce_count_cpy]
             pos.hash_key = hashkey_cpy
             pos.fifty = fifty_cpy
+            pos.reps = [_ for _ in reps_cpy]
 
             self.ply -= 1
 
