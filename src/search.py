@@ -294,6 +294,7 @@ class _standard():
             reps_cpy:list = [_ for _ in pos.reps]
 
             self.ply += 1
+            pos.reps.append(pos.hash_key)
 
             if pos.enpassant != squares['OFFBOARD']: pos.hash_key ^= pos.zobrist.ep[pos.enpassant]
             pos.enpassant = squares['OFFBOARD']
