@@ -31,10 +31,12 @@ PIECE_TYPES: int = 0xD # number of piece types: from empty to black king
 CASTLE_VAL: int = 0x10 # max castle value
 IDS: int = 0x2
 MAX_PCE_EACH_TYPE: int = 10
+MAX_RANKS: int = 8
+MAX_FILES: int = 16
 
 # capture flags (just give em random number)
-ALL_MOVES: int = 0x1
-CAPTURE_MOVES: int = 0x2
+ALL_MOVES: int = 0x85F4
+CAPTURE_MOVES: int = 0x760B
 
 # state storing
 class move_t:
@@ -67,7 +69,7 @@ square_to_coords: tuple = (
 )
 
 # piece encoding
-e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0x00, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD
+e, P, N, B, R, Q, K, p, n, b, r, q, k, o = 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD
 ascii_pieces: str = ".PNBRQKpnbrqko"
 unicode_pieces: str = ".♙♘♗♖♕♔♙♞♝♜♛♚" # only used with CPython
 

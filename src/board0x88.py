@@ -109,7 +109,6 @@ class Zobrist:
 
     def rand64(self) -> int:
         return self.secondary_generator.rand64()
-        # return uuid1().int >> 64
 
 class MovesStruct:
     def __init__(self) -> None:
@@ -129,7 +128,8 @@ class BoardState:
         self.castle: int = 0
         self.enpassant: int = offboard
         self.pce_pos: list = [[0 for _ in range(MAX_PCE_EACH_TYPE)] for _ in range(PIECE_TYPES)]
-        self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
+        self.pce_count: list = [0,]*PIECE_TYPES
+        self.reps: list = []
         self.board: list = [
             r, n, b, q, k, b, n, r,  o, o, o, o, o, o, o, o,
             p, p, p, p, p, p, p, p,  o, o, o, o, o, o, o, o,
@@ -160,9 +160,9 @@ class BoardState:
 
     def clear_board(self) -> None:
         # sweep the surface clean
-        for rank in range(8):
-            for file in range(16):
-                square:int = rank * 16 + file
+        for rank in range(MAX_RANKS):
+            for file in range(MAX_FILES):
+                square:int = rank * MAX_FILES + file
                 if not (square & 0x88):
                     self.board[square] = e
 
@@ -177,25 +177,22 @@ class BoardState:
         self.xside: int = -1
         self.castle: int = 0
         self.enpassant: int = offboard
+        self.reps: list = []
 
     def generate_fen(self) -> str:
         fen_string: str = ''
         empty: int = 0
 
         # filling up the string with pieces
-        for r in range(8):
-            for f in range(16):
-                sq = r * 16 + f
+        for r in range(MAX_RANKS):
+            for f in range(MAX_FILES):
+                sq = r * MAX_FILES + f
                 if not (sq & 0x88):
                     if self.board[sq] == e: empty += 1
-                    elif 1 <= self.board[sq] <= 12:
-                        if empty:
-                            fen_string = f'{fen_string}{empty}'
-                            empty = 0
+                    elif P <= self.board[sq] <= k:
+                        if empty: fen_string = f'{fen_string}{empty}'; empty = 0
                         fen_string = f'{fen_string}{int_pieces[self.board[sq]]}'
-            if empty:
-                fen_string = f'{fen_string}{empty}'
-                empty = 0
+            if empty: fen_string = f'{fen_string}{empty}'; empty = 0
             fen_string = f'{fen_string}/'
         fen_string = fen_string[:-1]
         if self.side: fen_string = f'{fen_string} w '
@@ -222,9 +219,9 @@ class BoardState:
                     file += int(sym)
                 else:
                     assert (ord('a') <= ord(sym) <= ord('z')) or (ord('A') <= ord(sym) <= ord('Z')) # unorthodoxed method to check FEN string but it works
-                    square:int = rank * 16 + file
+                    square:int = rank * MAX_FILES + file
                     if not (square & 0x88):
-                        if 1 <= char_pieces[sym] <= 12:
+                        if P <= char_pieces[sym] <= k:
                             self.pce_pos[char_pieces[sym]][self.pce_count[char_pieces[sym]]] = square
                             self.pce_count[char_pieces[sym]] += 1
                             if sym == 'K': self.king_square[sides['white']] = square
@@ -233,17 +230,19 @@ class BoardState:
                         file += 1
 
         # choose which side goes first
-        if fen_segments[1] == 'w':
+        side_segment:str = fen_segments[1]
+        if side_segment == 'w':
             self.side = sides['white']
             self.xside = sides['black']
-        elif fen_segments[1] == 'b':
+        elif side_segment == 'b':
             self.side = sides['black']
             self.xside = sides['white']
         else: self.side = -1; self.xside = -1
 
         # castle rights parsing
-        if fen_segments[2] != '-':
-            for sym in fen_segments[2]:
+        castling_segment:str = fen_segments[2]
+        if castling_segment != '-':
+            for sym in castling_segment:
                 if sym == 'K': self.castle |= castling_vals['K']
                 elif sym == 'Q': self.castle |= castling_vals['Q']
                 elif sym == 'k': self.castle |= castling_vals['k']
@@ -254,7 +253,7 @@ class BoardState:
         if fen_ep != '-':
             file:int = ord(fen_ep[0]) - ord('a')
             rank:int = 8 - (ord(fen_ep[1]) - ord('0'))
-            self.enpassant = rank * 16 + file
+            self.enpassant = rank * MAX_FILES + file
         else: self.enpassant = offboard
 
 
@@ -340,7 +339,7 @@ class BoardState:
                 if (target_piece == N) if oppside else (target_piece == n): return 1
         return 0
 
-    def make_move(self, move:int, capture_flag:int) -> int: # bound to return a int, in replacement for bool
+    def make_move(self, move:int, capture_flag:int, searching:int = 0) -> int: # bound to return a int, in replacement for bool
 
         # filter out the None moves
         if move == -1: return 0 # illegal anyway because this is not a valid move on the board
@@ -357,6 +356,7 @@ class BoardState:
             pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
             fifty_cpy:int = self.fifty
+            reps_cpy:list = [_ for _ in self.reps]
 
             # get move source and the square it moves to
             from_square:int = get_move_source(move)
@@ -436,6 +436,11 @@ class BoardState:
             self.xside ^= 1
             self.hash_key ^= self.zobrist.side
 
+            # update repetition table
+            if not searching:
+                if piece_moved == P or piece_moved == p or captured_piece: self.reps:list = []; self.fifty = 0
+                else: self.reps.append(self.hash_key)
+
             # take back move if king is under attack
             if self.in_check(self.xside):
                 self.board = [_ for _ in board_cpy]
@@ -447,10 +452,11 @@ class BoardState:
                 self.pce_count = [_ for _ in pce_count_cpy]
                 self.hash_key = hashkey_cpy
                 self.fifty = fifty_cpy
+                self.reps = [_ for _ in reps_cpy]
                 return 0 # illegal
             else: return 1 # legal
         elif capture_flag == CAPTURE_MOVES:
-            if get_move_capture(move): self.make_move(move, ALL_MOVES)
+            if get_move_capture(move): self.make_move(move, ALL_MOVES, searching=searching)
             else: return 0 # move is not a capture
         return 0 # returns 0 if flag is not equal to either set flags
 
@@ -605,6 +611,7 @@ class BoardState:
             pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
             fifty_cpy:int = self.fifty
+            reps_cpy:list = [_ for _ in self.reps]
 
             # filter out the illegal moves
             if not self.make_move(move_list.moves[mv_count].move, ALL_MOVES): continue
@@ -622,6 +629,7 @@ class BoardState:
             self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
             self.fifty = fifty_cpy
+            self.reps = [_ for _ in reps_cpy]
 
     def perft_test(self, depth:int = 1) -> None:
         print('\n  [PERFT TEST GENERATING MOVES]\n')
@@ -646,6 +654,7 @@ class BoardState:
             pce_count_cpy:list = [_ for _ in self.pce_count]
             hashkey_cpy:int = self.hash_key
             fifty_cpy:int = self.fifty
+            reps_cpy:list = [_ for _ in self.reps]
 
             if not self.make_move(move_list.moves[mv_count].move, ALL_MOVES): continue
 
@@ -668,6 +677,7 @@ class BoardState:
             self.pce_count = [_ for _ in pce_count_cpy]
             self.hash_key = hashkey_cpy
             self.fifty = fifty_cpy
+            self.reps = [_ for _ in reps_cpy]
 
             if get_move_promoted(move_list.moves[mv_count].move): print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}{promoted_pieces[get_move_promoted(move_list.moves[mv_count].move)]}: {old_nodes}')
             else: print(f'  {square_to_coords[get_move_source(move_list.moves[mv_count].move)]}{square_to_coords[get_move_target(move_list.moves[mv_count].move)]}: {old_nodes}')
@@ -680,14 +690,12 @@ class BoardState:
 
     def print_board(self) -> None:
         print('\n----------------------------------\n')
-        for rank in range(8):
-            for file in range(16):
-                square:int = rank * 16 + file
-                if file == 0:
-                    print('     ', 8 - rank, end='  ')
-                if not (square & 0x88):
-                    print(ascii_pieces[self.board[square]], end=' ')
-            print()
+        for rank in range(MAX_RANKS):
+            for file in range(MAX_FILES):
+                square:int = rank * MAX_FILES + file
+                if not file: print('     ', 8 - rank, end='  ')
+                if not (square & 0x88): print(ascii_pieces[self.board[square]], end=' ')
+            print('', end='\n')
         print('\n         a b c d e f g h\n')
         print('----------------------------------\n')
         print(f'  [SIDE TO MOVE]: {"white" if self.side else "black"} | {self.side}')
@@ -703,6 +711,7 @@ class BoardState:
         print(f'  [KING SQUARE]: {square_to_coords[self.king_square[self.side]]} | {self.king_square[self.side]}')
         print(f'  [PIECE LIST]: {self.pce_pos}')
         print(f'  [PIECE COUNT]: {self.pce_count}')
+        print(f'  [REPETITION HISTORY]: {self.reps}')
         print(f'  [PARSED FEN]: {self.parsed_fen}')
 
 def print_move_list(move_list, mode:str):

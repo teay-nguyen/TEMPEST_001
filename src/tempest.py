@@ -46,14 +46,14 @@ if __name__ == '__main__':
 
     searcher = search._standard()
     board = board0x88.BoardState()
-    board.init_state(preset_positions['start_position'])
+    board.init_state('3k4/8/2pp3p/8/8/1R6/2K5/5R2 w - - 0 1')
     board.print_board()
 
     # call perft test
-    board.perft_test(depth=5)
+    # board.perft_test(depth=4)
 
-    #while 1:
-    #    if not searcher._root(board, depth = 6): break
+    while 1:
+        if not searcher._root(board, depth=5): break
 
     # print(f'  [EVALUATION (HANDCRAFTED AND SCALED)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key)/100)}')
     # print(f'  [EVALUATION (HANDCRAFTED AND RAW)]: {(evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key))}')

@@ -19,8 +19,9 @@
 '''
 
 # imports
-from defs import IDS, BSQUARES, PIECE_TYPES, get_move_source, get_move_target,\
-                get_move_capture, ALL_MOVES, CAPTURE_MOVES, print_move, squares
+from defs import IDS, BSQUARES, PIECE_TYPES, get_move_source,\
+                get_move_target, get_move_capture, ALL_MOVES,\
+                CAPTURE_MOVES, print_move, squares, K, k
 
 from board0x88 import MovesStruct
 from evaluation import evaluate
@@ -47,27 +48,27 @@ mvv_lva:list = [
 
 ]
 
-POS_INF:int = int(1e7)
-NEG_INF:int = int(-1e7)
-MATE_VAL:int = 49000
-MAX_PLY:int = 60
+POS_INF:int = int(1e8)
+NEG_INF:int = int(-1e8)
+MATE_VAL:int = 50000
+MAX_PLY:int = 64
 OPTIMAL_DEPTH:int = 5
 TIME_LIMIT_FOR_SEARCH:int = 25
 
 tt = Transposition()
 tt.tt_setsize(0xCCCCC)
 
-get_ms = lambda t:round(t * 1000)
+get_ms = lambda t:round(t*1000)
 
 # standard searcher for TEMPEST_001, utilizing alphabeta
 # other search methods like MTD(f) or NegaScout are to be explored later
 
 class _standard():
     def __init__(self) -> None:
-        self._search_limitations:dict = {'inf_time_search':0}
+        self._search_limitations:dict = { 'inf_time_search':0 }
         self._search_depth_from_input:int = 0
         self._search_time_allocation_from_input:int = 0
-        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(self._search_time_allocation_from_input), 'timeset':0}
+        self.timing_util:dict = { 'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(self._search_time_allocation_from_input), 'timeset':0 }
 
         self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
@@ -95,18 +96,18 @@ class _standard():
         self.timing_util['abort'] = 0
 
     def _clear_search_tables(self) -> None:
-        self.killer_moves = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
-        self.history_moves = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
-        self.pv_table = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
-        self.pv_length = [0 for _ in range(MAX_PLY)]
+        self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
+        self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
+        self.pv_table:list = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
+        self.pv_length:list = [0 for _ in range(MAX_PLY)]
 
     def _clear(self) -> None:
-        self.nodes = 0
-        self.ply = 0
-        self.tb_hits = 0
+        self.nodes:int = 0
+        self.ply:int = 0
+        self.tb_hits:int = 0
         self.timing_util['abort'] = 0
-        self._search_depth_from_input = 0
-        self._search_time_allocation_from_input = 0
+        self._search_depth_from_input:int = 0
+        self._search_time_allocation_from_input:int = 0
         self._reset_timecontrol()
         self._clear_search_tables()
 
@@ -118,12 +119,12 @@ class _standard():
 
     def _score(self, board:list, move:int) -> int:
         if self.pv_table[0][self.ply] == move: return 20000
-        score:int = mvv_lva[board[get_move_source(move)]][board[get_move_target(move)]]
-        if get_move_capture(move): score += 10000
+        score:int = 0
+        if get_move_capture(move): score = 10000 + mvv_lva[board[get_move_source(move)]][board[get_move_target(move)]]
         else:
-            if self.killer_moves[0][self.ply] == move: score = 9000
-            elif self.killer_moves[1][self.ply] == move: score = 8000
-            else: score = self.history_moves[board[get_move_source(move)]][get_move_target(move)] + 7000
+            if self.killer_moves[0][self.ply] == move: return 9000
+            elif self.killer_moves[1][self.ply] == move: return 8000
+            else: return self.history_moves[board[get_move_source(move)]][get_move_target(move)] + 7000
         return score
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
@@ -157,12 +158,12 @@ class _standard():
             if self.pv_length[0]:
                 print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
                 for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
-                if score == -MATE_VAL: self.enabled = 0; print('     IS MATED! | GAMEOVER!\n', end=''); break
+                if score <= -MATE_VAL: self.enabled = 0; print('     IS MATED! | GAMEOVER!\n', end=''); break
                 elif score <= -MATE_VAL + MAX_PLY: print('     GETTING MATED!\n', end=''); break
                 elif score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!\n', end=''); break
                 else: print()
                 for _v in range(len(pos.pce_count)):
-                    if not _v or _v == 6 or _v == 12: continue
+                    if not _v or _v == K or _v == k: continue
                     if pos.pce_count[_v]: absolute_draw = 0
                 if absolute_draw: self.enabled = 0; print('\n  GAME DRAWN!'); break
             else:
@@ -172,7 +173,7 @@ class _standard():
         if self.pv_table[0][0]:
             print('bestmove', end=' ')
             print_move(self.pv_table[0][0], '\n')
-            pos.make_move(self.pv_table[0][0], ALL_MOVES)
+            pos.make_move(self.pv_table[0][0], ALL_MOVES, searching=0)
             pos.print_board()
         else: print('\n  bestmove n/a')
         return 1
@@ -212,7 +213,7 @@ class _standard():
 
             self.ply += 1
 
-            if not pos.make_move(move_list.moves[c].move, CAPTURE_MOVES):
+            if not pos.make_move(move_list.moves[c].move, CAPTURE_MOVES, searching=1):
                 self.ply -= 1
                 continue
 
@@ -261,9 +262,11 @@ class _standard():
 
         if self.ply > MAX_PLY - 1: return beta
 
-        alpha = max(alpha, -MATE_VAL + self.ply - 1)
-        beta = min(beta, MATE_VAL - self.ply)
-        if alpha >= beta: return alpha
+        if self.ply > 0:
+            if pos.hash_key in pos.reps: return 0
+            alpha = max(alpha, -MATE_VAL + self.ply)
+            beta = min(beta, MATE_VAL - self.ply)
+            if alpha >= beta: return alpha
 
         score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
         if self.ply and score != NO_HASH_ENTRY and not pv_node:
@@ -328,7 +331,7 @@ class _standard():
 
             self.ply += 1
 
-            if not pos.make_move(move_list.moves[c].move, ALL_MOVES):
+            if not pos.make_move(move_list.moves[c].move, ALL_MOVES, searching=1):
                 self.ply -= 1
                 continue
 
@@ -354,12 +357,6 @@ class _standard():
 
             if self.timing_util['abort']: return 0
 
-            if score >= beta:
-                tt.tt_save(depth, beta, HASH_BETA, pos.hash_key)
-                if not get_move_capture(move_list.moves[c].move):
-                    self.killer_moves[1][self.ply] = self.killer_moves[0][self.ply]
-                    self.killer_moves[0][self.ply] = move_list.moves[c].move
-                return beta
             if score > alpha:
                 hash_flag = HASH_EXACT
                 alpha = score
@@ -367,6 +364,12 @@ class _standard():
                 self.pv_table[self.ply][self.ply] = move_list.moves[c].move
                 for _i in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][_i] = self.pv_table[self.ply+1][_i]
                 self.pv_length[self.ply] = self.pv_length[self.ply+1]
+                if score >= beta:
+                    tt.tt_save(depth, beta, HASH_BETA, pos.hash_key)
+                    if not get_move_capture(move_list.moves[c].move):
+                        self.killer_moves[1][self.ply] = self.killer_moves[0][self.ply]
+                        self.killer_moves[0][self.ply] = move_list.moves[c].move
+                    return beta
 
         if not legal_:
             if in_check: return -MATE_VAL + self.ply
