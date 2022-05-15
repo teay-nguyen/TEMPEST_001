@@ -128,9 +128,7 @@ class _standard():
         return score
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
-        for c in range(move_list.count):
-            if move_list.moves[c].move == self.pv_table[0][0] and move_list.moves[c].move: move_list.moves[c].score = 300000
-            else: move_list.moves[c].score = self._score(board, move_list.moves[c].move)
+        for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
         move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
     def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH) -> int:
