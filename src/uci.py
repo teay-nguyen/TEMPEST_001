@@ -51,18 +51,18 @@ def uci_prompt():
     print("uciok")
 
     board = board0x88.BoardState()
+    board.init_state(preset_positions['start_position'])
     searcher = search._standard()
 
     while 1:
-        _input:str = input()
+        try: _input:str = input()
+        except: exit()
         if _input == '': continue
         if _input == 'uci':
             print('id name TEMPEST_001')
             print('id author Terry Nguyen')
             print('uciok')
-        elif _input == 'isready':
-            print('readyok')
-            continue
+        elif _input == 'isready': print('readyok'); continue
         elif _input == 'ucinewgame': board.init_state(preset_positions['start_position'])
         elif _input[:23] == 'position startpos moves':
             board.init_state(preset_positions['start_position'])
@@ -71,6 +71,7 @@ def uci_prompt():
             if moves == []: raise RuntimeError('calling position startpos moves with any moves')
             for move in moves:
                 if move != ' ': board.make_move(parse_move(move, board), ALL_MOVES)
+        elif _input[:8] == 'go perft': board.perft_test(int(_input[9:]))
         elif _input == 'position startpos': board.init_state(preset_positions['start_position']); board.print_board()
         elif _input[:12] == 'position fen': fen_string:str = _input[13:]; board.init_state(fen_string)
         elif _input[:8] == 'go depth': search_depth:int = int(_input[9:]); searcher._root(board, depth=search_depth)
