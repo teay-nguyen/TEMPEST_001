@@ -21,9 +21,6 @@
 
 '''
 
-# notify that it is importing scripts
-print('IMPORTING SCRIPTS...')
-
 # imports
 from uci import uci_prompt
 

@@ -321,6 +321,18 @@ class _standard():
             if self.timing_util['abort']: return 0
             if score >= beta and abs(score) < MATE_VAL: return beta
 
+        if not pv_node and not in_check and depth <= 3:
+            score:int = static_eval + 125
+            new_score:int = 0
+            if score < beta:
+                if depth == 1:
+                    new_score:int = self._quiesce(alpha, beta, pos)
+                    return new_score if new_score > score else score
+                score += 175
+                if score < beta and depth <= 2:
+                    new_score:int = self._quiesce(alpha, beta, pos)
+                    if new_score < beta: return new_score if new_score > score else score
+
         move_list:MovesStruct = MovesStruct()
         pos.gen_moves(move_list)
         self._sort(pos.board, move_list)
