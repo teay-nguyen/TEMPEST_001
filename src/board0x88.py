@@ -20,6 +20,7 @@
 
 # imports
 from time import perf_counter
+from uuid import uuid4
 from defs import *
 
 # state variables
@@ -110,6 +111,15 @@ class Zobrist:
         self.castling: list = [self.rand64() for _ in range(CASTLE_VAL)]
         self.ep: list = [self.rand64() for _ in range(BSQUARES)]
 
+class Zobrist_v2:
+    def __init__(self) -> None:
+        self.piecesquare: list = [[self.rand64() for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
+        self.side: int = self.rand64()
+        self.castling: list = [self.rand64() for _ in range(CASTLE_VAL)]
+        self.ep: list = [self.rand64() for _ in range(BSQUARES)]
+
+    def rand64(self): return uuid4().int >> 64
+
 class MovesStruct:
     def __init__(self) -> None:
         self.moves:list = [move_t() for _ in range(GEN_STACK)]
@@ -117,7 +127,7 @@ class MovesStruct:
 
 class BoardState:
     def __init__(self) -> None:
-        self.zobrist: Zobrist = Zobrist()
+        self.zobrist: Zobrist_v2 = Zobrist_v2()
         self.fifty: int = 0
         self.hash_key: int = 0
         self.nodes: int = 0
