@@ -27,8 +27,9 @@ python main.py
 
 ## Testing
 
+There is no viable and elaborate way to test the engine  
 Test FEN strings are stored in the tests folder in a seperate files named differently according to the purpose of the positions  
-You can copy one of the FEN strings into the tempest file for it to parse the string, the doing what you want since the fen string is loaded
+You can copy one of the FEN strings into the UCI for it to parse the string, the doing what you want since the fen string is loaded
 
 ## Contributing
 
