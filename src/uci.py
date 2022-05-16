@@ -72,9 +72,12 @@ def uci_prompt():
             elif _input == 'go': searcher._root(board, depth=6)
             elif _input == 'd': board.print_board()
             elif _input == 'eval': board.print_board(); print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key, board.fifty)}')
+            elif _input == 'unlock searcher': searcher.enabled = 1; print('searcher unlocked')
+            elif _input == 'lock searcher': searcher.enabled = 0; print('searcher locked')
             elif _input == 'help': print('\nucinewgame - start new game'); print('position startpos - loads the start position'); print('position fen (fen string) - load fen string into engine');\
                                     print('go depth (search depth) - search at specified depth'); print('go perft (depth) - perform the debug perft');\
                                     print('uci - engine info'); print('d - prints the board with properties'); print('eval - call the evaluation function');\
+                                    print("unlock searcher - enable the searcher so it doesn't throw an error"); print("lock searcher - lock the searcher so it denies any calls to search");\
                                     print('quit - break out of engine loop')
             elif _input == 'quit': break
             print('\n', end='')
