@@ -133,28 +133,24 @@ class _standard():
     def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH) -> int:
         self._clear()
         score:int = 0
-        self.nodes:int = 0
         self._search_depth_from_input:int = depth
         self._search_time_allocation_from_input:int = _timeAllocated
         self._determine_search_limitations()
         self._start_timecontrol()
 
         if not self.enabled: print(f'\n  searcher not available for use, enabled: {self.enabled}\n'); return 0
-
-        alpha:int = NEG_INF
-        beta:int = POS_INF
         absolute_draw:int = 1
 
         print('', end='\n')
         for c_d in range(1, self._search_depth_from_input + 1):
-            score:int = self._alphabeta(alpha, beta, c_d, pos)
+            score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
             elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
             if not elapsed: elapsed = 1
             if self.timing_util['abort']: break
             if self.pv_length[0]:
                 print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
                 for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
-                if score <= -MATE_VAL: self.enabled = 0; print('     IS MATED! | GAMEOVER!\n', end=''); break
+                if score <= -MATE_VAL: self.enabled = 0; print('     IS MATED! | GAMEOVER!\n', end=''); return 0
                 elif score <= -MATE_VAL + MAX_PLY: print('     GETTING MATED!\n', end=''); break
                 elif score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!\n', end=''); break
                 else: print('', end='\n')
@@ -175,12 +171,11 @@ class _standard():
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
         assert beta > alpha
         self.nodes += 1
+        self.pv_length[self.ply] = self.ply
 
         if not (self.nodes & 2047):
             self._checkup()
             if self.timing_util['abort']: return 0
-
-        self.pv_length[self.ply] = self.ply
 
         if self.ply >= MAX_PLY: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
 
@@ -248,17 +243,17 @@ class _standard():
         hash_flag:int = HASH_ALPHA
         score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
         if self.ply and score != NO_HASH_ENTRY and not pv_node: self.tb_hits += 1; return score
-        if not (self.nodes & 2047):
-            self._checkup()
-            if self.timing_util['abort']: return 0
+        if not (self.nodes & 2047): self._checkup()
+        if self.timing_util['abort']: return 0
         if self.ply > 0 and pos.fifty >= 100: return 0
-        if depth <= 0: return self._quiesce(alpha, beta, pos)
+        if not depth: return self._quiesce(alpha, beta, pos)
         if self.ply >= MAX_PLY: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
 
         if self.ply > 0 and (pos.hash_key in pos.reps): return 0
-        alpha = max(alpha, -MATE_VAL + self.ply)
-        beta = min(beta, MATE_VAL - self.ply)
-        if alpha >= beta: return alpha
+        if self.ply > 0:
+            alpha = max(alpha, -MATE_VAL + self.ply)
+            beta = min(beta, MATE_VAL - self.ply)
+            if alpha >= beta: return alpha
 
         in_check:int = pos.in_check(pos.side)
         if in_check: depth += 1
@@ -349,11 +344,11 @@ class _standard():
             if not moves_searched: score = -self._alphabeta(-beta, -alpha, depth - 1, pos)
             else:
                 if  (
-                    moves_searched >= FULL_DEPTH_MOVES and\
-                    depth >= REDUCTION_LIMIT and\
-                    not in_check and\
-                    not get_move_capture(move_list.moves[c].move) and\
-                    not get_move_promoted(move_list.moves[c].move)
+                     moves_searched >= FULL_DEPTH_MOVES and\
+                     depth >= REDUCTION_LIMIT and\
+                     not in_check and\
+                     not get_move_capture(move_list.moves[c].move) and\
+                     not get_move_promoted(move_list.moves[c].move)
                     ): score:int = -self._alphabeta(-alpha - 1, -alpha, depth - 2, pos)
                 score:int = alpha + 1
                 if score > alpha:
