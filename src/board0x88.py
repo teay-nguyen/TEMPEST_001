@@ -721,6 +721,7 @@ class BoardState:
         print(f'  [KING SQUARE]: {square_to_coords[self.king_square[self.side]]} | {self.king_square[self.side]}')
         print(f'  [PIECE LIST]: {self.pce_pos}')
         print(f'  [PIECE COUNT]: {self.pce_count}')
+        print(f'  [POSITION KEY]: {self.hash_key}')
         print(f'  [REPETITION HISTORY]: {self.reps}')
         print(f'  [PARSED FEN]: {self.parsed_fen}')
 

@@ -134,15 +134,16 @@ class _standard():
 
     def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH) -> int:
         self._clear()
-        score:int = 0
         self._search_depth_from_input:int = depth
         self._search_time_allocation_from_input:int = _timeAllocated
         self._determine_search_limitations()
         self._start_timecontrol()
+        score:int = 0
 
         if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}'); return 0
         absolute_draw:int = 1
 
+        for _k, _v in self.timing_util.items(): print(f'{_k}: {_v}', end=' ')
         print('', end='\n')
         for c_d in range(1, self._search_depth_from_input + 1):
             score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
