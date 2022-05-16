@@ -79,6 +79,6 @@ def uci_prompt():
                                     print('uci - engine info'); print('d - prints the board with properties'); print('eval - call the evaluation function');\
                                     print("unlock searcher - enable the searcher so it doesn't throw an error"); print("lock searcher - lock the searcher so it denies any calls to search");\
                                     print('quit - break out of engine loop')
-            elif _input == 'quit': break
+            elif _input == 'quit' or _input == 'exit': break
             print('\n', end='')
     except: exit()
