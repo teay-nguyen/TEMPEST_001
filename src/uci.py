@@ -45,7 +45,7 @@ def parse_move(move_str:str, pos:board0x88.BoardState):
     return 0
 
 def uci_prompt():
-    print("id name TEMPEST_001"); print("id author Terry Nguyen"); print("uciok")
+    print("id name TEMPEST_001"); print("id author Terry Nguyen"); print('type "help" for commands'); print("uciok")
     board = board0x88.BoardState()
     board.init_state(preset_positions['start_position'])
     searcher = search._standard()
@@ -72,6 +72,10 @@ def uci_prompt():
             elif _input == 'go': searcher._root(board, depth=6)
             elif _input == 'd': board.print_board()
             elif _input == 'eval': board.print_board(); print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key, board.fifty)}')
+            elif _input == 'help': print('\nucinewgame - start new game'); print('position startpos - loads the start position'); print('position fen (fen string) - load fen string into engine');\
+                                    print('go depth (search depth) - search at specified depth'); print('go perft (depth) - perform the debug perft');\
+                                    print('uci - engine info'); print('d - prints the board with properties'); print('eval - call the evaluation function');\
+                                    print('quit - break out of engine loop')
             elif _input == 'quit': break
             print('\n', end='')
     except: exit()
