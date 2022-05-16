@@ -133,7 +133,6 @@ class _standard():
 
     def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH) -> int:
         self._clear()
-
         score:int = 0
         self.nodes:int = 0
         self._search_depth_from_input:int = depth
@@ -234,9 +233,9 @@ class _standard():
             if self.timing_util['abort']: return 0
 
             if score > alpha:
+                alpha = score
                 if score >= beta:
                     return beta
-                alpha = score
                 self.pv_table[self.ply][self.ply] = move_list.moves[c].move
                 for _i in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][_i] = self.pv_table[self.ply+1][_i]
                 self.pv_length[self.ply] = self.pv_length[self.ply+1]
@@ -253,15 +252,13 @@ class _standard():
         legal_:int = 0
         pv_node:int = beta - alpha > 1
         hash_flag:int = HASH_ALPHA
-        if self.ply and pos.fifty >= 100: return 0
         score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
         if self.ply and score != NO_HASH_ENTRY and not pv_node: self.tb_hits += 1; return score
-        if depth <= 0: return self._quiesce(alpha, beta, pos)
-
         if not (self.nodes & 2047):
             self._checkup()
             if self.timing_util['abort']: return 0
-
+        if self.ply and pos.fifty >= 100: return 0
+        if depth <= 0: return self._quiesce(alpha, beta, pos)
         if self.ply > MAX_PLY - 1: return beta
 
         if self.ply > 0:
