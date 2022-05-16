@@ -125,7 +125,6 @@ class _standard():
             if self.killer_moves[0][self.ply] == move: return 9000
             elif self.killer_moves[1][self.ply] == move: return 8000
             else: return self.history_moves[board[get_move_source(move)]][get_move_target(move)] + 7000
-        return 0 # unreachable
 
     def _sort(self, board:list, move_list:MovesStruct) -> None:
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
@@ -165,7 +164,7 @@ class _standard():
                 if absolute_draw: self.enabled = 0; print('\n  GAME DRAWN!'); break
             else:
                 print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed}     IS MATED! | GAMEOVER!', end=' ')
-                self.enabled = 0; break
+                self.enabled = 0; return 0
         print('\n', end='  ')
         if self.pv_table[0][0]:
             print('bestmove', end=' ')
@@ -185,13 +184,11 @@ class _standard():
 
         self.pv_length[self.ply] = self.ply
 
-        if self.ply > MAX_PLY - 1: return beta
+        if self.ply >= MAX_PLY: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
 
         threshold = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
-        if threshold > alpha:
-            if threshold >= beta:
-                return threshold
-            alpha = threshold
+        if threshold >= beta: return beta
+        if threshold > alpha: alpha = threshold
 
         move_list = MovesStruct()
         pos.gen_moves(move_list)
@@ -234,8 +231,7 @@ class _standard():
 
             if score > alpha:
                 alpha = score
-                if score >= beta:
-                    return beta
+                if score >= beta: return beta
                 self.pv_table[self.ply][self.ply] = move_list.moves[c].move
                 for _i in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][_i] = self.pv_table[self.ply+1][_i]
                 self.pv_length[self.ply] = self.pv_length[self.ply+1]
@@ -257,75 +253,75 @@ class _standard():
         if not (self.nodes & 2047):
             self._checkup()
             if self.timing_util['abort']: return 0
-        if self.ply and pos.fifty >= 100: return 0
+        if self.ply > 0 and pos.fifty >= 100: return 0
         if depth <= 0: return self._quiesce(alpha, beta, pos)
-        if self.ply > MAX_PLY - 1: return beta
+        if self.ply >= MAX_PLY: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
 
-        if self.ply > 0:
-            if pos.hash_key in pos.reps: return 0
-            alpha = max(alpha, -MATE_VAL + self.ply)
-            beta = min(beta, MATE_VAL - self.ply)
-            if alpha >= beta: return alpha
+        if self.ply > 0 and (pos.hash_key in pos.reps): return 0
+        alpha = max(alpha, -MATE_VAL + self.ply)
+        beta = min(beta, MATE_VAL - self.ply)
+        if alpha >= beta: return alpha
 
         in_check:int = pos.in_check(pos.side)
         if in_check: depth += 1
 
-        static_eval:int = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
-        if depth < 3 and not pv_node and not in_check and abs(beta - 1) > NEG_INF + 100:
-            eval_margin:int = 120 * depth
-            if static_eval - eval_margin >= beta: return static_eval - eval_margin
+        if not in_check and not pv_node:
+            static_eval:int = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
+            if depth < 3 and abs(beta - 1) > -MATE_VAL + 100:
+                eval_margin:int = 82 * depth
+                if static_eval - eval_margin >= beta: return static_eval - eval_margin
 
-        if depth >= 3 and not in_check and self.ply:
-            board_cpy:list = [_ for _ in pos.board]
-            side_cpy:int = pos.side
-            xside_cpy:int = pos.xside
-            enpassant_cpy:int = pos.enpassant
-            castle_cpy:int = pos.castle
-            king_square_cpy:list = [_ for _ in pos.king_square]
-            pce_count_cpy:list = [_ for _ in pos.pce_count]
-            hashkey_cpy:int = pos.hash_key
-            fifty_cpy:int = pos.fifty
-            reps_cpy:list = [_ for _ in pos.reps]
+            if depth >= 3 and self.ply and static_eval >= beta:
+                board_cpy:list = [_ for _ in pos.board]
+                side_cpy:int = pos.side
+                xside_cpy:int = pos.xside
+                enpassant_cpy:int = pos.enpassant
+                castle_cpy:int = pos.castle
+                king_square_cpy:list = [_ for _ in pos.king_square]
+                pce_count_cpy:list = [_ for _ in pos.pce_count]
+                hashkey_cpy:int = pos.hash_key
+                fifty_cpy:int = pos.fifty
+                reps_cpy:list = [_ for _ in pos.reps]
 
-            self.ply += 1
-            pos.reps.append(pos.hash_key)
+                self.ply += 1
+                pos.reps.append(pos.hash_key)
 
-            if pos.enpassant != squares['OFFBOARD']: pos.hash_key ^= pos.zobrist.ep[pos.enpassant]
-            pos.enpassant = squares['OFFBOARD']
+                if pos.enpassant != squares['OFFBOARD']: pos.hash_key ^= pos.zobrist.ep[pos.enpassant]
+                pos.enpassant = squares['OFFBOARD']
 
-            pos.side ^= 1
-            pos.xside ^= 1
-            pos.hash_key ^= pos.zobrist.side
+                pos.side ^= 1
+                pos.xside ^= 1
+                pos.hash_key ^= pos.zobrist.side
 
-            score:int = -self._alphabeta(-beta, -beta + 1, depth - 1 - R_LIMIT, pos)
+                score:int = -self._alphabeta(-beta, -beta + 1, depth - 1 - R_LIMIT, pos)
 
-            self.ply -= 1
+                self.ply -= 1
 
-            pos.board = [_ for _ in board_cpy]
-            pos.side = side_cpy
-            pos.xside = xside_cpy
-            pos.enpassant = enpassant_cpy
-            pos.castle = castle_cpy
-            pos.king_square = [_ for _ in king_square_cpy]
-            pos.pce_count = [_ for _ in pce_count_cpy]
-            pos.hash_key = hashkey_cpy
-            pos.fifty = fifty_cpy
-            pos.reps = [_ for _ in reps_cpy]
+                pos.board = [_ for _ in board_cpy]
+                pos.side = side_cpy
+                pos.xside = xside_cpy
+                pos.enpassant = enpassant_cpy
+                pos.castle = castle_cpy
+                pos.king_square = [_ for _ in king_square_cpy]
+                pos.pce_count = [_ for _ in pce_count_cpy]
+                pos.hash_key = hashkey_cpy
+                pos.fifty = fifty_cpy
+                pos.reps = [_ for _ in reps_cpy]
 
-            if self.timing_util['abort']: return 0
-            if score >= beta and abs(score) < MATE_VAL: return beta
+                if self.timing_util['abort']: return 0
+                if score >= beta and abs(score) < MATE_VAL: return beta
 
-        if not pv_node and not in_check and depth <= 3:
-            score:int = static_eval + 125
-            new_score:int = 0
-            if score < beta:
-                if depth == 1:
-                    new_score:int = self._quiesce(alpha, beta, pos)
-                    return new_score if new_score > score else score
-                score += 175
-                if score < beta and depth <= 2:
-                    new_score:int = self._quiesce(alpha, beta, pos)
-                    if new_score < beta: return new_score if new_score > score else score
+            if depth <= 3:
+                score:int = static_eval + 82
+                new_score:int = 0
+                if score < beta:
+                    if depth == 1:
+                        new_score:int = self._quiesce(alpha, beta, pos)
+                        return new_score if new_score > score else score
+                    score += 94
+                    if score < beta and depth <= 2:
+                        new_score:int = self._quiesce(alpha, beta, pos)
+                        if new_score < beta: return new_score if new_score > score else score
 
         moves_searched:int = 0
         move_list:MovesStruct = MovesStruct()
