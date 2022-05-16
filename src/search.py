@@ -58,9 +58,6 @@ MAX_PLY:int = 64
 OPTIMAL_DEPTH:int = 6
 TIME_LIMIT_FOR_SEARCH:int = 30
 
-tt = Transposition()
-tt.tt_setsize(0xCCCCC)
-
 get_ms = lambda t:round(t*1000)
 
 # standard searcher for TEMPEST_001, utilizing alphabeta
@@ -72,6 +69,7 @@ class _standard():
         self._search_depth_from_input:int = 0
         self._search_time_allocation_from_input:int = 0
         self.timing_util:dict = { 'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(self._search_time_allocation_from_input), 'timeset':0 }
+        self.tt_probing_base:Transposition = Transposition(); self.tt_probing_base.tt_setsize(0xCCCCC)
 
         self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
         self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
@@ -111,6 +109,7 @@ class _standard():
         self.timing_util['abort'] = 0
         self._search_depth_from_input:int = 0
         self._search_time_allocation_from_input:int = 0
+        self.tt_probing_base.tt_setsize(0xCCCCC)
         self._reset_timecontrol()
         self._clear_search_tables()
 
@@ -138,6 +137,7 @@ class _standard():
         self._search_time_allocation_from_input:int = _timeAllocated
         self._determine_search_limitations()
         self._start_timecontrol()
+        self.tt_probing_base.tt_setsize(0xCCCCC)
         score:int = 0
 
         if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}'); return 0
@@ -243,7 +243,7 @@ class _standard():
         legal_:int = 0
         pv_node:int = beta - alpha > 1
         hash_flag:int = HASH_ALPHA
-        score:int = tt.tt_probe(depth, alpha, beta, pos.hash_key)
+        score:int = self.tt_probing_base.tt_probe(depth, alpha, beta, pos.hash_key)
         if self.ply and score != NO_HASH_ENTRY and not pv_node: self.tb_hits += 1; return score
         if not (self.nodes & 2047): self._checkup()
         if self.timing_util['abort']: return 0
@@ -381,7 +381,7 @@ class _standard():
                 for _i in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][_i] = self.pv_table[self.ply+1][_i]
                 self.pv_length[self.ply] = self.pv_length[self.ply+1]
                 if score >= beta:
-                    tt.tt_save(depth, beta, HASH_BETA, pos.hash_key)
+                    self.tt_probing_base.tt_save(depth, beta, HASH_BETA, pos.hash_key)
                     if not get_move_capture(move_list.moves[c].move):
                         self.killer_moves[1][self.ply] = self.killer_moves[0][self.ply]
                         self.killer_moves[0][self.ply] = move_list.moves[c].move
@@ -391,7 +391,7 @@ class _standard():
             if in_check: return -MATE_VAL + self.ply
             else: return 0
 
-        tt.tt_save(depth, alpha, hash_flag, pos.hash_key)
+        self.tt_probing_base.tt_save(depth, alpha, hash_flag, pos.hash_key)
         return alpha
 
 if __name__ == "__main__":

@@ -57,12 +57,10 @@ def uci_prompt():
             if _input == '': continue
             elif _input == 'uci': print('id name TEMPEST_001'); print('id author Terry Nguyen'); print('uciok');
             elif _input == 'isready': print('readyok'); continue
-            elif _input == 'ucinewgame': board.init_state(preset_positions['start_position'])
+            elif _input == 'ucinewgame': board.init_state(preset_positions['start_position']); searcher.tt_probing_base.tt_setsize(0xCCCCC)
             elif _input[:23] == 'position startpos moves':
-                board.init_state(preset_positions['start_position'])
-                board.print_board()
-                moves = _input[24:].split()
-                if moves == []: raise RuntimeError('calling position startpos moves with any moves')
+                board.init_state(preset_positions['start_position']); board.print_board(); moves = _input[24:].split()
+                if not len(moves): raise RuntimeError('calling position startpos moves with any moves')
                 for move in moves:
                     if move != ' ': board.make_move(parse_move(move, board), ALL_MOVES)
             elif _input[:8] == 'go perft': board.perft_test(int(_input[9:]))
