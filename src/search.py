@@ -19,6 +19,7 @@
 '''
 
 # imports
+from __future__ import print_function, division
 from defs import IDS, BSQUARES, PIECE_TYPES, get_move_source,\
                 get_move_target, get_move_capture, get_move_promoted, ALL_MOVES,\
                 CAPTURE_MOVES, print_move, squares, K, k, FULL_DEPTH_MOVES, REDUCTION_LIMIT,\
@@ -117,7 +118,7 @@ class _standard():
         curr_time:int = get_ms(perf_counter())
         if self.timing_util['timeset'] and (curr_time >= self.timing_util['stoptime']):
             self.timing_util['abort'] = 1
-            print(f'  time limit exceeded! {curr_time - self.timing_util["starttime"]} ms')
+            print(f'time limit exceeded! {curr_time - self.timing_util["starttime"]} ms')
 
     def _score(self, board:list, move:int) -> int:
         if self.pv_table[0][self.ply] == move: return 20000
@@ -139,7 +140,7 @@ class _standard():
         self._determine_search_limitations()
         self._start_timecontrol()
 
-        if not self.enabled: print(f'\n  searcher not available for use, enabled: {self.enabled}\n'); return 0
+        if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}'); return 0
         absolute_draw:int = 1
 
         print('', end='\n')
@@ -149,26 +150,23 @@ class _standard():
             if not elapsed: elapsed = 1
             if self.timing_util['abort']: break
             if self.pv_length[0]:
-                if score > -MATE_VAL and score < -MATE_SCORE: print(f'info depth {c_d} nodes {self.nodes} mate {-(score+MATE_VAL)//2-1} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
+                if score > -MATE_VAL and score < -MATE_SCORE: print(f'info depth {c_d} nodes {self.nodes} mate {abs(-(score+MATE_VAL)//2-1)} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
                 elif score > MATE_SCORE and score < MATE_VAL: print(f'info depth {c_d} nodes {self.nodes} mate {(MATE_VAL-score)//2+1} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
                 else: print(f'info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
                 for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
-                if score <= -MATE_VAL: self.enabled = 0; print('     IS MATED! | GAMEOVER!\n', end=''); return 0
-                elif score <= -MATE_VAL + MAX_PLY: print('     GETTING MATED!\n', end=''); break
-                elif score >= MATE_VAL - MAX_PLY: print('     MATE FOUND!\n', end=''); break
-                else: print('', end='\n')
+                if self.enabled: print('', end='\n')
                 for _v in range(len(pos.pce_count)):
                     if not _v or _v == K or _v == k: continue
                     if pos.pce_count[_v]: absolute_draw = 0
-                if absolute_draw: self.enabled = 0; print('\n  GAME DRAWN!'); break
-            else: print(f'info depth 0 mate 0     IS MATED! | GAMEOVER!\n', end=' '); self.enabled = 0; return 0
-        print('\n', end='  ')
+                if absolute_draw: self.enabled = 0; print('\n  GAME DRAWN!'); return 0
+            else: print(f'info depth 0 mate 0   {"white" if pos.side ^ 1 else "black"} wins\n', end=''); self.enabled = 0; print(f'searcher is now locked, enabled: {self.enabled}'); return 0
+        print('\n', end='')
         if self.pv_table[0][0]:
             print('bestmove', end=' ')
             print_move(self.pv_table[0][0], '\n')
             pos.make_move(self.pv_table[0][0], ALL_MOVES, searching=0)
-            pos.print_board()
-        else: print('\n  bestmove n/a')
+            pos.print_board(); return 1
+        else: print('\nbestmove n/a')
         return 1
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
