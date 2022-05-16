@@ -4,8 +4,7 @@
 # OVERVIEW
 
 The TEMPEST Chess Engine is an open-source didactic minimal chess engine with basic features you would find in a mediocre chess engine  
-This engine is an incomplete terminal-based engine with no UCI options implemented yet  
-The estimate NPS for this engine is around 10K to 60K nodes per second, dependant on how good your machine is  
+This engine is an incomplete terminal-based engine with basic UCI features implemented  
 TEMPEST has not yet supported NNUE evaluation, and has only been implemented with the classic handcrafted evaluation function
 
 ## Installation
@@ -17,13 +16,13 @@ git clone https://github.com/HashingTerry/TEMPEST_001.git
 ## Usage
 
 ```
-pypy3 tempest.py
+pypy3 main.py
 ```
 
 or  
 
 ```
-python tempest.py
+python main.py
 ```
 
 ## Testing
@@ -39,6 +38,7 @@ For major changes, please open an issue first to discuss what you would like to 
 # TODO
 
 - Implement fully functional Search Routine, with Transposition Tables
+- Engine playing stupid moves sometimes when searching at depth 6, e.g losing knight because engine thinks fork on f7 is fine
 - Improve pawn evaluation and overall evaluation of pieces
 - Optimize move generation
 - Migrate from copy-make to a make-undo structure
