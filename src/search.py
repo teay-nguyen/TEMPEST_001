@@ -139,7 +139,7 @@ class _standard():
         self._determine_search_limitations()
         self._start_timecontrol()
 
-        if not self.enabled: print(f'  searcher not available for use, enabled: {self.enabled}'); return 0
+        if not self.enabled: print(f'\n  searcher not available for use, enabled: {self.enabled}\n'); return 0
 
         alpha:int = NEG_INF
         beta:int = POS_INF
@@ -162,9 +162,7 @@ class _standard():
                     if not _v or _v == K or _v == k: continue
                     if pos.pce_count[_v]: absolute_draw = 0
                 if absolute_draw: self.enabled = 0; print('\n  GAME DRAWN!'); break
-            else:
-                print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed}     IS MATED! | GAMEOVER!', end=' ')
-                self.enabled = 0; return 0
+            else: print(f'  info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} time {elapsed}     IS MATED! | GAMEOVER!\n', end=' '); self.enabled = 0; return 0
         print('\n', end='  ')
         if self.pv_table[0][0]:
             print('bestmove', end=' ')
