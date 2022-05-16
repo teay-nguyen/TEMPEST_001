@@ -391,3 +391,6 @@ class _standard():
 
         tt.tt_save(depth, alpha, hash_flag, pos.hash_key)
         return alpha
+
+if __name__ == "__main__":
+    _ = _standard()
