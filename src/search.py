@@ -139,7 +139,7 @@ class _standard():
         self._determine_search_limitations()
         self._start_timecontrol()
 
-        if not self.enabled: return 0
+        if not self.enabled: print(f'  searcher not available for use, enabled: {self.enabled}'); return 0
 
         alpha:int = NEG_INF
         beta:int = POS_INF
