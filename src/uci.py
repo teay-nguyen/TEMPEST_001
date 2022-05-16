@@ -19,7 +19,7 @@
 '''
 
 # imports
-import __future__
+from __future__ import print_function
 import search
 import board0x88
 import evaluation
@@ -27,12 +27,10 @@ from defs import *
 
 # parse move string and turn it into something the engine can understand
 def parse_move(move_str:str, pos:board0x88.BoardState):
-    move_list:board0x88.MovesStruct = board0x88.MovesStruct()
-    pos.gen_moves(move_list)
+    move_list:board0x88.MovesStruct = board0x88.MovesStruct(); pos.gen_moves(move_list)
     parse_from:int = (ord(move_str[0]) - ord('a')) + (8 - (ord(move_str[1]) - ord('0'))) * 16
     parse_to:int = (ord(move_str[2]) - ord('a')) + (8 - (ord(move_str[3]) - ord('0'))) * 16
-    promoted_piece:int = 0
-    move:int = 0
+    promoted_piece:int = 0; move:int = 0
     for c in range(move_list.count):
         move:int = move_list.moves[c].move
         if get_move_source(move) == parse_from and get_move_target(move) == parse_to:
@@ -47,34 +45,33 @@ def parse_move(move_str:str, pos:board0x88.BoardState):
     return 0
 
 def uci_prompt():
-    print("id name TEMPEST_001")
-    print("id author Terry Nguyen")
-    print("uciok")
-
+    print("id name TEMPEST_001"); print("id author Terry Nguyen"); print("uciok")
     board = board0x88.BoardState()
     board.init_state(preset_positions['start_position'])
     searcher = search._standard()
 
-    while 1:
-        try: _input:str = input()
-        except: exit()
-        if _input == '': continue
-        elif _input == 'uci': print('id name TEMPEST_001'); print('id author Terry Nguyen'); print('uciok');
-        elif _input == 'isready': print('readyok'); continue
-        elif _input == 'ucinewgame': board.init_state(preset_positions['start_position'])
-        elif _input[:23] == 'position startpos moves':
-            board.init_state(preset_positions['start_position'])
-            board.print_board()
-            moves = _input[24:].split()
-            if moves == []: raise RuntimeError('calling position startpos moves with any moves')
-            for move in moves:
-                if move != ' ': board.make_move(parse_move(move, board), ALL_MOVES)
-        elif _input[:8] == 'go perft': board.perft_test(int(_input[9:]))
-        elif _input == 'position startpos': board.init_state(preset_positions['start_position']); board.print_board()
-        elif _input[:12] == 'position fen': fen_string:str = _input[13:]; board.init_state(fen_string)
-        elif _input[:8] == 'go depth': search_depth:int = int(_input[9:]); searcher._root(board, depth=search_depth)
-        elif _input == 'go': searcher._root(board, depth=6)
-        elif _input == 'd': board.print_board()
-        elif _input == 'eval': board.print_board(); print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key, board.fifty)}')
-        elif _input == 'quit': break
-        print('\n', end='')
+    try:
+        while 1:
+            try: _input:str = input()
+            except: exit()
+            if _input == '': continue
+            elif _input == 'uci': print('id name TEMPEST_001'); print('id author Terry Nguyen'); print('uciok');
+            elif _input == 'isready': print('readyok'); continue
+            elif _input == 'ucinewgame': board.init_state(preset_positions['start_position'])
+            elif _input[:23] == 'position startpos moves':
+                board.init_state(preset_positions['start_position'])
+                board.print_board()
+                moves = _input[24:].split()
+                if moves == []: raise RuntimeError('calling position startpos moves with any moves')
+                for move in moves:
+                    if move != ' ': board.make_move(parse_move(move, board), ALL_MOVES)
+            elif _input[:8] == 'go perft': board.perft_test(int(_input[9:]))
+            elif _input == 'position startpos': board.init_state(preset_positions['start_position']); board.print_board()
+            elif _input[:12] == 'position fen': fen_string:str = _input[13:]; board.init_state(fen_string)
+            elif _input[:8] == 'go depth': search_depth:int = int(_input[9:]); searcher._root(board, depth=search_depth)
+            elif _input == 'go': searcher._root(board, depth=6)
+            elif _input == 'd': board.print_board()
+            elif _input == 'eval': board.print_board(); print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key, board.fifty)}')
+            elif _input == 'quit': break
+            print('\n', end='')
+    except: exit()
