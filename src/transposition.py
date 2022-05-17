@@ -23,6 +23,7 @@ HASH_EXACT:int = 0
 HASH_ALPHA:int = 1
 HASH_BETA:int = 2
 NO_HASH_ENTRY:int = 0xF4240
+MATE_SCORE:int = 49000
 
 # entries
 class tt_entry:
@@ -55,7 +56,7 @@ class Transposition:
         self.tt_size = size
         self.tt_table = [tt_entry() for _ in range(size)]
 
-    def tt_probe(self, depth:int, alpha:int, beta:int, hashkey:int):
+    def tt_probe(self, depth:int, alpha:int, beta:int, hashkey:int, search_ply:int) -> int:
         # checks the table for any record of the position before actually parsing and calculating the position
         # this is the whole purpose of the transposition table
         # get entry from table
@@ -65,6 +66,8 @@ class Transposition:
         if entry.hash_key == hashkey:
             if entry.depth >= depth:
                 score = entry.score
+                if score < -MATE_SCORE: score += search_ply
+                if score > MATE_SCORE: score -= search_ply
                 if entry.flag == HASH_EXACT: return score
                 elif entry.flag == HASH_ALPHA and score <= alpha: return alpha
                 elif entry.flag == HASH_BETA and score >= beta: return beta
@@ -72,13 +75,16 @@ class Transposition:
         # there is no valid entry, return no hash value
         return NO_HASH_ENTRY
 
-    def tt_save(self, depth:int, score:int, flag:int, hashkey:int):
+    def tt_save(self, depth:int, score:int, flag:int, hashkey:int, search_ply:int) -> None:
 
         # get entry from table
         entry = self.tt_table[hashkey % self.tt_size]
 
         # if there is a entry with a deeper depth then don't update the entry
         if entry.hash_key == hashkey and entry.depth > depth: return
+
+        if score < -MATE_SCORE: score -= search_ply
+        if score > MATE_SCORE: score += search_ply
 
         # set the value
         entry.hash_key = hashkey
