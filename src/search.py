@@ -143,9 +143,7 @@ class _standard():
         self._start_timecontrol()
         if self.tt_reset_each_root: self.tt_probing_base.tt_setsize(0xCCCCC)
         if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}', end='\n'); return 0
-
-        score:int = 0
-        absolute_draw:int = 1
+        score:int = 0; absolute_draw:int = 1
 
         print('\n', end='')
         for _k, _v in self.timing_util.items(): print(f'{_k}: {_v}', end=' ');
@@ -188,7 +186,7 @@ class _standard():
 
         threshold = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
         if threshold >= beta: return beta
-        if threshold > alpha: alpha = threshold
+        alpha = max(alpha, threshold)
 
         move_list = MovesStruct()
         pos.gen_moves(move_list)
@@ -246,7 +244,7 @@ class _standard():
         self.pv_length[self.ply] = self.ply
 
         legal_:int = 0
-        pv_node:int = beta - alpha > 1
+        pv_node:int = alpha != beta - 1
         hash_flag:int = HASH_ALPHA
         score:int = self.tt_probing_base.tt_probe(depth, alpha, beta, pos.hash_key)
         if self.ply and score != NO_HASH_ENTRY and not pv_node: self.tb_hits += 1; return score
@@ -259,7 +257,7 @@ class _standard():
         if self.ply > 0 and (pos.hash_key in pos.reps): return 0
         if self.ply > 0:
             alpha = max(alpha, -MATE_VAL + self.ply)
-            beta = min(beta, MATE_VAL - self.ply)
+            beta = min(beta, MATE_VAL - self.ply - 1)
             if alpha >= beta: return alpha
 
         in_check:int = pos.in_check(pos.side)
