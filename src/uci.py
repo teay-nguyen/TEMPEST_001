@@ -79,4 +79,4 @@ def uci_prompt():
                                     print('quit - break out of engine loop')
             elif _input == 'quit' or _input == 'exit': break
             print('\n', end='')
-    except: print(searcher.ply); exit()
+    except: exit()

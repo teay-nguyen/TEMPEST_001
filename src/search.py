@@ -53,7 +53,7 @@ POS_INF:int = int(1e8)
 NEG_INF:int = int(-1e8)
 MATE_VAL:int = 50000
 MATE_SCORE:int = 49000
-MAX_PLY:int = 5**3
+MAX_PLY:int = 4**3
 OPTIMAL_DEPTH:int = 6
 TIME_LIMIT_FOR_SEARCH:int = 30
 OFFBOARD:int = 120
@@ -262,9 +262,10 @@ class _standard():
         if self.ply > 1 and pos.fifty >= 100: return 0
         if self.ply > MAX_PLY - 1: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
         self.nodes += 1
-        if alpha < -MATE_VAL: alpha = -MATE_VAL
-        if beta > MATE_VAL - 1: beta = MATE_VAL - 1
-        if alpha >= beta: return alpha
+        if self.ply:
+            if alpha < -MATE_VAL: alpha = -MATE_VAL
+            if beta > MATE_VAL: beta = MATE_VAL
+            if alpha >= beta: return alpha
         in_check:int = pos.in_check(pos.side)
         if in_check: depth += 1
         if not in_check and not pv_node:
@@ -366,6 +367,7 @@ class _standard():
                     pos.hash_key = hashkey_cpy
                     pos.fifty = fifty_cpy
                     pos.reps = [_ for _ in reps_cpy]
+                    self.ply -= 1
                     continue
 
             if not moves_searched: score = -self._alphabeta(-beta, -alpha, depth - 1, pos, DO_NULL)
