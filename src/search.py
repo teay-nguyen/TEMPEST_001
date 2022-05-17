@@ -54,7 +54,7 @@ POS_INF:int = int(1e8)
 NEG_INF:int = int(-1e8)
 MATE_VAL:int = 50000
 MATE_SCORE:int = 49000
-MAX_PLY:int = 50
+MAX_PLY:int = 5**3
 OPTIMAL_DEPTH:int = 6
 TIME_LIMIT_FOR_SEARCH:int = 30
 
@@ -65,7 +65,7 @@ get_ms = lambda t:round(t*1000)
 
 class _standard():
     def __init__(self) -> None:
-        self._search_limitations:dict = { 'inf_time_search':0 }
+        self._search_limitations:dict = {'inf_time_search':0}
         self._search_depth_from_input:int = 0
         self._search_time_allocation_from_input:int = 0
         self.timing_util:dict = { 'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(self._search_time_allocation_from_input), 'timeset':0 }
@@ -80,6 +80,7 @@ class _standard():
         self.nodes:int = 0
         self.tb_hits:int = 0
         self.enabled:int = 1
+        self.tt_reset_each_root:int = 1
 
     def _determine_search_limitations(self):
         if self._search_limitations['inf_time_search']: self.timing_util['limit'] = get_ms(POS_INF)
@@ -109,6 +110,7 @@ class _standard():
         self.timing_util['abort'] = 0
         self._search_depth_from_input:int = 0
         self._search_time_allocation_from_input:int = 0
+        self.tt_reset_each_root:int = 1
         self.tt_probing_base.tt_setsize(0xCCCCC)
         self._reset_timecontrol()
         self._clear_search_tables()
@@ -134,13 +136,14 @@ class _standard():
         for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
         move_list.moves.sort(reverse=True, key=lambda x:x.score)
 
-    def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH) -> int:
+    def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH, _reset_tt:int = 1) -> int:
         self._clear()
         self._search_depth_from_input:int = depth
         self._search_time_allocation_from_input:int = _timeAllocated
+        self.tt_reset_each_root:int = _reset_tt
         self._determine_search_limitations()
         self._start_timecontrol()
-        self.tt_probing_base.tt_setsize(0xCCCCC)
+        if self.tt_reset_each_root: self.tt_probing_base.tt_setsize(0xCCCCC)
         score:int = 0
 
         if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}'); return 0
