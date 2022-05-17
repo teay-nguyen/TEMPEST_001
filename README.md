@@ -1,4 +1,4 @@
-![release](https://img.shields.io/github/v/release/teay-nguyen/TEMPEST_001?style=plastic) ![license](https://img.shields.io/github/license/teay-nguyen/TEMPEST_001?style=plastic)
+![release](https://img.shields.io/github/v/release/teay-nguyen/TEMPEST_001?style=plastic) ![license](https://img.shields.io/github/license/teay-nguyen/TEMPEST_001?style=plastic) ![open issues](https://img.shields.io/github/issues-raw/teay-nguyen/TEMPEST_001?style=plastic)
 ![Logo](logo.png)
 
 # OVERVIEW

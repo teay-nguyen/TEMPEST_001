@@ -54,7 +54,7 @@ POS_INF:int = int(1e8)
 NEG_INF:int = int(-1e8)
 MATE_VAL:int = 50000
 MATE_SCORE:int = 49000
-MAX_PLY:int = 64
+MAX_PLY:int = 50
 OPTIMAL_DEPTH:int = 6
 TIME_LIMIT_FOR_SEARCH:int = 30
 
