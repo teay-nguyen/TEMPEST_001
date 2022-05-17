@@ -144,12 +144,14 @@ class _standard():
         self._determine_search_limitations()
         self._start_timecontrol()
         if self.tt_reset_each_root: self.tt_probing_base.tt_setsize(0xCCCCC)
-        score:int = 0
+        if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}', end='\n'); return 0
 
-        if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}'); return 0
+        score:int = 0
         absolute_draw:int = 1
 
-        for _k, _v in self.timing_util.items(): print(f'{_k}: {_v}', end=' '); print('', end='\n')
+        print('\n', end='')
+        for _k, _v in self.timing_util.items(): print(f'{_k}: {_v}', end=' ');
+        print('\n', end='')
         for c_d in range(1, self._search_depth_from_input + 1):
             score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
             elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
