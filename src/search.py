@@ -113,6 +113,9 @@ class _standard():
         self._reset_timecontrol()
         self._clear_search_tables()
 
+    def _matescore(self, score:int) -> int: return abs(score) > MATE_SCORE
+    def _tomate(self, score:int) -> int: return MATE_VAL - abs(score)
+
     def _checkup(self) -> None:
         curr_time:int = get_ms(perf_counter())
         if self.timing_util['timeset'] and (curr_time >= self.timing_util['stoptime']):
@@ -143,8 +146,7 @@ class _standard():
         if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}'); return 0
         absolute_draw:int = 1
 
-        for _k, _v in self.timing_util.items(): print(f'{_k}: {_v}', end=' ')
-        print('', end='\n')
+        for _k, _v in self.timing_util.items(): print(f'{_k}: {_v}', end=' '); print('', end='\n')
         for c_d in range(1, self._search_depth_from_input + 1):
             score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos)
             elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
