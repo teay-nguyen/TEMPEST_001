@@ -172,7 +172,7 @@ class _standard():
             print_move(self.pv_table[0][0], '\n')
             pos.make_move(self.pv_table[0][0], ALL_MOVES, searching=0)
             pos.print_board(); return 1
-        else: print('\nbestmove n/a')
+        else: print('bestmove n/a')
         return 1
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
