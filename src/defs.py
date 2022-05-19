@@ -127,6 +127,9 @@ sq_8x8_to_0x88 = lambda sq8x8: sq8x8 + (sq8x8 & ~7)
 sq_0x88_to_0x8 = lambda sq0x88: (sq0x88 + (sq0x88 & 7)) >> 1
 diff0x88 = lambda A, B: 0x77 + A - B
 
+def _print(*args):
+    for _k in args: print(_k, end=' ')
+
 # initial values
 sides: dict = { 'black':0, 'white':1 }
 castling_vals: dict = { 'K':1, 'Q':2, 'k':4, 'q':8 }

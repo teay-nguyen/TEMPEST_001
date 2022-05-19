@@ -30,6 +30,7 @@ tt.tteval_setsize(0xCCCCC)
 
 # predefined variables so code can be more readable
 PAWN:int = 0; KNIGHT:int = 1; BISHOP:int = 2; ROOK:int = 3; QUEEN:int = 4; KING:int = 5
+BISHOP_PAIR_BONUS:int = 30
 
 # evaluate pawn
 def eval_white_pawn(board, sq) -> int:
@@ -111,6 +112,10 @@ def evaluate(board: list, side: int, pceNum: list, hashkey: int, fifty: int) -> 
 
     # define score variables
     score:int = 0; score_opening:int = 0; score_endgame:int = 0
+
+    # bishop pair bonus
+    if pceNum[B] > 1: score_opening += BISHOP_PAIR_BONUS; score_endgame += BISHOP_PAIR_BONUS
+    if pceNum[b] > 1: score_opening -= BISHOP_PAIR_BONUS; score_endgame -= BISHOP_PAIR_BONUS
 
     # tedious stuff right here
     for sq in range(len(board)):

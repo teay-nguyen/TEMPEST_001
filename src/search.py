@@ -19,186 +19,123 @@
 '''
 
 # imports
-from __future__ import print_function, division
-from defs import IDS, BSQUARES, PIECE_TYPES, get_move_source,\
-                get_move_target, get_move_capture, get_move_promoted, ALL_MOVES,\
-                CAPTURE_MOVES, print_move, K, k, P, N, R, FULL_DEPTH_MOVES, REDUCTION_LIMIT,\
-                R_LIMIT
-
-from board0x88 import MovesStruct
+from transposition import Transposition, HASH_ALPHA, HASH_BETA, HASH_EXACT, NO_HASH_ENTRY
 from evaluation import evaluate
+from board0x88 import MovesStruct
 from time import perf_counter
-from transposition import Transposition, NO_HASH_ENTRY, HASH_ALPHA, HASH_BETA, HASH_EXACT
-from data import piece_val
+from defs import CAPTURE_MOVES, ALL_MOVES, IDS, PIECE_TYPES, get_move_capture, get_move_source,\
+                 BSQUARES, get_move_target, _print, print_move
 
-# define prerequisite variables
-mvv_lva:list = [
-    [0,   0,   0,   0,   0,   0,   0,     0,   0,   0,   0,   0,   0],
-    [0, 105, 205, 305, 405, 505, 605,   105, 205, 305, 405, 505, 605],
-    [0, 104, 204, 304, 404, 504, 604,   104, 204, 304, 404, 504, 604],
-    [0, 103, 203, 303, 403, 503, 603,   103, 203, 303, 403, 503, 603],
-    [0, 102, 202, 302, 402, 502, 602,   102, 202, 302, 402, 502, 602],
-    [0, 101, 201, 301, 401, 501, 601,   101, 201, 301, 401, 501, 601],
-    [0, 100, 200, 300, 400, 500, 600,   100, 200, 300, 400, 500, 600],
-
-    [0, 105, 205, 305, 405, 505, 605,   105, 205, 305, 405, 505, 605],
-    [0, 104, 204, 304, 404, 504, 604,   104, 204, 304, 404, 504, 604],
-    [0, 103, 203, 303, 403, 503, 603,   103, 203, 303, 403, 503, 603],
-    [0, 102, 202, 302, 402, 502, 602,   102, 202, 302, 402, 502, 602],
-    [0, 101, 201, 301, 401, 501, 601,   101, 201, 301, 401, 501, 601],
-    [0, 100, 200, 300, 400, 500, 600,   100, 200, 300, 400, 500, 600],
-]
-
-POS_INF:int = int(1e8)
-NEG_INF:int = int(-1e8)
-MATE_VAL:int = 50000
-MATE_SCORE:int = 49000
+# definitions
+INF:int = int(1e8)
+M_VAL:int = 100000
+M_SCORE:int = 99000
 MAX_PLY:int = 4**3
-OPTIMAL_DEPTH:int = 6
-TIME_LIMIT_FOR_SEARCH:int = 30
-OFFBOARD:int = 120
-OPENING_INDEX:int = 0
-ENDGAME_INDEX:int = 1
+TO_MS = lambda _t: round(_t * 1000)
+GET_CURR_MS = lambda: TO_MS(perf_counter())
 
-DO_NULL:int = 1
-NO_NULL:int = 0
+# some defaults
+_DEFAULT_TIMELIMIT:int = 20
+_DEFAULT_SEARCHDEPTH:int = 6
 
-get_ms = lambda t:round(t*1000)
+MVV_LVA:tuple = ( # mvv lva table, most valuable victim - least valuable attacker
+    0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,   0,
+    0, 105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+    0, 104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+    0, 103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+    0, 102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+    0, 101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+    0, 100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600,
 
-# standard searcher for TEMPEST_001, utilizing alphabeta
-# other search methods like MTD(f) or NegaScout are to be explored later
+    0, 105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+    0, 104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+    0, 103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+    0, 102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+    0, 101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+    0, 100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600,
+)
 
-class _standard():
+class standard_searcher:
     def __init__(self) -> None:
-        self._search_limitations:dict = {'inf_time_search':0}
-        self._search_depth_from_input:int = 0
-        self._search_time_allocation_from_input:int = 0
-        self.timing_util:dict = { 'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(self._search_time_allocation_from_input), 'timeset':0 }
-        self.tt_probing_base:Transposition = Transposition(); self.tt_probing_base.tt_setsize(0xCCCCC)
+        self._km:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
+        self._hm:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
+        self._pv:list = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
+        self._pvlength:list = [0 for _ in range(MAX_PLY)]
+        self._ply, self._nodes, self._tt_base, self._tbhits = 0, 0, Transposition(), 0
+        self._time_utils:dict = {'abort':0, 'start_t':0, 'end_t':0, 'max_t':0, 'is_set':0}
 
-        self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
-        self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
-        self.pv_table:list = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
-        self.pv_length:list = [0 for _ in range(MAX_PLY)]
+        self._follow_pv:int = 0
+        self._score_pv:int = 0
+        self._enabled:int = 1
 
-        self.ply:int = 0
-        self.nodes:int = 0
-        self.tb_hits:int = 0
-        self.enabled:int = 1
-        self.tt_reset_each_root:int = 1
+        self._clear_vals()
+        self._clear_tbls()
+        self._clear_time_utils()
+        self._clear_tt() 
 
-    def _determine_search_limitations(self):
-        if self._search_limitations['inf_time_search']: self.timing_util['limit'] = get_ms(POS_INF)
-        else:
-            if not self._search_time_allocation_from_input: self.timing_util['limit'] = get_ms(TIME_LIMIT_FOR_SEARCH)
-            else: self.timing_util['limit'] = get_ms(self._search_time_allocation_from_input)
+    def _clear_tbls(self) -> None:
+        self._km:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
+        self._hm:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
+        self._pv:list = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
+        self._pvlength:list = [0 for _ in range(MAX_PLY)]
 
-    def _reset_timecontrol(self) -> None:
-        self.timing_util:dict = {'starttime':0, 'stoptime':0, 'abort':0, 'limit':get_ms(self._search_time_allocation_from_input), 'timeset':0}
+    def _clear_vals(self) -> None: self._ply, self._nodes, self._follow_pv, self._score_pv, self._tbhits = 0, 0, 0, 0, 0
+    def _clear_time_utils(self) -> None: self._time_utils:dict = {'abort':0, 'start_t':0, 'end_t':0, 'max_t':0, 'is_set':0}
+    def _clear_tt(self) -> None: self._tt_base.tt_setsize(0xCCCCC)
 
-    def _start_timecontrol(self) -> None:
-        self.timing_util['starttime'] = get_ms(perf_counter())
-        self.timing_util['stoptime'] = self.timing_util['starttime'] + self.timing_util['limit']
-        self.timing_util['timeset'] = 1
-        self.timing_util['abort'] = 0
+    def _clear_all(self) -> None:
+        self._clear_vals()
+        self._clear_tbls()
+        self._clear_time_utils()
+        self._clear_tt()
 
-    def _clear_search_tables(self) -> None:
-        self.killer_moves:list = [[0 for _ in range(MAX_PLY)] for _ in range(IDS)]
-        self.history_moves:list = [[0 for _ in range(BSQUARES)] for _ in range(PIECE_TYPES)]
-        self.pv_table:list = [[0 for _ in range(MAX_PLY)] for _ in range(MAX_PLY)]
-        self.pv_length:list = [0 for _ in range(MAX_PLY)]
-
-    def _clear(self) -> None:
-        self.nodes:int = 0
-        self.ply:int = 0
-        self.tb_hits:int = 0
-        self.timing_util['abort'] = 0
-        self._search_depth_from_input:int = 0
-        self._search_time_allocation_from_input:int = 0
-        self.tt_reset_each_root:int = 1
-        self.tt_probing_base.tt_setsize(0xCCCCC)
-        self._reset_timecontrol()
-        self._clear_search_tables()
-
-    def _matescore(self, score:int) -> int: return abs(score) > MATE_SCORE
-    def _tomate(self, score:int) -> int: return MATE_VAL - abs(score)
+    def _init_timer(self, _allocated:int = _DEFAULT_TIMELIMIT) -> None:
+        self._time_utils['start_t'] = GET_CURR_MS()
+        self._time_utils['max_t'] = TO_MS(_allocated)
+        self._time_utils['end_t'] = self._time_utils['start_t'] + self._time_utils['max_t']
+        self._time_utils['is_set'] = 1
 
     def _checkup(self) -> None:
-        curr_time:int = get_ms(perf_counter())
-        if self.timing_util['timeset'] and (curr_time >= self.timing_util['stoptime']):
-            self.timing_util['abort'] = 1
-            print(f'time limit exceeded! {curr_time - self.timing_util["starttime"]} ms')
+        curr_time:int = GET_CURR_MS(); elapsed:int = curr_time - self._time_utils['start_t']
+        if curr_time >= self._time_utils['end_t']: _print(f'time limit exceeded: {elapsed} ms\n'); self._time_utils['abort'] = 1
 
-    def _score(self, board:list, move:int) -> int:
-        if self.pv_table[0][self.ply] == move: return 20000
-        if get_move_capture(move): return 10000 + mvv_lva[board[get_move_source(move)]][board[get_move_target(move)]]
+    def _enable_pv_scoring(self, m_list:MovesStruct):
+        self._follow_pv:int = 0
+        for c in range(m_list.count):
+            if self._pv[0][self._ply] == m_list.moves[c].move: self._score_pv = 1; self._follow_pv = 1
+
+    def _score_move(self, board:list, move:int) -> int:
+        if self._score_pv and self._pv[0][self._ply] == move: self._score_pv = 0; return 20000
+        if get_move_capture(move): return MVV_LVA[board[get_move_source(move)] * 13 + board[get_move_target(move)]] + 10000
         else:
-            if self.killer_moves[0][self.ply] == move: return 9000
-            elif self.killer_moves[1][self.ply] == move: return 8000
-            else: return self.history_moves[board[get_move_source(move)]][get_move_target(move)] + 7000
+            if self._km[0][self._ply] == move: return 9000
+            elif self._km[1][self._ply] == move: return 8000
+            else: return self._hm[board[get_move_source(move)]][get_move_target(move)]
 
-    def _sort(self, board:list, move_list:MovesStruct) -> None:
-        for c in range(move_list.count): move_list.moves[c].score = self._score(board, move_list.moves[c].move)
-        move_list.moves.sort(reverse=True, key=lambda x:x.score)
+    def _sort_moves(self, board:list, move_list:MovesStruct) -> None:
+        for c in range(move_list.count): move_list.moves[c].score = self._score_move(board, move_list.moves[c].move)
+        move_list.moves.sort(reverse=True,key=lambda x:x.score)
 
-    def _root(self, pos, depth:int = OPTIMAL_DEPTH, _timeAllocated:int = TIME_LIMIT_FOR_SEARCH, _reset_tt:int = 1) -> int:
-        self._clear()
-        self._search_depth_from_input:int = depth
-        self._search_time_allocation_from_input:int = _timeAllocated
-        self.tt_reset_each_root:int = _reset_tt
-        self._determine_search_limitations()
-        self._start_timecontrol()
-        if self.tt_reset_each_root: self.tt_probing_base.tt_setsize(0xCCCCC)
-        if not self.enabled: print(f'\nsearcher not available for use, enabled: {self.enabled}', end='\n'); return 0
-        score:int = 0; absolute_draw:int = 1
+    def _is_rep(self, pos) -> int:
+        assert hasattr(pos, 'board') and hasattr(pos, 'hash_key')
+        return pos.hash_key in pos.reps
 
-        print('\n', end='')
-        for _k, _v in self.timing_util.items(): print(f'{_k}: {_v}', end=' ');
-        print('\n', end='')
-        for c_d in range(1, self._search_depth_from_input + 1):
-            score:int = self._alphabeta(NEG_INF, POS_INF, c_d, pos, DO_NULL)
-            elapsed:int = get_ms(perf_counter()) - self.timing_util['starttime']
-            if not elapsed: elapsed += 1
-            if self.timing_util['abort']: print('time limit exceeded for search!'); break
-            if self.pv_length[0]:
-                if score > -MATE_VAL and score < -MATE_SCORE: print(f'info depth {c_d} nodes {self.nodes} mate {abs(-(score+MATE_VAL)//2-1)} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
-                elif score > MATE_SCORE and score < MATE_VAL: print(f'info depth {c_d} nodes {self.nodes} mate {(MATE_VAL-score)//2+1} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
-                else: print(f'info depth {c_d} nodes {self.nodes} score {score} nps {get_ms(self.nodes)//elapsed} tbhits {self.tb_hits} time {elapsed} pv', end=' ')
-                for _m in range(self.pv_length[0]): print_move(self.pv_table[0][_m])
-                if self.enabled: print('', end='\n')
-                for _v in range(len(pos.pce_count)):
-                    if not _v or _v == K or _v == k: continue
-                    if pos.pce_count[_v]: absolute_draw = 0
-                if absolute_draw: self.enabled = 0; print('\n  GAME DRAWN!'); break
-            else: print(f'info depth 0 mate 0   {"white" if pos.side ^ 1 else "black"} wins\n', end=''); self.enabled = 0; print(f'searcher is now locked, enabled: {self.enabled}'); return 0
-        print('\n', end='')
-        if self.pv_table[0][0]:
-            print('bestmove', end=' ')
-            print_move(self.pv_table[0][0], '\n')
-            pos.make_move(self.pv_table[0][0], ALL_MOVES, searching=0)
-            pos.print_board(); return 1
-        else: print('bestmove n/a')
-        return 1
+    def _is_mate(self, score:int) -> int: return abs(score) > M_SCORE
+    def _to_mate(self, score:int) -> int: return M_VAL - abs(score)
 
     def _quiesce(self, alpha:int, beta:int, pos) -> int:
-        assert beta > alpha
-        self.nodes += 1
-        self.pv_length[self.ply] = self.ply
+        if not (self._nodes & 2047): self._checkup()
+        if self._time_utils['abort']: return 0
+        self._nodes += 1
+        if self._ply > MAX_PLY - 1: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
+        stand_pat:int = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
+        if stand_pat >= beta: return beta
+        if stand_pat > alpha: alpha = stand_pat
 
-        if not (self.nodes & 2047): self._checkup()
-        if self.timing_util['abort']: print('time limit exceeded for search!'); return 0
+        m_list:MovesStruct = MovesStruct()
+        pos.gen_moves(m_list); self._sort_moves(pos.board, m_list)
 
-        if self.ply > MAX_PLY - 1: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
-
-        threshold = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
-        if threshold >= beta: return beta
-        alpha = max(alpha, threshold)
-
-        move_list = MovesStruct()
-        pos.gen_moves(move_list)
-        self._sort(pos.board, move_list)
-
-        for c in range(move_list.count):
+        for c in range(m_list.count):
             board_cpy:list = [_ for _ in pos.board]
             side_cpy:int = pos.side
             xside_cpy:int = pos.xside
@@ -210,13 +147,14 @@ class _standard():
             fifty_cpy:int = pos.fifty
             reps_cpy:list = [_ for _ in pos.reps]
 
-            self.ply += 1
+            self._ply += 1
 
-            if not pos.make_move(move_list.moves[c].move, CAPTURE_MOVES, searching=1):
-                self.ply -= 1
-                continue
+            if not pos.make_move(m_list.moves[c].move, CAPTURE_MOVES, searching = 1):
+                self._ply -= 1; continue
 
-            score = -self._quiesce(-beta, -alpha, pos)
+            score:int = -self._quiesce(-beta, -alpha, pos)
+
+            self._ply -= 1
 
             pos.board = [_ for _ in board_cpy]
             pos.side = side_cpy
@@ -229,198 +167,111 @@ class _standard():
             pos.fifty = fifty_cpy
             pos.reps = [_ for _ in reps_cpy]
 
-            self.ply -= 1
-
-            if self.timing_util['abort']: print('time limit exceeded for search!'); return 0
+            if self._time_utils['abort']: return 0
 
             if score > alpha:
                 alpha = score
-                self.pv_table[self.ply][self.ply] = move_list.moves[c].move
-                for _i in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][_i] = self.pv_table[self.ply+1][_i]
-                self.pv_length[self.ply] = self.pv_length[self.ply+1]
-                if score >= beta: return beta
-        return alpha
-
-    def _alphabeta(self, alpha:int, beta:int, depth:int, pos, null_move:int) -> int:
-
-        assert depth >= 0
-        assert beta > alpha
-
-        self.pv_length[self.ply] = self.ply
-
-        legal_:int = 0
-        score:int = 0
-        pv_node:int = beta - alpha > 1
-        hash_flag:int = HASH_ALPHA
-        futility_pruning:int = 0
-        if self.ply > 1 and (pos.hash_key in pos.reps): return 0
-        score:int = self.tt_probing_base.tt_probe(depth, alpha, beta, pos.hash_key, self.ply)
-        if self.ply and score != NO_HASH_ENTRY and not pv_node: self.tb_hits += 1; return score
-        if not (self.nodes & 2047): self._checkup()
-        if self.timing_util['abort']: print('time limit exceeded for search!'); return 0
-        if not depth: return self._quiesce(alpha, beta, pos)
-        if self.ply > 1 and pos.fifty >= 100: return 0
-        if self.ply > MAX_PLY - 1: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
-        self.nodes += 1
-        if self.ply:
-            if alpha < -MATE_VAL: alpha = -MATE_VAL
-            if beta > MATE_VAL: beta = MATE_VAL
-            if alpha >= beta: return alpha
-        in_check:int = pos.in_check(pos.side)
-        if in_check: depth += 1
-        if not in_check and not pv_node:
-            static_eval:int = evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
-            if depth < 3 and abs(beta - 1) > -MATE_VAL + 100:
-                eval_margin:int = piece_val[OPENING_INDEX][P] * depth
-                if static_eval - eval_margin >= beta: return static_eval - eval_margin
-            if null_move:
-                if self.ply and depth > 2 and static_eval >= beta:
-                    board_cpy:list = [_ for _ in pos.board]
-                    side_cpy:int = pos.side
-                    xside_cpy:int = pos.xside
-                    enpassant_cpy:int = pos.enpassant
-                    castle_cpy:int = pos.castle
-                    king_square_cpy:list = [_ for _ in pos.king_square]
-                    pce_count_cpy:list = [_ for _ in pos.pce_count]
-                    hashkey_cpy:int = pos.hash_key
-                    fifty_cpy:int = pos.fifty
-                    reps_cpy:list = [_ for _ in pos.reps]
-
-                    self.ply += 1
-                    pos.reps.append(pos.hash_key)
-
-                    if pos.enpassant != OFFBOARD: pos.hash_key ^= pos.zobrist.ep[pos.enpassant]
-                    pos.enpassant = OFFBOARD
-
-                    pos.side ^= 1; pos.xside ^= 1
-                    pos.hash_key ^= pos.zobrist.side
-
-                    score:int = -self._alphabeta(-beta, -beta + 1, depth - 1 - R_LIMIT, pos, NO_NULL)
-
-                    self.ply -= 1
-
-                    pos.board = [_ for _ in board_cpy]
-                    pos.side = side_cpy
-                    pos.xside = xside_cpy
-                    pos.enpassant = enpassant_cpy
-                    pos.castle = castle_cpy
-                    pos.king_square = [_ for _ in king_square_cpy]
-                    pos.pce_count = [_ for _ in pce_count_cpy]
-                    pos.hash_key = hashkey_cpy
-                    pos.fifty = fifty_cpy
-                    pos.reps = [_ for _ in reps_cpy]
-
-                    if self.timing_util['abort']: print('time limit exceeded for search!'); return 0
-                    if score >= beta: return beta
-
-                score:int = static_eval + piece_val[OPENING_INDEX][P]; new_score:int = 0
-                if score < beta:
-                    if depth == 1:
-                        new_score = self._quiesce(alpha, beta, pos)
-                        return new_score if new_score > score else score
-                score += piece_val[OPENING_INDEX][P]
-                if score < beta and depth < 4:
-                    new_score = self._quiesce(alpha, beta, pos)
-                    if new_score < beta: return new_score if new_score > score else score
-            futility_margin:list = [0, piece_val[OPENING_INDEX][P], piece_val[OPENING_INDEX][N], piece_val[OPENING_INDEX][R]]
-            if depth < 4 and abs(alpha) < MATE_SCORE and static_eval + futility_margin[depth] <= alpha: futility_pruning = 1
-
-        moves_searched:int = 0
-        move_list:MovesStruct = MovesStruct()
-        pos.gen_moves(move_list)
-        self._sort(pos.board, move_list)
-
-        for c in range(move_list.count):
-            board_cpy:list = [_ for _ in pos.board]
-            side_cpy:int = pos.side
-            xside_cpy:int = pos.xside
-            enpassant_cpy:int = pos.enpassant
-            castle_cpy:int = pos.castle
-            king_square_cpy:list = [_ for _ in pos.king_square]
-            pce_count_cpy:list = [_ for _ in pos.pce_count]
-            hashkey_cpy:int = pos.hash_key
-            fifty_cpy:int = pos.fifty
-            reps_cpy:list = [_ for _ in pos.reps]
-
-            self.ply += 1
-
-            if not pos.make_move(move_list.moves[c].move, ALL_MOVES, searching=1):
-                self.ply -= 1
-                continue
-
-            legal_ = 1
-
-            if (
-                    futility_pruning and\
-                    moves_searched and\
-                    not get_move_capture(move_list.moves[c].move) and\
-                    not get_move_promoted(move_list.moves[c].move) and\
-                    not pos.is_square_attacked(pos.king_square[pos.side], pos.xside)
-               ):
-                    pos.board = [_ for _ in board_cpy]
-                    pos.side = side_cpy
-                    pos.xside = xside_cpy
-                    pos.enpassant = enpassant_cpy
-                    pos.castle = castle_cpy
-                    pos.king_square = [_ for _ in king_square_cpy]
-                    pos.pce_count = [_ for _ in pce_count_cpy]
-                    pos.hash_key = hashkey_cpy
-                    pos.fifty = fifty_cpy
-                    pos.reps = [_ for _ in reps_cpy]
-                    self.ply -= 1
-                    continue
-
-            if not moves_searched: score = -self._alphabeta(-beta, -alpha, depth - 1, pos, DO_NULL)
-            else:
-                if  (
-                     not pv_node and\
-                     moves_searched >= FULL_DEPTH_MOVES and\
-                     depth >= REDUCTION_LIMIT and\
-                     not in_check and\
-                     not get_move_capture(move_list.moves[c].move) and\
-                     not get_move_promoted(move_list.moves[c].move)
-                    ): score:int = -self._alphabeta(-alpha - 1, -alpha, depth - 2, pos, DO_NULL)
-                else: score:int = alpha + 1
-                if score > alpha:
-                    score:int = -self._alphabeta(-alpha - 1, -alpha, depth - 1, pos, DO_NULL)
-                    if alpha < score < beta: score:int = -self._alphabeta(-beta, -alpha, depth - 1, pos, DO_NULL)
-
-            self.ply -= 1
-
-            pos.board = [_ for _ in board_cpy]
-            pos.side = side_cpy
-            pos.xside = xside_cpy
-            pos.enpassant = enpassant_cpy
-            pos.castle = castle_cpy
-            pos.king_square = [_ for _ in king_square_cpy]
-            pos.pce_count = [_ for _ in pce_count_cpy]
-            pos.hash_key = hashkey_cpy
-            pos.fifty = fifty_cpy
-            pos.reps = [_ for _ in reps_cpy]
-
-            if self.timing_util['abort']: print('time limit exceeded for search!'); return 0
-            moves_searched += 1
-
-            if score > alpha:
-                hash_flag = HASH_EXACT
-                alpha = score
-                if not get_move_capture(move_list.moves[c].move): self.history_moves[pos.board[get_move_source(move_list.moves[c].move)]][get_move_target(move_list.moves[c].move)] += depth
-                self.pv_table[self.ply][self.ply] = move_list.moves[c].move
-                for _i in range(self.ply+1, self.pv_length[self.ply+1]): self.pv_table[self.ply][_i] = self.pv_table[self.ply+1][_i]
-                self.pv_length[self.ply] = self.pv_length[self.ply+1]
                 if score >= beta:
-                    self.tt_probing_base.tt_save(depth, beta, HASH_BETA, pos.hash_key, self.ply)
-                    if not get_move_capture(move_list.moves[c].move):
-                        self.killer_moves[1][self.ply] = self.killer_moves[0][self.ply]
-                        self.killer_moves[0][self.ply] = move_list.moves[c].move
                     return beta
 
-        if not legal_:
-            if in_check: return -MATE_VAL + self.ply
-            else: return 0
-
-        self.tt_probing_base.tt_save(depth, alpha, hash_flag, pos.hash_key, self.ply)
         return alpha
 
-if __name__ == "__main__":
-    _ = _standard()
+    def _ab(self, alpha:int, beta:int, depth:int, pos) -> int:
+        self._pvlength[self._ply] = self._ply
+        score:int = 0; _hash_flag:int = HASH_ALPHA; pv_node:int = beta - alpha > 1
+        if self._ply and self._is_rep(pos) or pos.fifty >= 100: return 0
+        score = self._tt_base.tt_probe(depth, alpha, beta, pos.hash_key, self._ply)
+        if self._ply and score != NO_HASH_ENTRY and not pv_node: self._tbhits += 1; return score
+        if not (self._nodes & 2047): self._checkup()
+        if self._time_utils['abort']: return 0
+        if not depth: return self._quiesce(alpha, beta, pos)
+        if self._ply > MAX_PLY - 1: return evaluate(pos.board, pos.side, pos.pce_count, pos.hash_key, pos.fifty)
+        self._nodes += 1; in_check:int = pos.in_check(pos.side)
+        if in_check: depth += 1
+        is_legal:int = 0
+
+        m_list:MovesStruct = MovesStruct()
+        pos.gen_moves(m_list)
+        if self._follow_pv: self._enable_pv_scoring(m_list)
+        self._sort_moves(pos.board, m_list)
+
+        for c in range(m_list.count):
+            board_cpy:list = [_ for _ in pos.board]
+            side_cpy:int = pos.side
+            xside_cpy:int = pos.xside
+            enpassant_cpy:int = pos.enpassant
+            castle_cpy:int = pos.castle
+            king_square_cpy:list = [_ for _ in pos.king_square]
+            pce_count_cpy:list = [_ for _ in pos.pce_count]
+            hashkey_cpy:int = pos.hash_key
+            fifty_cpy:int = pos.fifty
+            reps_cpy:list = [_ for _ in pos.reps]
+
+            self._ply += 1
+
+            if not pos.make_move(m_list.moves[c].move, ALL_MOVES, searching = 1):
+                self._ply -= 1; continue
+
+            is_legal:int = 1
+
+            score:int = -self._ab(-beta, -alpha, depth - 1, pos)
+
+            self._ply -= 1
+
+            pos.board = [_ for _ in board_cpy]
+            pos.side = side_cpy
+            pos.xside = xside_cpy
+            pos.enpassant = enpassant_cpy
+            pos.castle = castle_cpy
+            pos.king_square = [_ for _ in king_square_cpy]
+            pos.pce_count = [_ for _ in pce_count_cpy]
+            pos.hash_key = hashkey_cpy
+            pos.fifty = fifty_cpy
+            pos.reps = [_ for _ in reps_cpy]
+
+            if self._time_utils['abort']: return 0
+
+            if score > alpha:
+                _hash_flag:int = HASH_EXACT; alpha = score
+                if not get_move_capture(m_list.moves[c].move): self._hm[pos.board[get_move_source(m_list.moves[c].move)]][get_move_target(m_list.moves[c].move)] += depth
+                self._pv[self._ply][self._ply] = m_list.moves[c].move
+                for next_ply in range(self._ply + 1, self._pvlength[self._ply + 1]): self._pv[self._ply][next_ply] = self._pv[self._ply + 1][next_ply]
+                self._pvlength[self._ply] = self._pvlength[self._ply + 1]
+                if score >= beta:
+                    self._tt_base.tt_save(depth, beta, HASH_BETA, pos.hash_key, self._ply)
+                    if not get_move_capture(m_list.moves[c].move):
+                        self._km[1][self._ply] = self._km[0][self._ply]
+                        self._km[0][self._ply] = m_list.moves[c].move
+                    return beta
+        if not is_legal:
+            if in_check: return -M_VAL + self._ply
+            else: return 0
+
+        self._tt_base.tt_save(depth, alpha, _hash_flag, pos.hash_key, self._ply)
+        return alpha
+
+    def _start_search(self, pos, _depth = _DEFAULT_SEARCHDEPTH, _allocated = _DEFAULT_TIMELIMIT) -> int:
+        self._clear_all()
+        if not self._enabled: _print(f'\nsearcher not available for use, enabled: {self._enabled}\n'); return 0
+        self._init_timer(_allocated)
+        alpha:int = -INF; beta:int = INF; score:int = 0
+        for _k, _v in self._time_utils.items(): _print(f'{_k}: {_v}')
+        _print('\n')
+        for c_d in range(1, _depth + 1):
+            score:int = self._ab(alpha, beta, c_d, pos)
+            elapsed:int = GET_CURR_MS() - self._time_utils['start_t']
+            if not elapsed: elapsed += 1
+            if self._time_utils['abort']: _print('search aborted!\n')
+            if self._pvlength[0]:
+                if score > -M_VAL and score < -M_SCORE: _print(f'info depth {c_d} nodes {self._nodes} mate {abs(-(score+M_VAL)//2-1)} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv')
+                elif score > M_SCORE and score < M_VAL: _print(f'info depth {c_d} nodes {self._nodes} mate {(M_VAL-score)//2+1} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv')
+                else: _print(f'info depth {c_d} nodes {self._nodes} cp {score} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv')
+                for _m in range(self._pvlength[0]): print_move(self._pv[0][_m])
+                if self._enabled: _print('\n')
+            else: _print(f'info depth 0 mate 0  {"white" if pos.side^1 else "black"} wins\n'); self._enabled = 0; print(f'searcher is now locked, enabled: {self._enabled}'); return 0
+        _print('\n')
+        if self._pv[0][0]:
+            _print('bestmove')
+            print_move(self._pv[0][0], '\n')
+        else: print('bestmove n/a')
+        return 1

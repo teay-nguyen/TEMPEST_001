@@ -24,14 +24,16 @@ from uuid import uuid4
 from defs import *
 
 # state variables
-a8 = 0;    b8 = 1;    c8 = 2;   d8 = 3;   e8 = 4;   f8 = 5;   g8 = 6;   h8 = 7;
-a7 = 16;   b7 = 17;   c7 = 18;  d7 = 19;  e7 = 20;  f7 = 21;  g7 = 22;  h7 = 23;
-a6 = 32;   b6 = 33;   c6 = 34;  d6 = 35;  e6 = 36;  f6 = 37;  g6 = 39;  h6 = 40;
-a5 = 48;   b5 = 49;   c5 = 50;  d5 = 51;  e5 = 52;  f5 = 53;  g5 = 54;  h5 = 55;
-a4 = 64;   b4 = 65;   c4 = 66;  d4 = 67;  e4 = 68;  f4 = 69;  g4 = 70;  h4 = 71;
-a3 = 80;   b3 = 81;   c3 = 82;  d3 = 83;  e3 = 84;  f3 = 85;  g3 = 86;  h3 = 87;
-a2 = 96;   b2 = 97;   c2 = 98;  d2 = 99;  e2 = 100; f2 = 101; g2 = 102; h2 = 103;
-a1 = 112;  b1 = 113;  c1 = 114; d1 = 115; e1 = 116; f1 = 117; g1 = 118; h1 = 119;   offboard = 120
+a8 =   0;    b8 = 1;    c8 = 2;   d8 = 3;    e8 = 4;   f8 = 5;   g8 = 6;   h8 = 7;
+a7 =  16;   b7 = 17;   c7 = 18;  d7 = 19;   e7 = 20;  f7 = 21;  g7 = 22;  h7 = 23;
+a6 =  32;   b6 = 33;   c6 = 34;  d6 = 35;   e6 = 36;  f6 = 37;  g6 = 39;  h6 = 40;
+a5 =  48;   b5 = 49;   c5 = 50;  d5 = 51;   e5 = 52;  f5 = 53;  g5 = 54;  h5 = 55;
+a4 =  64;   b4 = 65;   c4 = 66;  d4 = 67;   e4 = 68;  f4 = 69;  g4 = 70;  h4 = 71;
+a3 =  80;   b3 = 81;   c3 = 82;  d3 = 83;   e3 = 84;  f3 = 85;  g3 = 86;  h3 = 87;
+a2 =  96;   b2 = 97;   c2 = 98;  d2 = 99;  e2 = 100; f2 = 101; g2 = 102; h2 = 103;
+a1 = 112;  b1 = 113;  c1 = 114; d1 = 115;  e1 = 116; f1 = 117; g1 = 118; h1 = 119;   offboard = 120
+
+offboard_mask:int = 0x88
 
 '''
 
@@ -153,12 +155,10 @@ class BoardState:
 
     def gen_hashkey(self) -> None:
         self.hash_key = 0
-
         for sq in range(len(self.board)):
-            if not (sq & 0x88):
+            if not (sq & offboard_mask):
                 piece:int = self.board[sq]
                 if piece: self.hash_key ^= self.zobrist.piecesquare[piece][sq]
-
         if self.enpassant != offboard: self.hash_key ^= self.zobrist.ep[self.enpassant]
         self.hash_key ^= self.zobrist.castling[self.castle]
         if not self.side: self.hash_key ^= self.zobrist.side
@@ -173,11 +173,11 @@ class BoardState:
         for rank in range(MAX_RANKS):
             for file in range(MAX_FILES):
                 square:int = rank * MAX_FILES + file
-                if not (square & 0x88):
+                if not (square & offboard_mask):
                     self.board[square] = e
 
         self.fifty: int = 0
-        self.pce_pos: list = [[0 for _ in range(10)] for _ in range(PIECE_TYPES)]
+        self.pce_pos: list = [[0 for _ in range(MAX_PCE_EACH_TYPE)] for _ in range(PIECE_TYPES)]
         self.pce_count: list = [0 for _ in range(PIECE_TYPES)]
         self.hash_key: int = 0
         self.nodes: int = 0
@@ -197,7 +197,7 @@ class BoardState:
         for r in range(MAX_RANKS):
             for f in range(MAX_FILES):
                 sq = r * MAX_FILES + f
-                if not (sq & 0x88):
+                if not (sq & offboard_mask):
                     if self.board[sq] == e: empty += 1
                     elif P <= self.board[sq] <= k:
                         if empty: fen_string = f'{fen_string}{empty}'; empty = 0
@@ -230,7 +230,7 @@ class BoardState:
                 else:
                     assert (ord('a') <= ord(sym) <= ord('z')) or (ord('A') <= ord(sym) <= ord('Z')) # unorthodoxed method to check FEN string but it works
                     square:int = rank * MAX_FILES + file
-                    if not (square & 0x88):
+                    if not (square & offboard_mask):
                         if P <= char_pieces[sym] <= k:
                             self.pce_pos[char_pieces[sym]][self.pce_count[char_pieces[sym]]] = square
                             self.pce_count[char_pieces[sym]] += 1
@@ -273,30 +273,30 @@ class BoardState:
     def is_square_attacked(self, square:int, oppside:int) -> int:
         # pawn attacks
         if oppside:
-            if not (square + 17) & 0x88 and self.board[square + 17] == P: return 1
-            if not (square + 15) & 0x88 and self.board[square + 15] == P: return 1
+            if not (square + 17) & offboard_mask and self.board[square + 17] == P: return 1
+            if not (square + 15) & offboard_mask and self.board[square + 15] == P: return 1
         else:
-            if not (square - 17) & 0x88 and self.board[square - 17] == p: return 1
-            if not (square - 15) & 0x88 and self.board[square - 15] == p: return 1
+            if not (square - 17) & offboard_mask and self.board[square - 17] == p: return 1
+            if not (square - 15) & offboard_mask and self.board[square - 15] == p: return 1
 
         # knight attacks
         for i in range(8):
             target_sq:int = square + knight_offsets[i]
-            if not (target_sq & 0x88):
+            if not (target_sq & offboard_mask):
                 target_piece:int = self.board[target_sq]
                 if (target_piece == N) if oppside else (target_piece == n): return 1
 
         # king attacks
         for i in range(8):
             target_sq:int = square + king_offsets[i]
-            if not (target_sq & 0x88):
+            if not (target_sq & offboard_mask):
                 target_piece:int = self.board[target_sq]
                 if (target_piece == K) if oppside else (target_piece == k): return 1
 
         # bishop attacks
         for i in range(4):
             target_sq:int = square + bishop_offsets[i]
-            while not (target_sq & 0x88):
+            while not (target_sq & offboard_mask):
                 target_piece:int = self.board[target_sq]
                 if (target_piece == B or target_piece == Q) if oppside else (target_piece == b or target_piece == q): return 1
                 if target_piece: break
@@ -305,7 +305,7 @@ class BoardState:
         # rook attacks
         for i in range(4):
             target_sq:int = square + rook_offsets[i]
-            while not (target_sq & 0x88):
+            while not (target_sq & offboard_mask):
                 target_piece:int = self.board[target_sq]
                 if (target_piece == R or target_piece == Q) if oppside else (target_piece == r or target_piece == q): return 1
                 if target_piece: break
@@ -314,17 +314,17 @@ class BoardState:
 
     def sq_attacked_optimized(self, sq:int, oppside:int) -> int:
         if oppside:
-            if not (sq + 17) & 0x88 and self.board[sq + 17] == P: return 1
-            if not (sq + 15) & 0x88 and self.board[sq + 15] == P: return 1
+            if not (sq + 17) & offboard_mask and self.board[sq + 17] == P: return 1
+            if not (sq + 15) & offboard_mask and self.board[sq + 15] == P: return 1
         else:
-            if not (sq - 17) & 0x88 and self.board[sq - 17] == p: return 1
-            if not (sq - 15) & 0x88 and self.board[sq - 15] == p: return 1
+            if not (sq - 17) & offboard_mask and self.board[sq - 17] == p: return 1
+            if not (sq - 15) & offboard_mask and self.board[sq - 15] == p: return 1
 
         for _i in range(4):
             target_sq:int = sq; step:int = 0
             while 1:
                 target_sq += bishop_offsets[_i]; step += 1
-                if target_sq & 0x88: break
+                if target_sq & offboard_mask: break
                 target_piece:int = self.board[target_sq]
                 if not target_piece: continue
                 if (target_piece == B or target_piece == Q) if oppside else (target_piece == b or target_piece == q): return 1
@@ -335,7 +335,7 @@ class BoardState:
             target_sq:int = sq; step:int = 0
             while 1:
                 target_sq += rook_offsets[_i]; step += 1
-                if target_sq & 0x88: break
+                if target_sq & offboard_mask: break
                 target_piece:int = self.board[target_sq]
                 if not target_piece: continue
                 if (target_piece == R or target_piece == Q) if oppside else (target_piece == r or target_piece == q): return 1
@@ -344,7 +344,7 @@ class BoardState:
 
         for i in range(8):
             target_sq:int = sq + knight_offsets[i]
-            if not (target_sq & 0x88):
+            if not (target_sq & offboard_mask):
                 target_piece:int = self.board[target_sq]
                 if (target_piece == N) if oppside else (target_piece == n): return 1
         return 0
@@ -477,12 +477,12 @@ class BoardState:
     def gen_moves(self, move_list: MovesStruct) -> None:
         move_list.count = 0
         for sq in range(BSQUARES):
-            if not (sq & 0x88):
+            if not (sq & offboard_mask):
                 if self.side:
                     if self.board[sq] == P:
                         to_sq:int = sq - 16
-                        if not (to_sq & 0x88) and not self.board[to_sq]:
-                            if sq >= a7 and sq <= h7:
+                        if not (to_sq & offboard_mask) and not self.board[to_sq]:
+                            if a7 <= sq <= h7:
                                 self.add_move(move_list, encode_move(sq, to_sq, Q, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, R, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, B, 0, 0, 0, 0))
@@ -493,7 +493,7 @@ class BoardState:
                         for i in range(2):
                             pawn_offset:int = bishop_offsets[i+2]
                             to_sq:int = sq + pawn_offset
-                            if not (to_sq & 0x88):
+                            if not (to_sq & offboard_mask):
                                 if (sq >= a7 and sq <= h7) and\
                                     (self.board[to_sq] >= 7 and self.board[to_sq] <= 12):
                                     self.add_move(move_list, encode_move(sq, to_sq, Q, 1, 0, 0, 0))
@@ -515,7 +515,7 @@ class BoardState:
                 else:
                     if self.board[sq] == p:
                         to_sq:int = sq + 16
-                        if not (to_sq & 0x88) and not self.board[to_sq]:
+                        if not (to_sq & offboard_mask) and not self.board[to_sq]:
                             if sq >= a2 and sq <= h2:
                                 self.add_move(move_list, encode_move(sq, to_sq, q, 0, 0, 0, 0))
                                 self.add_move(move_list, encode_move(sq, to_sq, r, 0, 0, 0, 0))
@@ -528,7 +528,7 @@ class BoardState:
                         for i in range(2):
                             pawn_offset:int = bishop_offsets[i]
                             to_sq = sq + pawn_offset
-                            if not (to_sq & 0x88):
+                            if not (to_sq & offboard_mask):
                                 if (sq >= a2 and sq <= h2) and\
                                     (self.board[to_sq] >= 1 and self.board[to_sq] <= 6):
                                     self.add_move(move_list, encode_move(sq, to_sq, q, 1, 0, 0, 0))
@@ -551,7 +551,7 @@ class BoardState:
                 if (self.board[sq] == N) if self.side else (self.board[sq] == n):
                     for i in range(8):
                         to_sq:int = sq + knight_offsets[i]
-                        if not (to_sq & 0x88):
+                        if not (to_sq & offboard_mask):
                             piece:int = self.board[to_sq]
                             if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
                                 (not piece or (piece >= 1 and piece <= 6)):
@@ -561,7 +561,7 @@ class BoardState:
                 if (self.board[sq] == K) if self.side else (self.board[sq] == k):
                     for i in range(8):
                         to_sq:int = sq + king_offsets[i]
-                        if not (to_sq & 0x88):
+                        if not (to_sq & offboard_mask):
                             piece:int = self.board[to_sq]
                             if (not piece or (piece >= 7 and piece <= 12)) if self.side else\
                                 (not piece or (piece >= 1 and piece <= 6)):
@@ -572,7 +572,7 @@ class BoardState:
                     else ((self.board[sq] == b) or (self.board[sq] == q)):
                     for i in range(4):
                         to_sq:int = sq + bishop_offsets[i]
-                        while not (to_sq & 0x88):
+                        while not (to_sq & offboard_mask):
                             piece:int = self.board[to_sq]
                             if (1 <= piece <= 6) if self.side else (7 <= piece <= 12): break
                             if (7 <= piece <= 12) if self.side else (1 <= piece <= 6):
@@ -586,7 +586,7 @@ class BoardState:
                     else ((self.board[sq] == r) or (self.board[sq] == q)):
                     for i in range(4):
                         to_sq:int = sq + rook_offsets[i]
-                        while not (to_sq & 0x88):
+                        while not (to_sq & offboard_mask):
                             piece:int = self.board[to_sq]
                             if (1 <= piece <= 6) if self.side else (7 <= piece <= 12): break
                             if (7 <= piece <= 12) if self.side else (1 <= piece <= 6):
@@ -704,7 +704,7 @@ class BoardState:
             for file in range(MAX_FILES):
                 square:int = rank * MAX_FILES + file
                 if not file: print('     ', 8 - rank, end='  ')
-                if not (square & 0x88): print(ascii_pieces[self.board[square]], end=' ')
+                if not (square & offboard_mask): print(ascii_pieces[self.board[square]], end=' ')
             print('', end='\n')
         print('\n         a b c d e f g h\n')
         print('----------------------------------\n')

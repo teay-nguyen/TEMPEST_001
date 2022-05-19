@@ -48,7 +48,7 @@ def uci_prompt():
     print("id name TEMPEST_001"); print("id author Terry Nguyen"); print('type "help" for commands'); print("uciok")
     board = board0x88.BoardState()
     board.init_state(preset_positions['start_position'])
-    searcher = search._standard()
+    searcher = search.standard_searcher()
 
     try:
         while 1:
@@ -57,7 +57,7 @@ def uci_prompt():
             if _input == '': continue
             elif _input == 'uci': print('id name TEMPEST_001'); print('id author Terry Nguyen'); print('uciok');
             elif _input == 'isready': print('readyok'); continue
-            elif _input == 'ucinewgame': board.init_state(preset_positions['start_position']); searcher.tt_probing_base.tt_setsize(0xCCCCC)
+            elif _input == 'ucinewgame': board.init_state(preset_positions['start_position']); searcher._clear_all()
             elif _input[:23] == 'position startpos moves':
                 board.init_state(preset_positions['start_position']); board.print_board(); moves = _input[24:].split()
                 if not len(moves): raise RuntimeError('calling position startpos moves with any moves')
@@ -66,12 +66,12 @@ def uci_prompt():
             elif _input[:8] == 'go perft': board.perft_test(int(_input[9:]))
             elif _input == 'position startpos': board.init_state(preset_positions['start_position']); board.print_board()
             elif _input[:12] == 'position fen': fen_string:str = _input[13:]; board.init_state(fen_string)
-            elif _input[:8] == 'go depth': search_depth:int = int(_input[9:]); searcher._root(board, depth=search_depth)
-            elif _input == 'go': searcher._root(board, depth=6)
+            elif _input[:8] == 'go depth': search_depth:int = int(_input[9:]); searcher._start_search(board, _depth=search_depth)
+            elif _input == 'go': searcher._start_search(board, _depth=6)
             elif _input == 'd': board.print_board()
             elif _input == 'eval': board.print_board(); print(f'\n  [EVALUATION (HANDCRAFTED)]: {evaluation.evaluate(board.board, board.side, board.pce_count, board.hash_key, board.fifty)}')
-            elif _input == 'unlock searcher': searcher.enabled = 1; print('searcher unlocked')
-            elif _input == 'lock searcher': searcher.enabled = 0; print('searcher locked')
+            elif _input == 'unlock searcher': searcher._enabled = 1; print('searcher unlocked')
+            elif _input == 'lock searcher': searcher._enabled = 0; print('searcher locked')
             elif _input == 'help': print('\nucinewgame - start new game'); print('position startpos - loads the start position'); print('position fen (fen string) - load fen string into engine');\
                                     print('go depth (search depth) - search at specified depth'); print('go perft (depth) - perform the debug perft');\
                                     print('uci - engine info'); print('d - prints the board with properties'); print('eval - call the evaluation function');\
