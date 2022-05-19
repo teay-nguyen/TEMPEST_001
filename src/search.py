@@ -255,23 +255,23 @@ class standard_searcher:
         if not self._enabled: _print(f'\nsearcher not available for use, enabled: {self._enabled}\n'); return 0
         self._init_timer(_allocated)
         alpha:int = -INF; beta:int = INF; score:int = 0
-        for _k, _v in self._time_utils.items(): _print(f'{_k}: {_v}')
+        for _k, _v in self._time_utils.items(): _print(f'{_k}: {_v} ')
         _print('\n')
         for c_d in range(1, _depth + 1):
             score:int = self._ab(alpha, beta, c_d, pos)
             elapsed:int = GET_CURR_MS() - self._time_utils['start_t']
             if not elapsed: elapsed += 1
-            if self._time_utils['abort']: _print('search aborted!\n')
+            if self._time_utils['abort']: _print('search aborted!\n'); break
             if self._pvlength[0]:
-                if score > -M_VAL and score < -M_SCORE: _print(f'info depth {c_d} nodes {self._nodes} mate {abs(-(score+M_VAL)//2-1)} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv')
-                elif score > M_SCORE and score < M_VAL: _print(f'info depth {c_d} nodes {self._nodes} mate {(M_VAL-score)//2+1} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv')
-                else: _print(f'info depth {c_d} nodes {self._nodes} cp {score} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv')
+                if score > -M_VAL and score < -M_SCORE: _print(f'info depth {c_d} nodes {self._nodes} mate {abs(-(score+M_VAL)//2-1)} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv ')
+                elif score > M_SCORE and score < M_VAL: _print(f'info depth {c_d} nodes {self._nodes} mate {(M_VAL-score)//2+1} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv ')
+                else: _print(f'info depth {c_d} nodes {self._nodes} cp {score} nps {TO_MS(self._nodes)//elapsed} tbhits {self._tbhits} time {elapsed} pv ')
                 for _m in range(self._pvlength[0]): print_move(self._pv[0][_m])
                 if self._enabled: _print('\n')
             else: _print(f'info depth 0 mate 0  {"white" if pos.side^1 else "black"} wins\n'); self._enabled = 0; print(f'searcher is now locked, enabled: {self._enabled}'); return 0
         _print('\n')
         if self._pv[0][0]:
-            _print('bestmove')
+            _print('bestmove ')
             print_move(self._pv[0][0], '\n')
         else: print('bestmove n/a')
         return 1
